@@ -1,0 +1,25 @@
+[project]
+name = "gpt-racing"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Logan Grado", email = "grado.logan@gmail.com"},
+]
+dependencies = [
+    "numpy>=1.26.0",
+    "pandas>=2.1.1",
+]
+requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "ipython>=8.15.0",
+    "ipdb>=0.13.13",
+    "pytest>=7.4.2",
+]
