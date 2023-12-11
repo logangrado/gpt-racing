@@ -8,9 +8,7 @@ from gpt_racing import iracing_data
 
 
 class TestGetRaceResults:
-    def test_basic(self):
-        client = iracing_data.IracingDataClient()
-
+    def test_basic(self, client):
         subsession_id = 63788123
         result = client.get_race_result(subsession_id)
 

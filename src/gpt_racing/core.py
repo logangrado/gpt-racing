@@ -22,12 +22,10 @@ def _load_race_data(config, client):
     return data
 
 
-def compute_ratings(config):
+def compute_ratings(config, client):
     """
     Compute ratings given a config
     """
-    client = IracingDataClient()
-
     race_data = _load_race_data(config, client)
 
     elo_df = compute_elo_mmr(race_data)

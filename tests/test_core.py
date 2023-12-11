@@ -7,10 +7,10 @@ from gpt_racing.config import RatingConfig
 
 
 class TestComputeRatings:
-    def test_single_race(self):
+    def test_single_race(self, client):
         config = RatingConfig(**{"races": [{"subsession_id": 64681712}]})
 
-        result = core.compute_ratings(config)
+        result = core.compute_ratings(config, client=client)
 
         pd.testing.assert_frame_equal(
             result,
@@ -39,7 +39,7 @@ class TestComputeRatings:
             ),
         )
 
-    def test_multi_race(self):
+    def test_multi_race(self, client):
         config = RatingConfig(
             **{
                 "races": [
@@ -51,7 +51,7 @@ class TestComputeRatings:
             }
         )
 
-        result = core.compute_ratings(config)
+        result = core.compute_ratings(config, client=client)
 
         pd.testing.assert_frame_equal(
             result,
@@ -103,7 +103,7 @@ class TestComputeRatings:
             ),
         )
 
-    def test_order_invariance(self):
+    def test_order_invariance(self, client):
         races = [
             {"subsession_id": 60407964},
             {"subsession_id": 60673413},
@@ -114,7 +114,7 @@ class TestComputeRatings:
         config0 = RatingConfig(**{"races": races})
         config1 = RatingConfig(**{"races": races[::-1]})
 
-        result0 = core.compute_ratings(config0)
-        result1 = core.compute_ratings(config1)
+        result0 = core.compute_ratings(config0, client)
+        result1 = core.compute_ratings(config1, client)
 
         pd.testing.assert_frame_equal(result0, result1),
