@@ -2,6 +2,7 @@
 
 
 import pandas as pd
+import pytest
 
 from gpt_racing import iracing_data
 
@@ -41,3 +42,14 @@ class TestGetRaceResults:
                 ]
             ),
         )
+
+
+@pytest.mark.skip(reason="Not implemented")
+class TestGetLapData:
+    def test_basic(self):
+        pass
+
+
+@pytest.mark.skip(reason="Not implemented")
+class TestSearch:
+    pass

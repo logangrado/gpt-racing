@@ -127,6 +127,9 @@ class IracingDataClient:
 
         return race_result
 
+    def get_lap_times(self, subsession_id: int) -> pd.DataFrame:
+        return pd.DataFrame(self._client.result_lap_chart_data(subsession_id))
+
     def search_sessions(self, start_time, end_time, cust_id=None):
         if cust_id is None:
             cust_id = self._cust_id
