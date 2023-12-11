@@ -93,8 +93,17 @@ def _get_race_result(result: dict) -> pd.DataFrame:
                 ]
             ]
 
+            df = df.rename(
+                columns={
+                    "cust_id": "user_id",
+                }
+            )
+
             # # Compute total time
             # df["total_time"] = df["average_lap"] * df["laps_complete"]
+
+            df["subsession_id"] = result["subsession_id"]
+            df["session_end_time"] = pd.Timestamp(result["end_time"])
             return df
 
     return None
@@ -117,3 +126,17 @@ class IracingDataClient:
         race_result = _get_race_result(result)
 
         return race_result
+
+    def search_sessions(self, start_time, end_time, cust_id=None):
+        if cust_id is None:
+            cust_id = self._cust_id
+
+        # Start_time/end_time must be no more than 90 days apart!
+
+        return pd.DataFrame(
+            self._client.result_search_hosted(
+                start_range_begin=start_time,
+                start_range_end=end_time,
+                cust_id=cust_id,
+            )
+        )

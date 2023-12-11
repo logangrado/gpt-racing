@@ -17,7 +17,7 @@ class TestELOMMR:
         data["contest_id"] = 0
         data["contest_time"] = 0
 
-        result = elo_mmr.calculate(data)
+        result = elo_mmr.compute_elo_mmr(data)
 
         pd.testing.assert_frame_equal(
             result,
@@ -36,9 +36,40 @@ class TestELOMMR:
             ]
         )
 
-        result = elo_mmr.calculate(data)
+        result = elo_mmr.compute_elo_mmr(data)
 
         pd.testing.assert_frame_equal(
             result,
             pd.DataFrame({"rank": [1, 2, 3, 4], "user_id": [0, 1, 3, 2], "rating": [1592, 1362, 1064, 1022]}),
         )
+
+    def test_contest_order_invariance(self):
+        contests = [
+            pd.DataFrame(
+                [
+                    {"user_id": 0, "finish_position": 0, "contest_id": 0, "contest_time": 0},
+                    {"user_id": 1, "finish_position": 1, "contest_id": 0, "contest_time": 0},
+                    {"user_id": 2, "finish_position": 2, "contest_id": 0, "contest_time": 0},
+                ]
+            ),
+            pd.DataFrame(
+                [
+                    {"user_id": 0, "finish_position": 0, "contest_id": 1, "contest_time": 2},
+                    {"user_id": 1, "finish_position": 1, "contest_id": 1, "contest_time": 2},
+                    {"user_id": 3, "finish_position": 2, "contest_id": 1, "contest_time": 2},
+                ]
+            ),
+            pd.DataFrame(
+                [
+                    {"user_id": 1, "finish_position": 0, "contest_id": 2, "contest_time": 1},
+                    {"user_id": 2, "finish_position": 1, "contest_id": 2, "contest_time": 1},
+                    {"user_id": 3, "finish_position": 2, "contest_id": 2, "contest_time": 1},
+                ]
+            ),
+        ]
+
+        result0 = elo_mmr.compute_elo_mmr(pd.concat(contests))
+
+        result1 = elo_mmr.compute_elo_mmr(pd.concat(contests[::-1]))
+
+        pd.testing.assert_frame_equal(result0, result1)

@@ -7,15 +7,22 @@ import shutil
 
 import subprocess
 
+import numpy as np
 import pandas as pd
+
 from gpt_racing import ELO_MMR_PATH, ELO_MMR_CACHE_PATH, ELO_MMR_RESULT_PATH
 
 
 def _write_data(data, path):
     path.mkdir(parents=True)
 
-    for i, (contest_id, contest_df) in enumerate(data.sort_values("contest_time").groupby("contest_id")):
-        contest_dest = path / f"{i}.json"
+    contest_df = data[["contest_id", "contest_time"]].drop_duplicates().sort_values("contest_time")
+    contest_df["contest_index"] = np.arange(len(contest_df))
+
+    data = data.merge(contest_df[["contest_id", "contest_index"]], on="contest_id")
+
+    for (contest_index, contest_id), contest_df in data.groupby(["contest_index", "contest_id"]):
+        contest_dest = path / f"{contest_index}.json"
         contest_data = {}
 
         contest_data["name"] = str(contest_id)
@@ -47,7 +54,7 @@ def _read_result(path):
     return result
 
 
-def calculate(data: pd.DataFrame) -> pd.DataFrame:
+def compute_elo_mmr(data: pd.DataFrame) -> pd.DataFrame:
     # Check required data columns
     req_cols = {"contest_id", "contest_time", "user_id", "finish_position"}
     missing_cols = req_cols - set(data.columns)
