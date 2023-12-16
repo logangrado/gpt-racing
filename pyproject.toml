@@ -27,3 +27,10 @@ dev = [
     "ipdb>=0.13.13",
     "pytest>=7.4.2",
 ]
+jupyter = [
+    "jupyter>=1.0.0",
+    "jupyterlab>=4.0.9",
+    "matplotlib>=3.8.2",
+    "pyqt6>=6.6.1",
+    "ipympl>=0.9.3",
+]
