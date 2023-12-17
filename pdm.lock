@@ -5,7 +5,7 @@
 groups = ["default", "dev", "jupyter"]
 strategy = ["cross_platform"]
 lock_version = "4.4"
-content_hash = "sha256:ab0635d5a69956544de2b20d8b0e480dc9c349878de25434202bcf54743f35ec"
+content_hash = "sha256:dc79e90183ae9e789efb3000b10b42b5f8e192ad11be52ade2a0cede709e04fa"
 
 [[package]]
 name = "annotated-types"
@@ -364,6 +364,16 @@ summary = "XML bomb protection for Python stdlib modules"
 files = [
     {file = "defusedxml-0.7.1-py2.py3-none-any.whl", hash = "sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61"},
     {file = "defusedxml-0.7.1.tar.gz", hash = "sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69"},
+]
+
+[[package]]
+name = "elommr"
+version = "1.2.1"
+requires_python = ">=3.10"
+summary = "A minimal, Python implementation of the Elo-MMR rating system."
+files = [
+    {file = "elommr-1.2.1-py3-none-any.whl", hash = "sha256:e2e644f9e1f877070a33573bda7b3fcf1f11629b880fd905e95a8d19707de786"},
+    {file = "elommr-1.2.1.tar.gz", hash = "sha256:7918a1db7619d2c80ebe2dd19d1db171884c9f112f35952e783cc54297a96873"},
 ]
 
 [[package]]

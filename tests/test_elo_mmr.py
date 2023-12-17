@@ -21,7 +21,17 @@ class TestELOMMR:
 
         pd.testing.assert_frame_equal(
             result,
-            pd.DataFrame({"rank": [1, 2, 3], "user_id": [0, 1, 2], "rating": [1432, 1227, 1022]}),
+            pd.DataFrame(
+                {
+                    "user_id": [0, 1, 2],
+                    "rating": [1715, 1500, 1285],
+                    "rating_change": [215, 0, -215],
+                    "num_contests": [1, 1, 1],
+                    "rank": [0, 1, 2],
+                    "contest_id": [0, 0, 0],
+                    "participated": [True, True, True],
+                }
+            ),
         )
 
     def test_multi_contest(self):
@@ -40,7 +50,17 @@ class TestELOMMR:
 
         pd.testing.assert_frame_equal(
             result,
-            pd.DataFrame({"rank": [1, 2, 3, 4], "user_id": [0, 1, 3, 2], "rating": [1592, 1362, 1064, 1022]}),
+            pd.DataFrame(
+                {
+                    "user_id": [0, 1, 2, 0, 1, 3, 2],
+                    "rating": [1715, 1500, 1285, 1737, 1513, 1346, 1285],
+                    "rating_change": [215, 0, -215, 22, 13, -154, 0],
+                    "num_contests": [1, 1, 1, 2, 2, 1, 1],
+                    "participated": [True, True, True, True, True, True, False],
+                    "rank": [0, 1, 2, 0, 1, 2, 3],
+                    "contest_id": [0, 0, 0, 1, 1, 1, 1],
+                }
+            ),
         )
 
     def test_contest_order_invariance(self):
