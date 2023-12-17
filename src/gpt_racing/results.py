@@ -21,7 +21,7 @@ def _compute_interval(result_df):
     return result_df
 
 
-def apply_penalties(lap_df: pd.DataFrame, penalty_df: pd.DataFrame) -> pd.DataFrame:
+def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame) -> pd.DataFrame:
     """
     Compute the race result with penalties applied
 

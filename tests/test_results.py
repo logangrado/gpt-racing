@@ -2,10 +2,10 @@
 
 import pandas as pd
 
-from gpt_racing.penalties import apply_penalties
+from gpt_racing.results import compute_results
 
 
-class TestApplyPenalties:
+class TestComputeResults:
     def test_basic(self):
         """
         Basic penalty test, all drivers on lead lap
@@ -36,7 +36,7 @@ class TestApplyPenalties:
             ]
         )
 
-        result = apply_penalties(lap_df, penalties)
+        result = compute_results(lap_df, penalties)
 
         pd.testing.assert_frame_equal(
             result,
@@ -96,7 +96,7 @@ class TestApplyPenalties:
 
         penalties = pd.DataFrame()
 
-        result = apply_penalties(lap_df, penalties)
+        result = compute_results(lap_df, penalties)
 
         pd.testing.assert_frame_equal(
             result,
@@ -157,7 +157,7 @@ class TestApplyPenalties:
             ]
         )
 
-        result = apply_penalties(lap_df, penalties)
+        result = compute_results(lap_df, penalties)
 
         pd.testing.assert_frame_equal(
             result,
@@ -219,7 +219,7 @@ class TestApplyPenalties:
             ]
         )
 
-        result = apply_penalties(lap_df, penalties)
+        result = compute_results(lap_df, penalties)
 
         pd.testing.assert_frame_equal(
             result,
