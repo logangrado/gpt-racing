@@ -3,6 +3,23 @@
 import pandas as pd
 import numpy as np
 
+from gpt_racing import utils
+
+
+def _compute_interval(result_df):
+    result_df = result_df.copy()
+
+    result_df["interval"] = result_df.iloc[0]["total_time"] - result_df["total_time"]
+
+    result_df["laps_down"] = result_df["laps_complete"] - result_df["laps_complete"][0]
+
+    result_df["interval"] = result_df.apply(
+        lambda x: utils.seconds_to_str(x["interval"]) if x["laps_down"] == 0 else f"{int(x['laps_down'])}L", axis=1
+    )
+    result_df = result_df.drop(columns="laps_down")
+
+    return result_df
+
 
 def apply_penalties(lap_df: pd.DataFrame, penalty_df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -22,16 +39,21 @@ def apply_penalties(lap_df: pd.DataFrame, penalty_df: pd.DataFrame) -> pd.DataFr
 
     # Compute cumulative lap time
     lap_df = lap_df.sort_values(["user_id", "lap"])
+
+    # Ensure all times are positive
+    lap_df["time"] = lap_df["time"].apply(lambda x: max(x, 0))
     lap_df["total_time"] = lap_df[["user_id", "time"]].groupby("user_id").cumsum()
 
     # Compute each drivers total penalty
     if len(penalty_df) == 0 or penalty_df is None:
-        penalty_df = pd.DataFrame(columns=["user_id", "time_s"])
-    penalty_df = penalty_df.groupby("user_id").sum().reset_index().rename(columns={"time_s": "penalty"})
+        penalty_df = pd.DataFrame(columns=["user_id", "time"])
+
+    penalty_df = penalty_df.rename(columns={"time": "penalty"})
+    penalty_df = penalty_df.groupby("user_id").sum().reset_index()
 
     # Add penalties for each driver to all laps
     lap_df = lap_df.merge(penalty_df, on="user_id", how="left")
-    lap_df["penalty"] = lap_df["penalty"].fillna(0.0)
+    lap_df["penalty"] = lap_df["penalty"].fillna(0)
 
     # Compute penalized total_time
     lap_df["total_time"] = lap_df["total_time"] + lap_df["penalty"]
@@ -55,8 +77,12 @@ def apply_penalties(lap_df: pd.DataFrame, penalty_df: pd.DataFrame) -> pd.DataFr
         .rename(columns={"lap": "laps_complete"})
         .reset_index(drop=True)
     )
-    result_df["laps_complete"] += 1  # Add one to get the finish lap number
 
     result_df["finish_position"] = np.arange(len(result_df))
 
+    # Compute interval column
+    # result_df["interval"] = result_df.apply(_compute_interval, axis=1, winner=result_df.iloc[0])
+    result_df = _compute_interval(result_df)
+
+    # Compute fastest lap column
     return result_df

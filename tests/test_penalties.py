@@ -26,13 +26,13 @@ class TestApplyPenalties:
                 {"user_id": 1, "lap": 0, "time": 110},
                 {"user_id": 2, "lap": 1, "time": 100},
                 {"user_id": 2, "lap": 0, "time": 120},
-                {"user_id": 2, "lap": 2, "time": 100},
+                {"user_id": 2, "lap": 2, "time": 100.123456},
             ]
         )
 
         penalties = pd.DataFrame(
             [
-                {"user_id": 1, "time_s": 15},
+                {"user_id": 1, "time": 15},
             ]
         )
 
@@ -42,9 +42,30 @@ class TestApplyPenalties:
             result,
             pd.DataFrame(
                 [
-                    {"user_id": 0, "laps_complete": 3, "total_time": 300.0, "penalty": 0.0, "finish_position": 0},
-                    {"user_id": 2, "laps_complete": 3, "total_time": 320.0, "penalty": 0.0, "finish_position": 1},
-                    {"user_id": 1, "laps_complete": 3, "total_time": 325.0, "penalty": 15.0, "finish_position": 2},
+                    {
+                        "user_id": 0,
+                        "laps_complete": 2,
+                        "total_time": 300.0,
+                        "penalty": 0.0,
+                        "finish_position": 0,
+                        "interval": "0.000",
+                    },
+                    {
+                        "user_id": 2,
+                        "laps_complete": 2,
+                        "total_time": 320.12345600000003,
+                        "penalty": 0.0,
+                        "finish_position": 1,
+                        "interval": "-20.123",
+                    },
+                    {
+                        "user_id": 1,
+                        "laps_complete": 2,
+                        "total_time": 325.0,
+                        "penalty": 15.0,
+                        "finish_position": 2,
+                        "interval": "-25.000",
+                    },
                 ]
             ),
         )
@@ -81,9 +102,30 @@ class TestApplyPenalties:
             result,
             pd.DataFrame(
                 [
-                    {"user_id": 0, "laps_complete": 3, "total_time": 300.0, "penalty": 0.0, "finish_position": 0},
-                    {"user_id": 1, "laps_complete": 3, "total_time": 310.0, "penalty": 0.0, "finish_position": 1},
-                    {"user_id": 2, "laps_complete": 3, "total_time": 320.0, "penalty": 0.0, "finish_position": 2},
+                    {
+                        "user_id": 0,
+                        "laps_complete": 2,
+                        "total_time": 300,
+                        "penalty": 0,
+                        "finish_position": 0,
+                        "interval": "0.000",
+                    },
+                    {
+                        "user_id": 1,
+                        "laps_complete": 2,
+                        "total_time": 310,
+                        "penalty": 0,
+                        "finish_position": 1,
+                        "interval": "-10.000",
+                    },
+                    {
+                        "user_id": 2,
+                        "laps_complete": 2,
+                        "total_time": 320,
+                        "penalty": 0,
+                        "finish_position": 2,
+                        "interval": "-20.000",
+                    },
                 ]
             ),
         )
@@ -111,7 +153,7 @@ class TestApplyPenalties:
 
         penalties = pd.DataFrame(
             [
-                {"user_id": 0, "time_s": 15},
+                {"user_id": 0, "time": 15},
             ]
         )
 
@@ -121,9 +163,30 @@ class TestApplyPenalties:
             result,
             pd.DataFrame(
                 [
-                    {"user_id": 1, "laps_complete": 3, "total_time": 310.0, "penalty": 0.0, "finish_position": 0},
-                    {"user_id": 0, "laps_complete": 3, "total_time": 315.0, "penalty": 15.0, "finish_position": 1},
-                    {"user_id": 2, "laps_complete": 3, "total_time": 320.0, "penalty": 0.0, "finish_position": 2},
+                    {
+                        "user_id": 1,
+                        "laps_complete": 2,
+                        "total_time": 310.0,
+                        "penalty": 0.0,
+                        "finish_position": 0,
+                        "interval": "0.000",
+                    },
+                    {
+                        "user_id": 0,
+                        "laps_complete": 2,
+                        "total_time": 315.0,
+                        "penalty": 15.0,
+                        "finish_position": 1,
+                        "interval": "-5.000",
+                    },
+                    {
+                        "user_id": 2,
+                        "laps_complete": 2,
+                        "total_time": 320.0,
+                        "penalty": 0.0,
+                        "finish_position": 2,
+                        "interval": "-10.000",
+                    },
                 ]
             ),
         )
@@ -152,7 +215,7 @@ class TestApplyPenalties:
 
         penalties = pd.DataFrame(
             [
-                {"user_id": 1, "time_s": 30},
+                {"user_id": 1, "time": 30},
             ]
         )
 
@@ -162,9 +225,30 @@ class TestApplyPenalties:
             result,
             pd.DataFrame(
                 [
-                    {"user_id": 0, "laps_complete": 3, "total_time": 300.0, "penalty": 0.0, "finish_position": 0},
-                    {"user_id": 2, "laps_complete": 2, "total_time": 310.0, "penalty": 0.0, "finish_position": 1},
-                    {"user_id": 1, "laps_complete": 2, "total_time": 320.0, "penalty": 30.0, "finish_position": 2},
+                    {
+                        "user_id": 0,
+                        "laps_complete": 2,
+                        "total_time": 300.0,
+                        "penalty": 0.0,
+                        "finish_position": 0,
+                        "interval": "0.000",
+                    },
+                    {
+                        "user_id": 2,
+                        "laps_complete": 1,
+                        "total_time": 310.0,
+                        "penalty": 0.0,
+                        "finish_position": 1,
+                        "interval": "-1L",
+                    },
+                    {
+                        "user_id": 1,
+                        "laps_complete": 1,
+                        "total_time": 320.0,
+                        "penalty": 30.0,
+                        "finish_position": 2,
+                        "interval": "-1L",
+                    },
                 ]
             ),
         )
