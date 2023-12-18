@@ -27,11 +27,13 @@ class TestELOMMR:
                     "rating": [1715, 1500, 1285],
                     "rating_change": [215, 0, -215],
                     "num_contests": [1, 1, 1],
+                    "participated": [True, True, True],
                     "rank": [0, 1, 2],
                     "contest_id": [0, 0, 0],
-                    "participated": [True, True, True],
+                    "rank_change": [None, None, None],
                 }
             ),
+            check_dtype=False,
         )
 
     def test_multi_contest(self):
@@ -40,9 +42,9 @@ class TestELOMMR:
                 {"user_id": 0, "finish_position": 0, "contest_id": 0, "contest_time": 0},
                 {"user_id": 1, "finish_position": 1, "contest_id": 0, "contest_time": 0},
                 {"user_id": 2, "finish_position": 2, "contest_id": 0, "contest_time": 0},
-                {"user_id": 0, "finish_position": 0, "contest_id": 1, "contest_time": 1},
-                {"user_id": 1, "finish_position": 1, "contest_id": 1, "contest_time": 1},
-                {"user_id": 3, "finish_position": 2, "contest_id": 1, "contest_time": 1},
+                {"user_id": 0, "finish_position": 2, "contest_id": 1, "contest_time": 1},
+                {"user_id": 1, "finish_position": 0, "contest_id": 1, "contest_time": 1},
+                {"user_id": 3, "finish_position": 1, "contest_id": 1, "contest_time": 1},
             ]
         )
 
@@ -52,15 +54,17 @@ class TestELOMMR:
             result,
             pd.DataFrame(
                 {
-                    "user_id": [0, 1, 2, 0, 1, 3, 2],
-                    "rating": [1715, 1500, 1285, 1737, 1513, 1346, 1285],
-                    "rating_change": [215, 0, -215, 22, 13, -154, 0],
-                    "num_contests": [1, 1, 1, 2, 2, 1, 1],
+                    "user_id": [0, 1, 2, 1, 3, 0, 2],
+                    "rating": [1715, 1500, 1285, 1664, 1519, 1454, 1285],
+                    "rating_change": [215, 0, -215, 164, 19, -261, None],
+                    "num_contests": [1, 1, 1, 2, 1, 2, 1],
                     "participated": [True, True, True, True, True, True, False],
                     "rank": [0, 1, 2, 0, 1, 2, 3],
                     "contest_id": [0, 0, 0, 1, 1, 1, 1],
+                    "rank_change": [None, None, None, -1, None, 2, 1],
                 }
             ),
+            check_dtype=False,
         )
 
     def test_contest_order_invariance(self):

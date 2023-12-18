@@ -107,7 +107,7 @@ def compute_elo_mmr(data: pd.DataFrame) -> pd.DataFrame:
             participated = any(contest_df["user_id"] == user_id)
             # User didn't compete this round
             if not participated:
-                rating_change = 0
+                rating_change = None
 
             round_data.append(
                 {
@@ -120,10 +120,18 @@ def compute_elo_mmr(data: pd.DataFrame) -> pd.DataFrame:
             )
         round_df = pd.DataFrame(round_data).sort_values("rating", ascending=False)
         round_df["rank"] = np.arange(len(round_df))
+        round_df["rating_change"] = round_df["rating_change"].astype("Int64")
         round_df["contest_id"] = contest_id
         round_dfs.append(round_df)
 
     all_rounds_df = pd.concat(round_dfs).reset_index(drop=True)
+
+    all_rounds_df = all_rounds_df.sort_values(["user_id", "contest_id"])
+    all_rounds_df["rank_previous"] = all_rounds_df.groupby("user_id")["rank"].shift().astype("Int64")
+    all_rounds_df["rank_change"] = all_rounds_df["rank"] - all_rounds_df["rank_previous"]
+    all_rounds_df = (
+        all_rounds_df.sort_values(["contest_id", "rank"]).drop(columns="rank_previous").reset_index(drop=True)
+    )
 
     return all_rounds_df
 
