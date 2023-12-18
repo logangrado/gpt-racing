@@ -1,5 +1,24 @@
 #!/usr/bin/env python3
 
+import pandas as pd
+
+
+def _format_value_with_delta_helper(value, delta):
+    out = str(value)
+    if not pd.isnull(delta):
+        if delta < 0:
+            sign = "-"
+        elif delta > 0:
+            sign = "+"
+        else:
+            sign = ""
+        out += f" ({sign}{abs(delta)})"
+    return out
+
+
+def format_value_with_delta(df, value_col, delta_col):
+    return df.apply(lambda x: _format_value_with_delta_helper(x[value_col], x[delta_col]), axis=1)
+
 
 def seconds_to_str(seconds, precision=3):
     negative = False

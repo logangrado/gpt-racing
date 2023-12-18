@@ -5,34 +5,88 @@ import pandas as pd
 
 from gpt_racing.iracing_data import IracingDataClient
 from gpt_racing.elo_mmr import compute_elo_mmr
+from gpt_racing.results import compute_results
+from gpt_racing import utils
 
 
 def _load_race_data(config, client):
-    data = pd.concat([client.get_race_result(race_config.subsession_id) for race_config in config.races])
+    # Load lap data
+    result_dfs = []
+    name_data = []
 
-    data = data.rename(
-        columns={
-            "subsession_id": "contest_id",
-            "session_end_time": "contest_time",
-        }
+    for race_config in config.races:
+        lap_df = client.get_lap_data(race_config.subsession_id)
+        lap_df = lap_df.rename(
+            columns={
+                "cust_id": "user_id",
+                "lap_number": "lap",
+            }
+        )
+        lap_df["time"] = lap_df["lap_time"] / 10000
+
+        result_df = compute_results(lap_df, pd.DataFrame(race_config.penalties))
+        result_df["subsession_id"] = race_config.subsession_id
+
+        result_dfs.append(result_df)
+        name_data.append(lap_df[["user_id", "display_name"]].drop_duplicates())
+
+    result_df = pd.concat(result_dfs).reset_index(drop=True)
+    name_df = pd.concat(name_data).drop_duplicates().reset_index(drop=True)
+
+    return result_df, name_df
+
+
+def _write_outputs(rating_df, result_df, output_path):
+    rating_df = rating_df.copy()
+    result_df = result_df.copy()
+
+    # Format results, select columns
+    rating_df["rating"] = utils.format_value_with_delta(rating_df, "rating", "rating_change")
+    rating_df["rank"] = utils.format_value_with_delta(rating_df, "rank", "rank_change")
+    rating_df = rating_df[["subsession_id", "rank", "display_name", "rating"]].rename(
+        columns={"display_name": "Name", "rating": "Rating", "rank": "Rank"}
     )
 
-    data = data.reset_index(drop=True)
-
-    return data
+    result_df["rating"] = utils.format_value_with_delta(result_df, "rating", "rating_change")
+    result_df["rank"] = utils.format_value_with_delta(result_df, "rank", "rank_change")
+    result_df = result_df[
+        [
+            "subsession_id",
+            "finish_position",
+            "display_name",
+            "interval",
+            "rating",
+            "rank",
+        ]
+    ]
 
 
 def compute_ratings(config, client):
     """
     Compute ratings given a config
     """
-    race_data = _load_race_data(config, client)
+    result_df, name_df = _load_race_data(config, client)
 
-    elo_df = compute_elo_mmr(race_data)
+    contest_df = result_df[["user_id", "finish_position", "subsession_id"]].rename(
+        columns={"subsession_id": "contest_id"}
+    )
 
-    name_df = race_data[["user_id", "display_name"]].drop_duplicates(subset="user_id")
+    rating_df = compute_elo_mmr(contest_df).rename(columns={"contest_id": "subsession_id"})
 
-    # Join display name
-    elo_df = elo_df.merge(name_df, on="user_id", how="left")
+    # Join ratings and names onto result_df
+    result_df = (
+        result_df.merge(rating_df, on=["subsession_id", "user_id"], how="inner")
+        .merge(name_df, on="user_id", how="left")
+        .sort_values(["subsession_id", "finish_position"])
+    )
 
-    return elo_df
+    # Join names onto rating df, select/rename
+    rating_df = (
+        rating_df.merge(name_df, on="user_id")[
+            ["display_name", "user_id", "rating", "rating_change", "rank", "rank_change", "subsession_id"]
+        ]
+        .sort_values(["subsession_id", "rank"])
+        .reset_index(drop=True)
+    )
+
+    return rating_df, result_df

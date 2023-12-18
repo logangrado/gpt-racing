@@ -7,6 +7,177 @@ from gpt_racing.config import RatingConfig
 
 
 class TestComputeRatings:
+    def test_single_race_fake(self, fake_client):
+        config = RatingConfig.model_validate(
+            {"races": [{"subsession_id": 0}]},
+        )
+        lap_data_0 = pd.DataFrame(
+            [
+                {"cust_id": 0, "display_name": "a", "lap_number": 0, "lap_time": -1, "lap_events": []},
+                {"cust_id": 0, "display_name": "a", "lap_number": 1, "lap_time": 10000, "lap_events": []},
+                {"cust_id": 0, "display_name": "a", "lap_number": 2, "lap_time": 10000, "lap_events": []},
+                {"cust_id": 0, "display_name": "a", "lap_number": 3, "lap_time": 10000, "lap_events": []},
+                #
+                {"cust_id": 1, "display_name": "b", "lap_number": 0, "lap_time": -1, "lap_events": []},
+                {"cust_id": 1, "display_name": "b", "lap_number": 1, "lap_time": 11000, "lap_events": []},
+                {"cust_id": 1, "display_name": "b", "lap_number": 2, "lap_time": 11000, "lap_events": []},
+                {"cust_id": 1, "display_name": "b", "lap_number": 3, "lap_time": 11000, "lap_events": []},
+                #
+                {"cust_id": 2, "display_name": "c", "lap_number": 0, "lap_time": -1, "lap_events": []},
+                {"cust_id": 2, "display_name": "c", "lap_number": 1, "lap_time": 12000, "lap_events": []},
+                {"cust_id": 2, "display_name": "c", "lap_number": 2, "lap_time": 12000, "lap_events": []},
+                {"cust_id": 2, "display_name": "c", "lap_number": 3, "lap_time": 12000, "lap_events": []},
+            ]
+        )
+        fake_client._set_lap_data(0, lap_data_0)
+
+        rating_df, result_df = core.compute_ratings(config, client=fake_client)
+
+        # Check result dataframes
+        pd.testing.assert_frame_equal(
+            rating_df,
+            pd.DataFrame(
+                {
+                    "display_name": ["a", "b", "c"],
+                    "user_id": [0, 1, 2],
+                    "rating": [1715, 1500, 1285],
+                    "rating_change": [215, 0, -215],
+                    "rank": [0, 1, 2],
+                    "rank_change": [None, None, None],
+                    "subsession_id": [0, 0, 0],
+                }
+            ),
+            check_dtype=False,
+        )
+
+        pd.testing.assert_frame_equal(
+            result_df,
+            pd.DataFrame(
+                {
+                    "user_id": [0, 1, 2],
+                    "laps_complete": [3, 3, 3],
+                    "total_time": [3.0, 3.3000000000000003, 3.5999999999999996],
+                    "penalty": [0, 0, 0],
+                    "finish_position": [0, 1, 2],
+                    "interval": ["0.000", "-0.300", "-0.600"],
+                    "subsession_id": [0, 0, 0],
+                    "rating": [1715, 1500, 1285],
+                    "rating_change": [215, 0, -215],
+                    "num_contests": [1, 1, 1],
+                    "participated": [True, True, True],
+                    "rank": [0, 1, 2],
+                    "rank_change": [None, None, None],
+                    "display_name": ["a", "b", "c"],
+                }
+            ),
+            check_dtype=False,
+        )
+
+    def test_multi_race_fake(self, fake_client, tmp_path):
+        config = RatingConfig.model_validate(
+            {
+                "races": [
+                    {"subsession_id": 0},
+                    {"subsession_id": 1},
+                ]
+            },
+        )
+        lap_data_0 = pd.DataFrame(
+            [
+                {"cust_id": 0, "display_name": "a", "lap_number": 0, "lap_time": -1, "lap_events": []},
+                {"cust_id": 0, "display_name": "a", "lap_number": 1, "lap_time": 10000, "lap_events": []},
+                {"cust_id": 0, "display_name": "a", "lap_number": 2, "lap_time": 10000, "lap_events": []},
+                {"cust_id": 0, "display_name": "a", "lap_number": 3, "lap_time": 10000, "lap_events": []},
+                #
+                {"cust_id": 1, "display_name": "b", "lap_number": 0, "lap_time": -1, "lap_events": []},
+                {"cust_id": 1, "display_name": "b", "lap_number": 1, "lap_time": 11000, "lap_events": []},
+                {"cust_id": 1, "display_name": "b", "lap_number": 2, "lap_time": 11000, "lap_events": []},
+                {"cust_id": 1, "display_name": "b", "lap_number": 3, "lap_time": 11000, "lap_events": []},
+                #
+                {"cust_id": 2, "display_name": "c", "lap_number": 0, "lap_time": -1, "lap_events": []},
+                {"cust_id": 2, "display_name": "c", "lap_number": 1, "lap_time": 12000, "lap_events": []},
+                {"cust_id": 2, "display_name": "c", "lap_number": 2, "lap_time": 12000, "lap_events": []},
+                {"cust_id": 2, "display_name": "c", "lap_number": 3, "lap_time": 12000, "lap_events": []},
+            ]
+        )
+        fake_client._set_lap_data(0, lap_data_0)
+
+        lap_data_1 = pd.DataFrame(
+            [
+                {"cust_id": 0, "display_name": "a", "lap_number": 0, "lap_time": -1, "lap_events": []},
+                {"cust_id": 0, "display_name": "a", "lap_number": 1, "lap_time": 10000, "lap_events": []},
+                {"cust_id": 0, "display_name": "a", "lap_number": 2, "lap_time": 10000, "lap_events": []},
+                {"cust_id": 0, "display_name": "a", "lap_number": 3, "lap_time": 10000, "lap_events": []},
+                #
+                {"cust_id": 1, "display_name": "b", "lap_number": 0, "lap_time": -1, "lap_events": []},
+                {"cust_id": 1, "display_name": "b", "lap_number": 1, "lap_time": 11000, "lap_events": []},
+                {"cust_id": 1, "display_name": "b", "lap_number": 2, "lap_time": 11000, "lap_events": []},
+                {"cust_id": 1, "display_name": "b", "lap_number": 3, "lap_time": 11000, "lap_events": []},
+                #
+                {"cust_id": 3, "display_name": "d", "lap_number": 0, "lap_time": -1, "lap_events": []},
+                {"cust_id": 3, "display_name": "d", "lap_number": 1, "lap_time": 12000, "lap_events": []},
+                {"cust_id": 3, "display_name": "d", "lap_number": 2, "lap_time": 12000, "lap_events": []},
+                {"cust_id": 3, "display_name": "d", "lap_number": 3, "lap_time": 12000, "lap_events": []},
+            ]
+        )
+        fake_client._set_lap_data(1, lap_data_1)
+
+        rating_df, result_df = core.compute_ratings(
+            config,
+            client=fake_client,
+        )
+
+        # Check result dataframes
+        pd.testing.assert_frame_equal(
+            rating_df,
+            pd.DataFrame(
+                {
+                    "display_name": ["a", "b", "c", "a", "b", "d", "c"],
+                    "user_id": [0, 1, 2, 0, 1, 3, 2],
+                    "rating": [1715, 1500, 1285, 1737, 1513, 1346, 1285],
+                    "rating_change": [215, 0, -215, 22, 13, -154, None],
+                    "rank": [0, 1, 2, 0, 1, 2, 3],
+                    "rank_change": [None, None, None, 0, 0, None, 1],
+                    "subsession_id": [0, 0, 0, 1, 1, 1, 1],
+                }
+            ),
+            check_dtype=False,
+        )
+
+        pd.testing.assert_frame_equal(
+            result_df,
+            pd.DataFrame(
+                {
+                    "user_id": [0, 1, 2, 0, 1, 3],
+                    "laps_complete": [3, 3, 3, 3, 3, 3],
+                    "total_time": [
+                        3.0,
+                        3.3000000000000003,
+                        3.5999999999999996,
+                        3.0,
+                        3.3000000000000003,
+                        3.5999999999999996,
+                    ],
+                    "penalty": [0, 0, 0, 0, 0, 0],
+                    "finish_position": [0, 1, 2, 0, 1, 2],
+                    "interval": ["0.000", "-0.300", "-0.600", "0.000", "-0.300", "-0.600"],
+                    "subsession_id": [0, 0, 0, 1, 1, 1],
+                    "rating": [1715, 1500, 1285, 1737, 1513, 1346],
+                    "rating_change": [215, 0, -215, 22, 13, -154],
+                    "num_contests": [1, 1, 1, 2, 2, 1],
+                    "participated": [True, True, True, True, True, True],
+                    "rank": [0, 1, 2, 0, 1, 2],
+                    "rank_change": [None, None, None, 0, 0, None],
+                    "display_name": ["a", "b", "c", "a", "b", "d"],
+                }
+            ),
+            check_dtype=False,
+        )
+
+        # Check output artifacts
+
+
+class _TestComputeRatings:
     def test_single_race(self, client):
         config = RatingConfig(**{"races": [{"subsession_id": 64681712}]})
 
