@@ -23,6 +23,7 @@ def _load_race_data(config, client):
             }
         )
         lap_df["time"] = lap_df["lap_time"] / 10000
+        lap_df["interval"] = lap_df["interval"] / 10000
 
         result_df = compute_results(lap_df, pd.DataFrame(race_config.penalties))
         result_df["subsession_id"] = race_config.subsession_id

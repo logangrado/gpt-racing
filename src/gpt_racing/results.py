@@ -9,6 +9,8 @@ from gpt_racing import utils
 def _compute_interval(result_df):
     result_df = result_df.copy()
 
+    # WE NEED TO USE IRACING PROVIDED INTERVALS!!!
+    # The iracing we calculate using all lap times has some drift!
     result_df["interval"] = result_df.iloc[0]["total_time"] - result_df["total_time"]
 
     result_df["laps_down"] = result_df["laps_complete"] - result_df["laps_complete"][0]
@@ -19,6 +21,53 @@ def _compute_interval(result_df):
     result_df = result_df.drop(columns="laps_down")
 
     return result_df
+
+
+def _infer_invalid_laps(lap_df):
+    """
+    Infer lap times for any lap marked as invalid.
+    """
+    lap_df = lap_df.copy()
+
+    lap_df["interval_previous"] = (
+        lap_df.sort_values(["user_id", "lap"]).groupby(["user_id"])["interval"].shift().fillna(0)
+    )
+
+    valid_laps = lap_df[lap_df["time"] != -1]
+    valid_laps["interval"] = valid_laps["interval"].fillna(0)
+
+    zero_int_lap_times = valid_laps.sort_values(["interval"], ascending=False).groupby("lap").first().reset_index()
+
+    lap_df = lap_df.merge(
+        zero_int_lap_times[["lap", "time", "interval", "interval_previous"]].rename(
+            columns={"time": "time0", "interval": "interval0", "interval_previous": "interval_previous0"}
+        ),
+        on=["lap"],
+        how="left",
+    )
+
+    # Compute this_lap_interval
+    lap_df["interval_change"] = lap_df["interval"] - lap_df["interval_previous"]
+
+    # Infer all lap times
+    lap_df["time_inferred"] = (
+        lap_df["time0"] - lap_df["interval_change"].fillna(0) + lap_df["interval0"] - lap_df["interval_previous0"]
+    )
+
+    # Fill -1 lap times with inferred
+    lap_df["time"][lap_df["time"] < 0] = lap_df["time_inferred"]
+
+    # In the rare case where we have all invalid across all laps, we will get Nones in `time`
+    # We can just fill with the fastest lap + interval.
+    # We use the fastest lap because it is unlikely that all laps are invalid (so we should have at least 1),
+    # and it probably won't break any of our assumptions
+    fastest_lap = lap_df["time"][~lap_df["time"].isna()].min()
+    lap_df["time"][lap_df["time"].isna()] = lap_df["time"].fillna(fastest_lap) - lap_df["interval_change"].fillna(0)
+
+    # Drop extra columns
+    lap_df = lap_df.drop(columns=["time0", "interval0", "interval_previous", "interval_change", "time_inferred"])
+
+    return lap_df
 
 
 def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame) -> pd.DataFrame:
@@ -40,12 +89,15 @@ def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame) -> pd.DataFr
     # Compute cumulative lap time
     lap_df = lap_df.sort_values(["user_id", "lap"])
 
-    # Ensure all times are positive
-    lap_df["time"] = lap_df["time"].apply(lambda x: max(x, 0))
+    # Drop formation lap
+    lap_df = lap_df[lap_df["lap"] > 0]
+
+    lap_df = _infer_invalid_laps(lap_df)
+
     lap_df["total_time"] = lap_df[["user_id", "time"]].groupby("user_id").cumsum()
 
     # Compute each drivers total penalty
-    if len(penalty_df) == 0 or penalty_df is None:
+    if penalty_df is None or len(penalty_df) == 0:
         penalty_df = pd.DataFrame(columns=["user_id", "time"])
 
     penalty_df = penalty_df.rename(columns={"time": "penalty"})
@@ -62,12 +114,18 @@ def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame) -> pd.DataFr
     race_end_time = lap_df[lap_df["lap"] == lap_df["lap"].max()]["total_time"].min()
 
     # Find the last lap for each driver. That is the _first_ lap that ends ON or AFTER the race end time
-    last_lap_df = (
+    finish_lap_df = (
         lap_df[lap_df["total_time"] >= race_end_time]
         .sort_values(["user_id", "total_time"])
         .groupby("user_id")
         .first()
         .reset_index()
+    )
+    # We also need the last lap per driver, to catch disconnects
+    last_lap_df = lap_df.sort_values(["user_id", "total_time"]).groupby("user_id").last().reset_index()
+
+    last_lap_df = (
+        pd.concat([finish_lap_df, last_lap_df]).sort_values("lap").drop_duplicates(subset="user_id", keep="first")
     )
 
     # Finally, create the finish order dataframe

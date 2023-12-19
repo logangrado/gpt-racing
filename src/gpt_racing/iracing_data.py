@@ -66,7 +66,7 @@ def _get_race_result(result: dict) -> pd.DataFrame:
     """
     Get the race result from a result dict
     """
-    for session in result["session_results"]:
+    for session in result["session_results"][::-1]:
         if session["simsession_type_name"].upper() == "RACE":
             df_all = pd.DataFrame(session["results"])
 
@@ -127,7 +127,7 @@ class IracingDataClient:
 
         return race_result
 
-    def get_lap_times(self, subsession_id: int) -> pd.DataFrame:
+    def get_lap_data(self, subsession_id: int) -> pd.DataFrame:
         return pd.DataFrame(self._client.result_lap_chart_data(subsession_id))
 
     def search_sessions(self, start_time, end_time, cust_id=None):
