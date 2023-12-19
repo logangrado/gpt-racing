@@ -25,9 +25,12 @@ def core(config):
     config = RatingConfig(**_load_config(config))
     client = IracingDataClient()
 
-    result = core.compute_ratings(config, client)
+    rating_df, result_df = core.compute_ratings(config, client)
 
-    print(result)
+    out = Path("out")
+    out.mkdir(parents=True, exist_ok=True)
+    rating_df.to_csv(out / "ranking.csv", index=False)
+    result_df.to_csv(out / "results.csv", index=False)
 
 
 if __name__ == "__main__":
