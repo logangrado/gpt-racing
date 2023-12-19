@@ -2,12 +2,13 @@
 
 import getpass
 import json
+import hashlib
 
 from iracingdataapi.client import irDataClient
 
 import pandas as pd
 
-from gpt_racing import SECRETS_PATH
+from gpt_racing import SECRETS_PATH, CACHE_PATH
 
 # idc = irDataClient(username=[YOUR iRACING USERNAME], password=[YOUR iRACING PASSWORD])
 
@@ -19,6 +20,8 @@ from gpt_racing import SECRETS_PATH
 
 # # get all laps for a specific driver in a race
 # idc.get_result_lap_data(subsession_id=43720351, cust_id=209179)
+
+import inspect
 
 
 def _load_secrets(path):
@@ -109,12 +112,128 @@ def _get_race_result(result: dict) -> pd.DataFrame:
     return None
 
 
-class IracingDataClient:
-    def __init__(self):
-        self._client = _load_client()
-        # auth = _load_secrets(SECRETS_PATH)
+def _get_qualy_result(result: dict) -> pd.DataFrame:
+    """
+    Get the race result from a result dict
+    """
+    for session in result["session_results"][::-1]:
+        if "QUALIFY" in session["simsession_type_name"].upper():
+            df_all = pd.DataFrame(session["results"])
 
-        # self._client = irDataClient(**auth)
+            # Filter out AIs
+            df_all = df_all[df_all["ai"] == False]
+
+            # Select columns we care about
+            df = df_all[
+                [
+                    "cust_id",
+                    "display_name",
+                    "finish_position",
+                    "finish_position_in_class",
+                    "average_lap",
+                    "best_lap_time",
+                    "interval",
+                    "laps_complete",
+                    "class_interval",
+                    "qual_lap_time",
+                    "incidents",
+                    "reason_out",
+                ]
+            ]
+
+            df = df.rename(
+                columns={
+                    "cust_id": "user_id",
+                }
+            )
+
+            # # Compute total time
+            # df["total_time"] = df["average_lap"] * df["laps_complete"]
+
+            df["subsession_id"] = result["subsession_id"]
+            df["session_end_time"] = pd.Timestamp(result["end_time"])
+            return df
+
+    raise ValueError("")
+
+
+def _collect_func_signature_and_args(func: callable, args: tuple, kwargs: dict) -> dict:
+    """
+    Inspects the given function `func`, and determines all positional and keyword arguments that the function has.
+    It then combines these with the provided `args` and `kwargs`.
+
+    Parameters:
+    - func (callable): The function to inspect.
+    - args (tuple): The positional arguments provided to the function.
+    - kwargs (dict): The keyword arguments provided to the function.
+
+    Returns:
+    - dict: A dictionary containing all arguments and their values.
+    """
+    # Get the signature of the function
+    sig = inspect.signature(func)
+
+    # Initialize a dictionary to hold the arguments and their default values
+    args_dict = {**kwargs}
+
+    # Iterate over the parameters of the function
+    for i, (name, param) in enumerate(sig.parameters.items()):
+        # Check if we have a provided positional arg
+        if len(args) > i:
+            if name in args_dict:
+                raise ValueError(f"Multiple values provided for arg {name}")
+            args_dict[name] = args[i]
+
+        else:
+            if name not in args_dict:
+                args_dict[name] = param.default
+
+    return args_dict
+
+
+class CachedIRClient:
+    def __init__(self, cache_path):
+        self._client = _load_client()
+        self._cache_path = cache_path
+
+    def _cache_wrapper(self, func, func_name, z=42):
+        def wrapper(*args, **kwargs):
+            # Collet all args
+            all_kwargs = _collect_func_signature_and_args(func, args, kwargs)
+
+            # Determine cache path
+            hash_str = hashlib.sha256((func_name + json.dumps(all_kwargs, sort_keys=True)).encode()).hexdigest()
+            cache_path = self._cache_path / "ir_data_client" / hash_str[:2] / hash_str[2:]
+            data_path = cache_path / "data.json"
+
+            # Check for cache.
+            if data_path.is_file():
+                print("Reading cache")
+                with open(data_path, "r") as f:
+                    result = json.load(f)
+            else:
+                print("Retrieving result")
+                result = func(*args, **kwargs)
+                data_path.parent.mkdir(exist_ok=True, parents=True)
+                print("Writing cache")
+                with open(data_path, "w") as f:
+                    json.dump(result, f)
+
+            return result
+
+        return wrapper
+
+    def __getattr__(self, attr):
+        if attr in self.__dict__:
+            return getattr(self, attr)
+
+        return self._cache_wrapper(getattr(self._client, attr), attr)
+
+
+class IracingDataClient:
+    def __init__(self, cache=True, cache_path=CACHE_PATH):
+        self._client = CachedIRClient(cache_path=cache_path)
+
         self._cust_id = self._client.member_profile()["cust_id"]
 
     def get_race_result(self, subsession_id: int) -> pd.DataFrame:
@@ -124,6 +243,16 @@ class IracingDataClient:
         session_result = result["session_results"]
 
         race_result = _get_race_result(result)
+
+        return race_result
+
+    def get_qualy_result(self, subsession_id: int) -> pd.DataFrame:
+        result = self._client.result(subsession_id)
+
+        # Find the race results
+        session_result = result["session_results"]
+
+        race_result = _get_qualy_result(result)
 
         return race_result
 
