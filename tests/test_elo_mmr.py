@@ -36,6 +36,38 @@ class TestELOMMR:
             check_dtype=False,
         )
 
+    def test_single_contest_tie(self):
+        data = pd.DataFrame(
+            [
+                {"user_id": 0, "finish_position": 0},
+                {"user_id": 1, "finish_position": 1},
+                {"user_id": 2, "finish_position": 2},
+                {"user_id": 3, "finish_position": 2},
+                {"user_id": 4, "finish_position": 4},
+            ]
+        )
+        data["contest_id"] = 0
+        data["contest_time"] = 0
+
+        result = elo_mmr.compute_elo_mmr(data)
+
+        pd.testing.assert_frame_equal(
+            result,
+            pd.DataFrame(
+                {
+                    "user_id": [0, 1, 2, 3, 4],
+                    "rating": [1815, 1636, 1444, 1444, 1185],
+                    "rating_change": [315, 136, -56, -56, -315],
+                    "num_contests": [1, 1, 1, 1, 1],
+                    "participated": [True, True, True, True, True],
+                    "rank": [1, 2, 3, 3, 5],
+                    "contest_id": [0, 0, 0, 0, 0],
+                    "rank_change": [None, None, None, None, None],
+                }
+            ),
+            check_dtype=False,
+        )
+
     def test_multi_contest(self):
         data = pd.DataFrame(
             [

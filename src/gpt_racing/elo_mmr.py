@@ -93,7 +93,14 @@ def compute_elo_mmr(data: pd.DataFrame) -> pd.DataFrame:
             if player is None:
                 player = elommr.Player()
                 players[row["user_id"]] = player
-            standings.append((player, row["finish_position"], row["finish_position"]))
+
+            standings.append(
+                (
+                    player,
+                    row["finish_position"],
+                    row["finish_position"] + (contest_df["finish_position"] == row["finish_position"]).sum() - 1,
+                )
+            )
 
         elo_mmr.round_update(standings)
 
@@ -119,7 +126,7 @@ def compute_elo_mmr(data: pd.DataFrame) -> pd.DataFrame:
                 }
             )
         round_df = pd.DataFrame(round_data).sort_values("rating", ascending=False)
-        round_df["rank"] = np.arange(len(round_df))
+        round_df["rank"] = round_df["rating"].rank(method="min", ascending=False).astype("Int64")
         round_df["rating_change"] = round_df["rating_change"].astype("Int64")
         round_df["contest_id"] = contest_id
         round_dfs.append(round_df)
