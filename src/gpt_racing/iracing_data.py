@@ -3,25 +3,13 @@
 import getpass
 import json
 import hashlib
+import inspect
 
+import numpy as np
+import pandas as pd
 from iracingdataapi.client import irDataClient
 
-import pandas as pd
-
 from gpt_racing import SECRETS_PATH, CACHE_PATH
-
-# idc = irDataClient(username=[YOUR iRACING USERNAME], password=[YOUR iRACING PASSWORD])
-
-# # get the summary data of a member
-# idc.get_member_summary(cust_id=20979)
-
-# # get latest results of a member
-# idc.get_member_recent_races(cust_id=209179)
-
-# # get all laps for a specific driver in a race
-# idc.get_result_lap_data(subsession_id=43720351, cust_id=209179)
-
-import inspect
 
 
 def _load_secrets(path):
@@ -106,7 +94,7 @@ def _get_race_result(result: dict) -> pd.DataFrame:
             # df["total_time"] = df["average_lap"] * df["laps_complete"]
 
             df["subsession_id"] = result["subsession_id"]
-            df["session_end_time"] = pd.Timestamp(result["end_time"])
+            df["session_end_time"] = np.datetime64(result["end_time"])
             return df
 
     return None
