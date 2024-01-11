@@ -15,6 +15,7 @@ def _load_race_data(config, client):
     name_data = []
 
     for race_config in config.races:
+        # Load lap time DF
         lap_df = client.get_lap_data(race_config.subsession_id)
         lap_df = lap_df.rename(
             columns={
@@ -25,11 +26,16 @@ def _load_race_data(config, client):
         lap_df["time"] = lap_df["lap_time"] / 10000
         lap_df["interval"] = lap_df["interval"] / 10000
 
-        result_df = compute_results(lap_df, pd.DataFrame(race_config.penalties))
+        # Compute results
+        penalty_df = pd.DataFrame([dict(x) for x in race_config.penalties])
+        qualy_df = client.get_qualy_result(race_config.subsession_id)
+        qualy_df["best_lap_time"] = qualy_df["best_lap_time"] / 10000
+
+        result_df = compute_results(lap_df, penalty_df, qualy_df)
         result_df["subsession_id"] = race_config.subsession_id
 
         result_dfs.append(result_df)
-        name_data.append(lap_df[["user_id", "display_name"]].drop_duplicates())
+        name_data.append(qualy_df[["user_id", "display_name"]].drop_duplicates())
 
     result_df = pd.concat(result_dfs).reset_index(drop=True)
     name_df = pd.concat(name_data).drop_duplicates().reset_index(drop=True)
@@ -89,5 +95,15 @@ def compute_ratings(config, client):
         .sort_values(["subsession_id", "rank"])
         .reset_index(drop=True)
     )
+
+    # Increment columns that start at zero
+    inc_cols = ["start_position", "finish_position"]
+    for col in inc_cols:
+        result_df[col] += 1
+
+    # Format output columns
+    time_cols = ["total_time", "qualify_lap_time", "average_lap_time"]
+    for col in time_cols:
+        result_df[col] = result_df[col].apply(utils.seconds_to_str)
 
     return rating_df, result_df

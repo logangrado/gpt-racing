@@ -6,7 +6,7 @@ import pydantic
 
 class Penalty(pydantic.BaseModel):
     user_id: int
-    time_s: float
+    time: float
 
 
 class Race(pydantic.BaseModel):

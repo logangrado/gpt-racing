@@ -21,6 +21,9 @@ def format_value_with_delta(df, value_col, delta_col):
 
 
 def seconds_to_str(seconds, precision=3):
+    if pd.isnull(seconds):
+        return "-"
+
     negative = False
     if seconds < 0:
         seconds *= -1

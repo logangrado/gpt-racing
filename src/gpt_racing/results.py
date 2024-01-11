@@ -70,7 +70,28 @@ def _infer_invalid_laps(lap_df):
     return lap_df
 
 
-def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame) -> pd.DataFrame:
+def _join_qualy_data(result_df, qualy_df):
+    if qualy_df is None:
+        return result_df
+
+    qualy_df = qualy_df[["user_id", "finish_position", "best_lap_time", "laps_complete"]].rename(
+        columns={"finish_position": "start_position", "best_lap_time": "qualify_lap_time"}
+    )
+
+    qualy_df = qualy_df[qualy_df["laps_complete"] > 0].drop(columns="laps_complete")
+
+    result_df = result_df.merge(qualy_df, on="user_id", how="outer")
+
+    # Fill finish position for anyone that didn't compete
+    result_df["finish_position"] = (
+        result_df["finish_position"].fillna(result_df["finish_position"].max() + 1).astype("Int64")
+    )
+    result_df["laps_complete"] = result_df["laps_complete"].astype("Int64")
+
+    return result_df
+
+
+def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame, qualy_df: pd.DataFrame = None) -> pd.DataFrame:
     """
     Compute the race result with penalties applied
 
@@ -137,10 +158,13 @@ def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame) -> pd.DataFr
     )
 
     result_df["finish_position"] = np.arange(len(result_df))
+    result_df["average_lap_time"] = result_df["total_time"] / result_df["laps_complete"]
 
     # Compute interval column
     # result_df["interval"] = result_df.apply(_compute_interval, axis=1, winner=result_df.iloc[0])
     result_df = _compute_interval(result_df)
+
+    result_df = _join_qualy_data(result_df, qualy_df)
 
     # Compute fastest lap column
     return result_df
