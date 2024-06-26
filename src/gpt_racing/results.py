@@ -16,31 +16,43 @@ def _compute_interval(result_df):
     result_df["laps_down"] = result_df["laps_complete"] - result_df["laps_complete"][0]
 
     result_df["interval"] = result_df.apply(
-        lambda x: utils.seconds_to_str(x["interval"]) if x["laps_down"] == 0 else f"{int(x['laps_down'])}L", axis=1
+        lambda x: utils.seconds_to_str(x["interval"]) if x["laps_down"] == 0 else f"{int(x['laps_down'])}L",
+        axis=1,
     )
     result_df = result_df.drop(columns="laps_down")
 
     return result_df
 
 
-def _infer_invalid_laps(lap_df):
+def infer_invalid_laps(lap_df):
     """
     Infer lap times for any lap marked as invalid.
     """
+    lap_df = lap_df.copy()[["user_id", "lap", "lap_time", "interval"]]
+
+    lap_df.loc[:, "interval"] = lap_df["interval"].fillna(0)
+
+    # Everything should be integer at this point
+    lap_df = lap_df.astype("Int64")
+
+    input_cols = lap_df.columns
     lap_df = lap_df.copy()
 
     lap_df["interval_previous"] = (
         lap_df.sort_values(["user_id", "lap"]).groupby(["user_id"])["interval"].shift().fillna(0)
     )
 
-    valid_laps = lap_df[lap_df["time"] != -1]
-    valid_laps["interval"] = valid_laps["interval"].fillna(0)
+    valid_laps = lap_df[lap_df["lap_time"] != -1]
 
     zero_int_lap_times = valid_laps.sort_values(["interval"], ascending=False).groupby("lap").first().reset_index()
 
     lap_df = lap_df.merge(
-        zero_int_lap_times[["lap", "time", "interval", "interval_previous"]].rename(
-            columns={"time": "time0", "interval": "interval0", "interval_previous": "interval_previous0"}
+        zero_int_lap_times[["lap", "lap_time", "interval", "interval_previous"]].rename(
+            columns={
+                "lap_time": "lap_time0",
+                "interval": "interval0",
+                "interval_previous": "interval_previous0",
+            }
         ),
         on=["lap"],
         how="left",
@@ -50,22 +62,30 @@ def _infer_invalid_laps(lap_df):
     lap_df["interval_change"] = lap_df["interval"] - lap_df["interval_previous"]
 
     # Infer all lap times
-    lap_df["time_inferred"] = (
-        lap_df["time0"] - lap_df["interval_change"].fillna(0) + lap_df["interval0"] - lap_df["interval_previous0"]
+    lap_df["lap_time_inferred"] = (
+        lap_df["lap_time0"] - lap_df["interval_change"].fillna(0) + lap_df["interval0"] - lap_df["interval_previous0"]
     )
 
     # Fill -1 lap times with inferred
-    lap_df["time"][lap_df["time"] < 0] = lap_df["time_inferred"]
+    lap_df.loc[lap_df["lap_time"] <= 0, "lap_time"] = lap_df["lap_time_inferred"]
 
     # In the rare case where we have all invalid across all laps, we will get Nones in `time`
     # We can just fill with the fastest lap + interval.
     # We use the fastest lap because it is unlikely that all laps are invalid (so we should have at least 1),
     # and it probably won't break any of our assumptions
-    fastest_lap = lap_df["time"][~lap_df["time"].isna()].min()
-    lap_df["time"][lap_df["time"].isna()] = lap_df["time"].fillna(fastest_lap) - lap_df["interval_change"].fillna(0)
+    fastest_lap = lap_df["lap_time"][~lap_df["lap_time"].isna()].min()
+    lap_df.loc[lap_df["lap_time"].isna(), "lap_time"] = lap_df["lap_time"].fillna(fastest_lap) - lap_df[
+        "interval_change"
+    ].fillna(0)
 
     # Drop extra columns
-    lap_df = lap_df.drop(columns=["time0", "interval0", "interval_previous", "interval_change", "time_inferred"])
+    lap_df = lap_df[input_cols]
+
+    # Check for any remaining -1 laps
+    if sum(lap_df["lap_time"] < 0) > 0:
+        raise ValueError("Error inferring lap times!")
+
+    lap_df = lap_df.astype("int64")
 
     return lap_df
 
@@ -75,7 +95,10 @@ def _join_qualy_data(result_df, qualy_df):
         return result_df
 
     qualy_df = qualy_df[["user_id", "finish_position", "best_lap_time", "laps_complete"]].rename(
-        columns={"finish_position": "start_position", "best_lap_time": "qualify_lap_time"}
+        columns={
+            "finish_position": "start_position",
+            "best_lap_time": "qualify_lap_time",
+        }
     )
 
     qualy_df = qualy_df[qualy_df["laps_complete"] > 0].drop(columns="laps_complete")
@@ -91,6 +114,11 @@ def _join_qualy_data(result_df, qualy_df):
     return result_df
 
 
+def _check_lap_df(lap_df):
+    if len(lap_df[["user_id", "lap"]].drop_duplicates()) < len(lap_df):
+        raise ValueError("Lap dataframe has duplicate laps per driver")
+
+
 def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame, qualy_df: pd.DataFrame = None) -> pd.DataFrame:
     """
     Compute the race result with penalties applied
@@ -100,11 +128,14 @@ def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame, qualy_df: pd
     lap_df : Dataframe of lap times, must have the following columns:
         user_id : User identifier
         lap : Lap index (starts at 0)
-        time : Time per lap (in seconds)
+        lap_time : Time per lap (in seconds)
     penalty_df : Dataframe of penalties. Can have multiple entries per user_id
         user_id : User identifier
         time_s : Penalty time in seconds
     """
+    # Make some assertions on the lap dataframe
+    _check_lap_df(lap_df)
+
     lap_df = lap_df.copy()
 
     # Compute cumulative lap time
@@ -113,9 +144,7 @@ def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame, qualy_df: pd
     # Drop formation lap
     lap_df = lap_df[lap_df["lap"] > 0]
 
-    lap_df = _infer_invalid_laps(lap_df)
-
-    lap_df["total_time"] = lap_df[["user_id", "time"]].groupby("user_id").cumsum()
+    lap_df["total_time"] = lap_df[["user_id", "lap_time"]].groupby("user_id").cumsum()
 
     # Compute each drivers total penalty
     if penalty_df is None or len(penalty_df) == 0:

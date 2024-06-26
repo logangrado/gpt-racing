@@ -1,97 +1,196 @@
 #!/usr/bin/env python3
 
 import pandas as pd
+import pytest
 
-from gpt_racing.results import compute_results
+from gpt_racing.results import compute_results, infer_invalid_laps
 from gpt_racing.iracing_data import IracingDataClient
 
 
-class TestComputeResults:
-    def test_basic(self):
-        """
-        Basic penalty test, all drivers on lead lap
-        """
-        result_df = pd.DataFrame(
-            [
-                {"user_id": 0, "finish_position": 0},
-            ]
-        )
+class TestInferInvalidLapTimes:
+    """
+    Test that we can infer invalid laps
+    """
 
+    def test_basic(self):
+        """Basic test without invalid laps"""
         lap_df = pd.DataFrame(
             [
-                {"user_id": 0, "lap": 0, "time": 100},
-                {"user_id": 0, "lap": 1, "time": 100},
-                {"user_id": 0, "lap": 2, "time": 100},
-                {"user_id": 1, "lap": 2, "time": 100},
-                {"user_id": 1, "lap": 1, "time": 100},
-                {"user_id": 1, "lap": 0, "time": 110},
-                {"user_id": 2, "lap": 1, "time": 100},
-                {"user_id": 2, "lap": 0, "time": 120},
-                {"user_id": 2, "lap": 2, "time": 100.123456},
+                {"user_id": 0, "lap": 1, "lap_time": 100, "interval": None},
+                {"user_id": 0, "lap": 2, "lap_time": 100, "interval": None},
+                {"user_id": 0, "lap": 3, "lap_time": 100, "interval": None},
+                {"user_id": 1, "lap": 1, "lap_time": 110, "interval": -10},
+                {"user_id": 1, "lap": 2, "lap_time": 100, "interval": -10},
+                {"user_id": 1, "lap": 3, "lap_time": 100, "interval": -10},
+                {"user_id": 2, "lap": 1, "lap_time": 120, "interval": -20},
+                {"user_id": 2, "lap": 2, "lap_time": 100, "interval": -20},
+                {"user_id": 2, "lap": 3, "lap_time": 100, "interval": -20},
             ]
         )
 
-        penalties = pd.DataFrame(
-            [
-                {"user_id": 1, "time": 15},
-            ]
-        )
-
-        result = compute_results(lap_df, penalties)
+        result = compute_lap_times(lap_df)
 
         pd.testing.assert_frame_equal(
             result,
             pd.DataFrame(
-                [
-                    {
-                        "user_id": 0,
-                        "laps_complete": 2,
-                        "total_time": 300.0,
-                        "penalty": 0.0,
-                        "finish_position": 0,
-                        "interval": "0.000",
-                    },
-                    {
-                        "user_id": 2,
-                        "laps_complete": 2,
-                        "total_time": 320.12345600000003,
-                        "penalty": 0.0,
-                        "finish_position": 1,
-                        "interval": "-20.123",
-                    },
-                    {
-                        "user_id": 1,
-                        "laps_complete": 2,
-                        "total_time": 325.0,
-                        "penalty": 15.0,
-                        "finish_position": 2,
-                        "interval": "-25.000",
-                    },
-                ]
+                {
+                    "user_id": [0, 0, 0, 1, 1, 1, 2, 2, 2],
+                    "lap": [1, 2, 3, 1, 2, 3, 1, 2, 3],
+                    "lap_time": [100, 100, 100, 110, 100, 100, 120, 100, 100],
+                    "interval": [0, 0, 0, -10, -10, -10, -20, -20, -20],
+                }
             ),
         )
 
-    def test_no_penalties(self):
-        """
-        Basic penalty test, all drivers on lead lap
-        """
-        result_df = pd.DataFrame(
+    def test_single_invalid(self):
+        lap_df = pd.DataFrame(
             [
-                {"user_id": 0, "finish_position": 0},
+                {"user_id": 0, "lap": 1, "lap_time": 100, "interval": None},
+                {"user_id": 0, "lap": 2, "lap_time": 100, "interval": None},
+                {"user_id": 0, "lap": 3, "lap_time": 100, "interval": None},
+                #
+                {"user_id": 1, "lap": 1, "lap_time": 101, "interval": -1},
+                {"user_id": 1, "lap": 2, "lap_time": -1, "interval": -2},
+                {"user_id": 1, "lap": 3, "lap_time": 101, "interval": -3},
             ]
         )
 
+        result = compute_lap_times(lap_df)
+
+        pd.testing.assert_frame_equal(
+            result,
+            pd.DataFrame(
+                {
+                    "user_id": [0, 0, 0, 1, 1, 1],
+                    "lap": [1, 2, 3, 1, 2, 3],
+                    "lap_time": [100, 100, 100, 101, 101, 101],
+                    "interval": [0, 0, 0, -1, -2, -3],
+                }
+            ),
+        )
+
+    def test_single_invalid_leader(self):
         lap_df = pd.DataFrame(
             [
-                {"user_id": 0, "lap": 0, "time": 100},
-                {"user_id": 0, "lap": 1, "time": 100},
-                {"user_id": 0, "lap": 2, "time": 100},
-                {"user_id": 1, "lap": 2, "time": 100},
-                {"user_id": 1, "lap": 1, "time": 100},
-                {"user_id": 1, "lap": 0, "time": 110},
-                {"user_id": 2, "lap": 1, "time": 100},
-                {"user_id": 2, "lap": 0, "time": 120},
-                {"user_id": 2, "lap": 2, "time": 100},
+                {"user_id": 0, "lap": 1, "lap_time": 100, "interval": None},
+                {"user_id": 0, "lap": 2, "lap_time": -1, "interval": None},
+                {"user_id": 0, "lap": 3, "lap_time": 100, "interval": None},
+                #
+                {"user_id": 1, "lap": 1, "lap_time": 101, "interval": -1},
+                {"user_id": 1, "lap": 2, "lap_time": 101, "interval": -2},
+                {"user_id": 1, "lap": 3, "lap_time": 101, "interval": -3},
+            ]
+        )
+
+        result = compute_lap_times(lap_df)
+
+        pd.testing.assert_frame_equal(
+            result,
+            pd.DataFrame(
+                {
+                    "user_id": [0, 0, 0, 1, 1, 1],
+                    "lap": [1, 2, 3, 1, 2, 3],
+                    "lap_time": [100, 100, 100, 101, 101, 101],
+                    "interval": [0, 0, 0, -1, -2, -3],
+                }
+            ),
+        )
+
+    def test_all_invalid_for_a_lap(self):
+        """
+        Here, we don't have enough information to determine the missing lap time.
+
+        We will instead infer that the lead driver matched their fastest lap
+        """
+        lap_df = pd.DataFrame(
+            [
+                {"user_id": 0, "lap": 1, "lap_time": 99, "interval": None},
+                {"user_id": 0, "lap": 2, "lap_time": -1, "interval": None},
+                {"user_id": 0, "lap": 3, "lap_time": 100, "interval": None},
+                #
+                {"user_id": 1, "lap": 1, "lap_time": 101, "interval": -2},
+                {"user_id": 1, "lap": 2, "lap_time": -1, "interval": -3},
+                {"user_id": 1, "lap": 3, "lap_time": 101, "interval": -4},
+            ]
+        )
+
+        result = compute_lap_times(lap_df)
+        pd.testing.assert_frame_equal(
+            result,
+            pd.DataFrame(
+                {
+                    "user_id": [0, 0, 0, 1, 1, 1],
+                    "lap": [1, 2, 3, 1, 2, 3],
+                    "lap_time": [99, 99, 100, 101, 100, 101],
+                    "interval": [0, 0, 0, -2, -3, -4],
+                }
+            ),
+        )
+
+    def test_sequential_invalid(self):
+        lap_df = pd.DataFrame(
+            [
+                {"user_id": 0, "lap": 1, "lap_time": 100, "interval": None},
+                {"user_id": 0, "lap": 2, "lap_time": 100, "interval": None},
+                {"user_id": 0, "lap": 3, "lap_time": 100, "interval": None},
+                {"user_id": 0, "lap": 3, "lap_time": 100, "interval": None},
+                {"user_id": 0, "lap": 3, "lap_time": 100, "interval": None},
+                #
+                {"user_id": 1, "lap": 1, "lap_time": 101, "interval": -1},
+                {"user_id": 1, "lap": 2, "lap_time": -1, "interval": -2},
+                {"user_id": 1, "lap": 3, "lap_time": -1, "interval": -3},
+                {"user_id": 1, "lap": 4, "lap_time": -1, "interval": -4},
+                {"user_id": 1, "lap": 5, "lap_time": 101, "interval": -5},
+            ]
+        )
+
+        result = compute_lap_times(lap_df)
+
+        pd.testing.assert_frame_equal(
+            result,
+            pd.DataFrame(
+                {
+                    "user_id": [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+                    "lap": [1, 2, 3, 3, 3, 1, 2, 3, 4, 5],
+                    "lap_time": [100, 100, 100, 100, 100, 101, 101, 101, 101, 101],
+                    "interval": [0, 0, 0, 0, 0, -1, -2, -3, -4, -5],
+                }
+            ),
+        )
+
+    def test_sequential_invalid_leader(self):
+        lap_df = pd.DataFrame(
+            [
+                {"user_id": 0, "lap": 1, "lap_time": 100, "interval": None},
+                {"user_id": 0, "lap": 2, "lap_time": -1, "interval": None},
+                {"user_id": 0, "lap": 3, "lap_time": -1, "interval": None},
+                {"user_id": 0, "lap": 3, "lap_time": -1, "interval": None},
+                {"user_id": 0, "lap": 3, "lap_time": 100, "interval": None},
+                #
+                {"user_id": 1, "lap": 1, "lap_time": 101, "interval": -1},
+                {"user_id": 1, "lap": 2, "lap_time": 101, "interval": -2},
+                {"user_id": 1, "lap": 3, "lap_time": 101, "interval": -3},
+                {"user_id": 1, "lap": 4, "lap_time": 101, "interval": -4},
+                {"user_id": 1, "lap": 5, "lap_time": 101, "interval": -5},
+            ]
+        )
+
+        result = compute_lap_times(lap_df)
+
+        pd.testing.assert_frame_equal(
+            result,
+            pd.DataFrame(
+                {
+                    "user_id": [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+                    "lap": [1, 2, 3, 3, 3, 1, 2, 3, 4, 5],
+                    "lap_time": [100, 100, 100, 100, 100, 101, 101, 101, 101, 101],
+                    "interval": [0, 0, 0, 0, 0, -1, -2, -3, -4, -5],
+                }
+            ),
+        )
+
+
+class TestComputeResults:
             ]
         )
 
