@@ -9,9 +9,11 @@ from gpt_racing import utils
 def _compute_interval(result_df):
     result_df = result_df.copy()
 
-    # WE NEED TO USE IRACING PROVIDED INTERVALS!!!
     # The iracing we calculate using all lap times has some drift!
-    result_df["interval"] = result_df.iloc[0]["total_time"] - result_df["total_time"]
+    # result_df["interval"] = result_df.iloc[0]["total_time"] - result_df["total_time"]
+
+    # We need to use iRacing's interval, rather than calculating from total time, as there is some drift.
+    # The source of the drift is unknown, but likely a precision issue
 
     result_df["laps_down"] = result_df["laps_complete"] - result_df["laps_complete"][0]
 
@@ -19,6 +21,8 @@ def _compute_interval(result_df):
         lambda x: utils.seconds_to_str(x["interval"]) if x["laps_down"] == 0 else f"{int(x['laps_down'])}L",
         axis=1,
     )
+    result_df["interval"] = result_df["interval"].fillna("-")
+
     result_df = result_df.drop(columns="laps_down")
 
     return result_df
@@ -28,24 +32,21 @@ def infer_invalid_laps(lap_df):
     """
     Infer lap times for any lap marked as invalid.
     """
+    original_df = lap_df
+    # PREPARE LAP DATAFRAME
     lap_df = lap_df.copy()[["user_id", "lap", "lap_time", "interval"]]
-
     lap_df.loc[:, "interval"] = lap_df["interval"].fillna(0)
-
-    # Everything should be integer at this point
-    lap_df = lap_df.astype("Int64")
-
-    input_cols = lap_df.columns
-    lap_df = lap_df.copy()
 
     lap_df["interval_previous"] = (
         lap_df.sort_values(["user_id", "lap"]).groupby(["user_id"])["interval"].shift().fillna(0)
     )
 
-    valid_laps = lap_df[lap_df["lap_time"] != -1]
+    valid_laps = lap_df[lap_df["lap_time"] > 0]
 
+    # Get the single valid lap per lap_number with the lowest interval
     zero_int_lap_times = valid_laps.sort_values(["interval"], ascending=False).groupby("lap").first().reset_index()
 
+    # Merge zero int lap times onto lap dataframe, by lap. Suffix zero int lap data with `0`
     lap_df = lap_df.merge(
         zero_int_lap_times[["lap", "lap_time", "interval", "interval_previous"]].rename(
             columns={
@@ -78,14 +79,15 @@ def infer_invalid_laps(lap_df):
         "interval_change"
     ].fillna(0)
 
-    # Drop extra columns
-    lap_df = lap_df[input_cols]
-
     # Check for any remaining -1 laps
     if sum(lap_df["lap_time"] < 0) > 0:
         raise ValueError("Error inferring lap times!")
 
-    lap_df = lap_df.astype("int64")
+    # Downselect cols and cast
+    lap_df = lap_df[["user_id", "lap", "lap_time", "interval"]]
+
+    # Join back on original
+    lap_df = original_df.drop(columns=["lap_time", "interval"]).merge(lap_df, on=["user_id", "lap"])
 
     return lap_df
 
@@ -109,7 +111,10 @@ def _join_qualy_data(result_df, qualy_df):
     result_df["finish_position"] = (
         result_df["finish_position"].fillna(result_df["finish_position"].max() + 1).astype("Int64")
     )
-    result_df["laps_complete"] = result_df["laps_complete"].astype("Int64")
+
+    result_df["laps_complete"] = result_df["laps_complete"].astype("Int64").fillna(0)
+
+    result_df["penalty"] = result_df["penalty"].fillna(0)
 
     return result_df
 
@@ -157,8 +162,9 @@ def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame, qualy_df: pd
     lap_df = lap_df.merge(penalty_df, on="user_id", how="left")
     lap_df["penalty"] = lap_df["penalty"].fillna(0)
 
-    # Compute penalized total_time
+    # Compute penalized total_time and interval
     lap_df["total_time"] = lap_df["total_time"] + lap_df["penalty"]
+    lap_df["interval"] = lap_df["interval"] - lap_df["penalty"]
 
     # Compute race end time
     race_end_time = lap_df[lap_df["lap"] == lap_df["lap"].max()]["total_time"].min()
@@ -180,7 +186,7 @@ def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame, qualy_df: pd
 
     # Finally, create the finish order dataframe
     result_df = (
-        last_lap_df[["user_id", "lap", "total_time", "penalty"]]
+        last_lap_df[["user_id", "lap", "total_time", "penalty", "interval"]]
         .sort_values(by=["lap", "total_time"], ascending=[False, True])
         .rename(columns={"lap": "laps_complete"})
         .reset_index(drop=True)
@@ -189,11 +195,11 @@ def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame, qualy_df: pd
     result_df["finish_position"] = np.arange(len(result_df))
     result_df["average_lap_time"] = result_df["total_time"] / result_df["laps_complete"]
 
+    result_df = _join_qualy_data(result_df, qualy_df)
+
     # Compute interval column
     # result_df["interval"] = result_df.apply(_compute_interval, axis=1, winner=result_df.iloc[0])
     result_df = _compute_interval(result_df)
-
-    result_df = _join_qualy_data(result_df, qualy_df)
 
     # Compute fastest lap column
     return result_df

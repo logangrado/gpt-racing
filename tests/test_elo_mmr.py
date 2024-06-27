@@ -28,7 +28,7 @@ class TestELOMMR:
                     "rating_change": [215, 0, -215],
                     "num_contests": [1, 1, 1],
                     "participated": [True, True, True],
-                    "rank": [0, 1, 2],
+                    "rank": [1, 2, 3],
                     "contest_id": [0, 0, 0],
                     "rank_change": [None, None, None],
                 }
@@ -91,7 +91,7 @@ class TestELOMMR:
                     "rating_change": [215, 0, -215, 164, 19, -261, None],
                     "num_contests": [1, 1, 1, 2, 1, 2, 1],
                     "participated": [True, True, True, True, True, True, False],
-                    "rank": [0, 1, 2, 0, 1, 2, 3],
+                    "rank": [1, 2, 3, 1, 2, 3, 4],
                     "contest_id": [0, 0, 0, 1, 1, 1, 1],
                     "rank_change": [None, None, None, -1, None, 2, 1],
                 }

@@ -4,7 +4,6 @@ import pandas as pd
 import pytest
 
 from gpt_racing.results import compute_results, infer_invalid_laps
-from gpt_racing.iracing_data import IracingDataClient
 
 
 class TestInferInvalidLapTimes:
@@ -37,7 +36,7 @@ class TestInferInvalidLapTimes:
                     "user_id": [0, 0, 0, 1, 1, 1, 2, 2, 2],
                     "lap": [1, 2, 3, 1, 2, 3, 1, 2, 3],
                     "lap_time": [100, 100, 100, 110, 100, 100, 120, 100, 100],
-                    "interval": [0, 0, 0, -10, -10, -10, -20, -20, -20],
+                    "interval": [0.0, 0.0, 0.0, -10.0, -10.0, -10.0, -20.0, -20.0, -20.0],
                 }
             ),
         )
@@ -64,7 +63,7 @@ class TestInferInvalidLapTimes:
                     "user_id": [0, 0, 0, 1, 1, 1],
                     "lap": [1, 2, 3, 1, 2, 3],
                     "lap_time": [100, 100, 100, 101, 101, 101],
-                    "interval": [0, 0, 0, -1, -2, -3],
+                    "interval": [0.0, 0.0, 0.0, -1.0, -2.0, -3.0],
                 }
             ),
         )
@@ -91,7 +90,7 @@ class TestInferInvalidLapTimes:
                     "user_id": [0, 0, 0, 1, 1, 1],
                     "lap": [1, 2, 3, 1, 2, 3],
                     "lap_time": [100, 100, 100, 101, 101, 101],
-                    "interval": [0, 0, 0, -1, -2, -3],
+                    "interval": [0.0, 0.0, 0.0, -1.0, -2.0, -3.0],
                 }
             ),
         )
@@ -115,14 +114,15 @@ class TestInferInvalidLapTimes:
         )
 
         result = infer_invalid_laps(lap_df)
+
         pd.testing.assert_frame_equal(
             result,
             pd.DataFrame(
                 {
                     "user_id": [0, 0, 0, 1, 1, 1],
                     "lap": [1, 2, 3, 1, 2, 3],
-                    "lap_time": [99, 99, 100, 101, 100, 101],
-                    "interval": [0, 0, 0, -2, -3, -4],
+                    "lap_time": [99.0, 99.0, 100.0, 101.0, 100.0, 101.0],
+                    "interval": [0.0, 0.0, 0.0, -2.0, -3.0, -4.0],
                 }
             ),
         )
@@ -133,8 +133,8 @@ class TestInferInvalidLapTimes:
                 {"user_id": 0, "lap": 1, "lap_time": 100, "interval": None},
                 {"user_id": 0, "lap": 2, "lap_time": 100, "interval": None},
                 {"user_id": 0, "lap": 3, "lap_time": 100, "interval": None},
-                {"user_id": 0, "lap": 3, "lap_time": 100, "interval": None},
-                {"user_id": 0, "lap": 3, "lap_time": 100, "interval": None},
+                {"user_id": 0, "lap": 4, "lap_time": 100, "interval": None},
+                {"user_id": 0, "lap": 5, "lap_time": 100, "interval": None},
                 #
                 {"user_id": 1, "lap": 1, "lap_time": 101, "interval": -1},
                 {"user_id": 1, "lap": 2, "lap_time": -1, "interval": -2},
@@ -151,9 +151,9 @@ class TestInferInvalidLapTimes:
             pd.DataFrame(
                 {
                     "user_id": [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-                    "lap": [1, 2, 3, 3, 3, 1, 2, 3, 4, 5],
+                    "lap": [1, 2, 3, 4, 5, 1, 2, 3, 4, 5],
                     "lap_time": [100, 100, 100, 100, 100, 101, 101, 101, 101, 101],
-                    "interval": [0, 0, 0, 0, 0, -1, -2, -3, -4, -5],
+                    "interval": [0.0, 0.0, 0.0, 0.0, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0],
                 }
             ),
         )
@@ -164,8 +164,8 @@ class TestInferInvalidLapTimes:
                 {"user_id": 0, "lap": 1, "lap_time": 100, "interval": None},
                 {"user_id": 0, "lap": 2, "lap_time": -1, "interval": None},
                 {"user_id": 0, "lap": 3, "lap_time": -1, "interval": None},
-                {"user_id": 0, "lap": 3, "lap_time": -1, "interval": None},
-                {"user_id": 0, "lap": 3, "lap_time": 100, "interval": None},
+                {"user_id": 0, "lap": 4, "lap_time": -1, "interval": None},
+                {"user_id": 0, "lap": 5, "lap_time": 100, "interval": None},
                 #
                 {"user_id": 1, "lap": 1, "lap_time": 101, "interval": -1},
                 {"user_id": 1, "lap": 2, "lap_time": 101, "interval": -2},
@@ -182,30 +182,15 @@ class TestInferInvalidLapTimes:
             pd.DataFrame(
                 {
                     "user_id": [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-                    "lap": [1, 2, 3, 3, 3, 1, 2, 3, 4, 5],
+                    "lap": [1, 2, 3, 4, 5, 1, 2, 3, 4, 5],
                     "lap_time": [100, 100, 100, 100, 100, 101, 101, 101, 101, 101],
-                    "interval": [0, 0, 0, 0, 0, -1, -2, -3, -4, -5],
+                    "interval": [0.0, 0.0, 0.0, 0.0, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0],
                 }
             ),
         )
 
 
 class TestComputeResults:
-    @pytest.mark.skip("Test that lap 0 is always dropped")
-    def test_lap_0_dropped(self):
-        pass
-
-    @pytest.mark.skip("Not implemented")
-    def test_interval_sum_mismatch(self):
-        """
-        Sometimes (often?) the interval calculated from total time does not match perfectly the
-        actual interval.
-
-        Check a scinerio where this is true, and show that we use the interval (back calculated from last lap)
-
-        Also check when a lap down?
-        """
-
     def test_basic(self):
         """
         Basic penalty test, all drivers on lead lap
@@ -233,9 +218,9 @@ class TestComputeResults:
                     "laps_complete": [2, 2, 2],
                     "total_time": [200, 202, 204],
                     "penalty": [0, 0, 0],
+                    "interval": ["0.000", "-2.000", "-4.000"],
                     "finish_position": [0, 1, 2],
                     "average_lap_time": [100.0, 101.0, 102.0],
-                    "interval": ["0.000", "-2.000", "-4.000"],
                 }
             ),
         )
@@ -271,9 +256,9 @@ class TestComputeResults:
                     "laps_complete": [2, 2, 2],
                     "total_time": [200.0, 220.0, 225.0],
                     "penalty": [0.0, 0.0, 15.0],
+                    "interval": ["-", "-20.000", "-25.000"],
                     "finish_position": [0, 1, 2],
                     "average_lap_time": [100.0, 110.0, 112.5],
-                    "interval": ["0.000", "-20.000", "-25.000"],
                 }
             ),
         )
@@ -309,9 +294,9 @@ class TestComputeResults:
                     "laps_complete": [3, 3, 3],
                     "total_time": [310.0, 315.0, 320.0],
                     "penalty": [0.0, 15.0, 0.0],
+                    "interval": ["-10.000", "-", "-20.000"],
                     "finish_position": [0, 1, 2],
                     "average_lap_time": [103.33333333333333, 105.0, 106.66666666666667],
-                    "interval": ["0.000", "-5.000", "-10.000"],
                 }
             ),
         )
@@ -319,16 +304,16 @@ class TestComputeResults:
     def test_penalize_across_final_lap(self):
         lap_df = pd.DataFrame(
             [
-                {"user_id": 0, "lap": 0, "lap_time": 100},
-                {"user_id": 0, "lap": 1, "lap_time": 100},
-                {"user_id": 0, "lap": 2, "lap_time": 100},
+                {"user_id": 0, "lap": 1, "lap_time": 100, "interval": 0},
+                {"user_id": 0, "lap": 2, "lap_time": 100, "interval": 0},
+                {"user_id": 0, "lap": 3, "lap_time": 100, "interval": 0},
                 # User 1 finishes on lead lap, but they started their last lap within penalty range
-                {"user_id": 1, "lap": 0, "lap_time": 200},
-                {"user_id": 1, "lap": 1, "lap_time": 90},
-                {"user_id": 1, "lap": 2, "lap_time": 100},
+                {"user_id": 1, "lap": 1, "lap_time": 200, "interval": 100},
+                {"user_id": 1, "lap": 2, "lap_time": 90, "interval": 90},
+                {"user_id": 1, "lap": 3, "lap_time": 100, "interval": 90},
                 # User 2 finishes one lap down, 10s behind leader
-                {"user_id": 2, "lap": 0, "lap_time": 200},
-                {"user_id": 2, "lap": 1, "lap_time": 110},
+                {"user_id": 2, "lap": 1, "lap_time": 200, "interval": 100},
+                {"user_id": 2, "lap": 2, "lap_time": 110, "interval": 110},
             ]
         )
 
@@ -344,13 +329,13 @@ class TestComputeResults:
             result,
             pd.DataFrame(
                 {
-                    "user_id": [0, 1, 2],
-                    "laps_complete": [2, 2, 1],
-                    "total_time": [200.0, 220.0, 110.0],
-                    "penalty": [0.0, 30.0, 0.0],
+                    "user_id": [0, 2, 1],
+                    "laps_complete": [3, 2, 2],
+                    "total_time": [300.0, 310.0, 320.0],
+                    "penalty": [0.0, 0.0, 30.0],
+                    "interval": ["0.000", "-1L", "-1L"],
                     "finish_position": [0, 1, 2],
-                    "average_lap_time": [100.0, 110.0, 110.0],
-                    "interval": ["0.000", "-20.000", "-1L"],
+                    "average_lap_time": [100.0, 155.0, 160.0],
                 }
             ),
         )
@@ -359,3 +344,18 @@ class TestComputeResults:
     def test_disconnected_drivers(self):
         """Test that disconnected drivers are placed"""
         pass
+
+    @pytest.mark.skip("Test that lap 0 is always dropped")
+    def test_lap_0_dropped(self):
+        pass
+
+    @pytest.mark.skip("Not implemented")
+    def test_interval_sum_mismatch(self):
+        """
+        Sometimes (often?) the interval calculated from total time does not match perfectly the
+        actual interval.
+
+        Check a scinerio where this is true, and show that we use the interval (back calculated from last lap)
+
+        Also check when a lap down?
+        """

@@ -5,7 +5,7 @@ import pandas as pd
 
 from gpt_racing.iracing_data import IracingDataClient
 from gpt_racing.elo_mmr import compute_elo_mmr
-from gpt_racing.results import compute_results
+from gpt_racing.results import compute_results, infer_invalid_laps
 from gpt_racing import utils
 
 
@@ -23,12 +23,36 @@ def _load_race_data(config, client):
                 "lap_number": "lap",
             }
         )
-        lap_df["time"] = lap_df["lap_time"] / 10000
-        lap_df["interval"] = lap_df["interval"] / 10000
+
+        # For some really stupid reason, the `lap_time` is in 10,000th's of a second, while `interval` is in thousandths
+        lap_df["lap_time"] = lap_df["lap_time"] / 10000
+        lap_df["interval"] = lap_df["interval"] / 1000
+
+        # Infer invalid laps
+        lap_df = infer_invalid_laps(lap_df)
+
+        # # Round
+        # lap_df["time"] = lap_df["time"].round(3)
+
+        # # Truncate
+        # lap_df["time"] = (lap_df["time"] * 1000).astype(int) / 1000
+
+        # import numpy as np
+
+        # lap_df["time"] = np.ceil(lap_df["time"] * 1000) / 1000
 
         # Compute results
-        penalty_df = pd.DataFrame([dict(x) for x in race_config.penalties])
+        if race_config.penalties:
+            penalty_df = pd.DataFrame([dict(x) for x in race_config.penalties])
+        else:
+            penalty_df = None
         qualy_df = client.get_qualy_result(race_config.subsession_id)
+        qualy_df = qualy_df.rename(
+            columns={
+                "cust_id": "user_id",
+            }
+        )
+
         qualy_df["best_lap_time"] = qualy_df["best_lap_time"] / 10000
 
         result_df = compute_results(lap_df, penalty_df, qualy_df)
@@ -90,7 +114,15 @@ def compute_ratings(config, client):
     # Join names onto rating df, select/rename
     rating_df = (
         rating_df.merge(name_df, on="user_id")[
-            ["display_name", "user_id", "rating", "rating_change", "rank", "rank_change", "subsession_id"]
+            [
+                "display_name",
+                "user_id",
+                "rating",
+                "rating_change",
+                "rank",
+                "rank_change",
+                "subsession_id",
+            ]
         ]
         .sort_values(["subsession_id", "rank"])
         .reset_index(drop=True)

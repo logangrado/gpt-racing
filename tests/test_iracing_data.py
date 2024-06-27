@@ -8,6 +8,7 @@ from gpt_racing import iracing_data
 
 
 class TestCachedIRClient:
+    @pytest.mark.skip("not implemented")
     def test_result(self):
         client = iracing_data.CachedIRClient()
 
@@ -30,7 +31,7 @@ class TestRaceResults:
             pd.DataFrame(
                 [
                     {
-                        "user_id": 407068,
+                        "cust_id": 407068,
                         "display_name": "Christian Youngwall",
                         "finish_position": 0,
                         "finish_position_in_class": 0,
@@ -48,7 +49,7 @@ class TestRaceResults:
                         "session_end_time": pd.Timestamp("2023-12-12 02:16:29"),
                     },
                     {
-                        "user_id": 483350,
+                        "cust_id": 483350,
                         "display_name": "Reed Gibson",
                         "finish_position": 1,
                         "finish_position_in_class": 1,
@@ -75,7 +76,7 @@ class TestRaceResults:
         result = client.get_qualy_result(subsession_id)
 
         assert set(result.columns) == {
-            "user_id",
+            "cust_id",
             "display_name",
             "finish_position",
             "finish_position_in_class",
@@ -97,7 +98,7 @@ class TestRaceResults:
             pd.DataFrame(
                 [
                     {
-                        "user_id": 260862,
+                        "cust_id": 260862,
                         "display_name": "Rafael Amorim",
                         "finish_position": 0,
                         "finish_position_in_class": 0,
@@ -113,7 +114,7 @@ class TestRaceResults:
                         "session_end_time": pd.Timestamp("2023-12-12 02:16:29"),
                     },
                     {
-                        "user_id": 154321,
+                        "cust_id": 154321,
                         "display_name": "Leif Peterson",
                         "finish_position": 1,
                         "finish_position_in_class": 1,

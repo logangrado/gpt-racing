@@ -84,12 +84,6 @@ def _get_race_result(result: dict) -> pd.DataFrame:
                 ]
             ]
 
-            df = df.rename(
-                columns={
-                    "cust_id": "user_id",
-                }
-            )
-
             # # Compute total time
             # df["total_time"] = df["average_lap"] * df["laps_complete"]
 
@@ -128,12 +122,6 @@ def _get_qualy_result(result: dict) -> pd.DataFrame:
                     "reason_out",
                 ]
             ]
-
-            df = df.rename(
-                columns={
-                    "cust_id": "user_id",
-                }
-            )
 
             # # Compute total time
             # df["total_time"] = df["average_lap"] * df["laps_complete"]
@@ -220,7 +208,10 @@ class CachedIRClient:
 
 class IracingDataClient:
     def __init__(self, cache=True, cache_path=CACHE_PATH):
-        self._client = CachedIRClient(cache_path=cache_path)
+        if cache:
+            self._client = CachedIRClient(cache_path=cache_path)
+        else:
+            self._client = _load_client()
 
         self._cust_id = self._client.member_profile()["cust_id"]
 
