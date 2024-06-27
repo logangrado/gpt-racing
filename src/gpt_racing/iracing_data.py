@@ -82,13 +82,13 @@ def _get_race_result(result: dict) -> pd.DataFrame:
                     "car_class_name",
                     "reason_out",
                 ]
-            ]
+            ].copy()
 
             # # Compute total time
             # df["total_time"] = df["average_lap"] * df["laps_complete"]
 
             df["subsession_id"] = result["subsession_id"]
-            df["session_end_time"] = np.datetime64(result["end_time"])
+            df["session_end_time"] = pd.Timestamp(result["end_time"])
             return df
 
     return None
@@ -121,7 +121,7 @@ def _get_qualy_result(result: dict) -> pd.DataFrame:
                     "incidents",
                     "reason_out",
                 ]
-            ]
+            ].copy()
 
             # # Compute total time
             # df["total_time"] = df["average_lap"] * df["laps_complete"]

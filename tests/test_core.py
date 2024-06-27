@@ -117,7 +117,7 @@ class TestComputeRatings:
                     "rating": [1771, 1579, 1421, 1229],
                     "rating_change": [271, 79, -79, -271],
                     "rank": [1, 2, 3, 4],
-                    "rank_change": [None, None, None, None],
+                    "rank_change": [pd.NA, pd.NA, pd.NA, pd.NA],
                     "subsession_id": [0, 0, 0, 0],
                 }
             ),
@@ -143,7 +143,7 @@ class TestComputeRatings:
                     "num_contests": [1, 1, 1, 1],
                     "participated": [True, True, True, True],
                     "rank": [1, 2, 3, 4],
-                    "rank_change": [None, None, None, None],
+                    "rank_change": [pd.NA, pd.NA, pd.NA, pd.NA],
                     "display_name": ["a", "b", "c", "d"],
                 }
             ),
@@ -357,9 +357,9 @@ class TestComputeRatings:
                     "display_name": ["a", "b", "c", "d", "a", "b", "c", "e", "d"],
                     "user_id": [0, 1, 2, 3, 0, 1, 2, 4, 3],
                     "rating": [1771, 1579, 1421, 1229, 1793, 1586, 1421, 1387, 1229],
-                    "rating_change": [271, 79, -79, -271, 22, 7, None, -113, None],
+                    "rating_change": [271, 79, -79, -271, 22, 7, pd.NA, -113, pd.NA],
                     "rank": [1, 2, 3, 4, 1, 2, 3, 4, 5],
-                    "rank_change": [None, None, None, None, 0, 0, 0, None, 1],
+                    "rank_change": [pd.NA, pd.NA, pd.NA, pd.NA, 0, 0, 0, pd.NA, 1],
                     "subsession_id": [0, 0, 0, 0, 1, 1, 1, 1, 1],
                 }
             ),
@@ -385,7 +385,7 @@ class TestComputeRatings:
                     "num_contests": [1, 1, 1, 1, 2, 2, 1],
                     "participated": [True, True, True, True, True, True, True],
                     "rank": [1, 2, 3, 4, 1, 2, 4],
-                    "rank_change": [None, None, None, None, 0, 0, None],
+                    "rank_change": [pd.NA, pd.NA, pd.NA, pd.NA, 0, 0, pd.NA],
                     "display_name": ["a", "b", "c", "d", "a", "b", "e"],
                 }
             ),

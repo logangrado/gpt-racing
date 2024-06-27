@@ -30,7 +30,7 @@ class TestELOMMR:
                     "participated": [True, True, True],
                     "rank": [1, 2, 3],
                     "contest_id": [0, 0, 0],
-                    "rank_change": [None, None, None],
+                    "rank_change": [pd.NA, pd.NA, pd.NA],
                 }
             ),
             check_dtype=False,
@@ -62,7 +62,7 @@ class TestELOMMR:
                     "participated": [True, True, True, True, True],
                     "rank": [1, 2, 3, 3, 5],
                     "contest_id": [0, 0, 0, 0, 0],
-                    "rank_change": [None, None, None, None, None],
+                    "rank_change": [pd.NA, pd.NA, pd.NA, pd.NA, pd.NA],
                 }
             ),
             check_dtype=False,
@@ -88,12 +88,12 @@ class TestELOMMR:
                 {
                     "user_id": [0, 1, 2, 1, 3, 0, 2],
                     "rating": [1715, 1500, 1285, 1664, 1519, 1454, 1285],
-                    "rating_change": [215, 0, -215, 164, 19, -261, None],
+                    "rating_change": [215, 0, -215, 164, 19, -261, pd.NA],
                     "num_contests": [1, 1, 1, 2, 1, 2, 1],
                     "participated": [True, True, True, True, True, True, False],
                     "rank": [1, 2, 3, 1, 2, 3, 4],
                     "contest_id": [0, 0, 0, 1, 1, 1, 1],
-                    "rank_change": [None, None, None, -1, None, 2, 1],
+                    "rank_change": [pd.NA, pd.NA, pd.NA, -1, pd.NA, 2, 1],
                 }
             ),
             check_dtype=False,
