@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import List, Optional
+from typing import List, Optional, Literal
 import pydantic
 
 
@@ -16,6 +16,13 @@ class Penalty(BaseModel):
 class Race(BaseModel):
     subsession_id: int
     penalties: Optional[List[Penalty]] = None
+
+
+# Scoring Types
+class PointsScoringConfig(BaseModel):
+    type: Literal["POINTS"] = "POINTS"
+    drop_races: int = 0
+    points: list[int]
 
 
 class RatingConfig(BaseModel):
