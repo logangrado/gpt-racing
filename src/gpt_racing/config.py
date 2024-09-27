@@ -4,15 +4,19 @@ from typing import List, Optional
 import pydantic
 
 
-class Penalty(pydantic.BaseModel):
+class BaseModel(pydantic.BaseModel):
+    model_config = pydantic.ConfigDict(extra="forbid")
+
+
+class Penalty(BaseModel):
     user_id: int
     time: float
 
 
-class Race(pydantic.BaseModel):
+class Race(BaseModel):
     subsession_id: int
     penalties: Optional[List[Penalty]] = None
 
 
-class RatingConfig(pydantic.BaseModel):
+class RatingConfig(BaseModel):
     races: List[Race]
