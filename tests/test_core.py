@@ -1,109 +1,86 @@
 #!/usr/bin/env python3
 
 import pandas as pd
+import polars as pl
 
 from gpt_racing import core
 from gpt_racing.config import RatingConfig
 
 
+def _generate_qualy_data(session_data):
+    df = pl.DataFrame(session_data)
+    df = df.sort("best_lap_time").with_columns(pl.int_range(pl.len()).alias("finish_position"))
+
+    return df.to_dicts()
+
+
+def _generate_lap_data(session_data):
+    df = pl.DataFrame(session_data)
+
+    df = df.rename({"average_lap_time": "lap_time"})
+
+    df = df.with_columns(pl.col("laps_complete").map_elements(lambda x: range(x + 1)).alias("lap_number"))
+
+    df = df.explode("lap_number")
+
+    df = df.with_columns(pl.col("lap_time") * 10000)
+
+    # Compute interval
+    df = df.with_columns((pl.col("lap_time") * pl.col("lap_number")).alias("total_time"))
+    leader_df = (
+        df.sort("total_time")
+        .group_by("lap_number")
+        .first()["lap_number", "total_time"]
+        .rename({"total_time": "total_time_leader"})
+    )
+    df = df.join(leader_df, on="lap_number")
+    df = df.with_columns(((pl.col("total_time") - pl.col("total_time_leader")) / 10).alias("interval"))
+
+    # Make lap_number - lap_time = -1
+    df = df.with_columns(
+        [pl.when(pl.col("lap_number") == 0).then(-1).otherwise(pl.col("interval")).alias("interval")],
+    )
+
+    df = df.with_columns(pl.lit([]).alias("lap_events"))
+
+    # Select columns of interest
+    df = df["cust_id", "display_name", "lap_number", "lap_time", "interval", "lap_events"]
+    return df.to_dicts()
+
+
+def _generate_data(summary_data, fake_client):
+    for session in summary_data:
+        fake_client._set_qualy_result(
+            session["subsession_id"], pd.DataFrame(_generate_qualy_data(session["qualifying"]))
+        )
+        fake_client._set_lap_data(session["subsession_id"], pd.DataFrame(_generate_lap_data(session["race"])))
+
+
 class TestComputeRatings:
     def test_single_race_fake(self, fake_client):
         config = RatingConfig.model_validate(
-            {"races": [{"subsession_id": 0}]},
+            {
+                "races": [{"subsession_id": 0}],
+            },
         )
-        lap_data_0 = pd.DataFrame(
-            [
-                {"cust_id": 0, "display_name": "a", "lap_number": 0, "lap_time": -1, "interval": 0, "lap_events": []},
-                {
-                    "cust_id": 0,
-                    "display_name": "a",
-                    "lap_number": 1,
-                    "lap_time": 100000,
-                    "interval": 0,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 0,
-                    "display_name": "a",
-                    "lap_number": 2,
-                    "lap_time": 100000,
-                    "interval": 0,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 0,
-                    "display_name": "a",
-                    "lap_number": 3,
-                    "lap_time": 100000,
-                    "interval": 0,
-                    "lap_events": [],
-                },
-                #
-                {"cust_id": 1, "display_name": "b", "lap_number": 0, "lap_time": -1, "interval": 0, "lap_events": []},
-                {
-                    "cust_id": 1,
-                    "display_name": "b",
-                    "lap_number": 1,
-                    "lap_time": 110000,
-                    "interval": 1000,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 1,
-                    "display_name": "b",
-                    "lap_number": 2,
-                    "lap_time": 110000,
-                    "interval": 2000,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 1,
-                    "display_name": "b",
-                    "lap_number": 3,
-                    "lap_time": 110000,
-                    "interval": 3000,
-                    "lap_events": [],
-                },
-                #
-                {"cust_id": 2, "display_name": "c", "lap_number": 0, "lap_time": -1, "interval": 0, "lap_events": []},
-                {
-                    "cust_id": 2,
-                    "display_name": "c",
-                    "lap_number": 1,
-                    "lap_time": 120000,
-                    "interval": 2000,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 2,
-                    "display_name": "c",
-                    "lap_number": 2,
-                    "lap_time": 120000,
-                    "interval": 4000,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 2,
-                    "display_name": "c",
-                    "lap_number": 3,
-                    "lap_time": 120000,
-                    "interval": 6000,
-                    "lap_events": [],
-                },
-            ]
-        )
+        summary_data = [
+            {
+                "subsession_id": 0,
+                "qualifying": [
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
+                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42, "laps_complete": 3},
+                    {"cust_id": 3, "display_name": "d", "best_lap_time": 43, "laps_complete": 3},
+                ],
+                "race": [
+                    {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
+                    {"cust_id": 1, "display_name": "b", "laps_complete": 3, "average_lap_time": 11},
+                    {"cust_id": 2, "display_name": "c", "laps_complete": 3, "average_lap_time": 12},
+                ],
+            }
+        ]
 
-        qualy_data_0 = pd.DataFrame(
-            [
-                {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "finish_position": 0, "laps_complete": 3},
-                {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "finish_position": 3, "laps_complete": 4},
-                {"cust_id": 2, "display_name": "c", "best_lap_time": 42, "finish_position": 1, "laps_complete": 3},
-                {"cust_id": 3, "display_name": "d", "best_lap_time": 43, "finish_position": 2, "laps_complete": 3},
-            ]
-        )
-
-        fake_client._set_lap_data(0, lap_data_0)
-        fake_client._set_qualy_result(0, qualy_data_0)
+        _generate_data(summary_data, fake_client)
 
         rating_df, result_df = core.compute_ratings(config, client=fake_client)
 
@@ -156,193 +133,42 @@ class TestComputeRatings:
                 "races": [
                     {"subsession_id": 0},
                     {"subsession_id": 1},
-                ]
+                ],
             },
         )
-        lap_data_0 = pd.DataFrame(
-            [
-                {"cust_id": 0, "display_name": "a", "lap_number": 0, "lap_time": -1, "interval": 0, "lap_events": []},
-                {
-                    "cust_id": 0,
-                    "display_name": "a",
-                    "lap_number": 1,
-                    "lap_time": 100000,
-                    "interval": 0,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 0,
-                    "display_name": "a",
-                    "lap_number": 2,
-                    "lap_time": 100000,
-                    "interval": 0,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 0,
-                    "display_name": "a",
-                    "lap_number": 3,
-                    "lap_time": 100000,
-                    "interval": 0,
-                    "lap_events": [],
-                },
-                #
-                {"cust_id": 1, "display_name": "b", "lap_number": 0, "lap_time": -1, "interval": 0, "lap_events": []},
-                {
-                    "cust_id": 1,
-                    "display_name": "b",
-                    "lap_number": 1,
-                    "lap_time": 110000,
-                    "interval": 1000,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 1,
-                    "display_name": "b",
-                    "lap_number": 2,
-                    "lap_time": 110000,
-                    "interval": 2000,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 1,
-                    "display_name": "b",
-                    "lap_number": 3,
-                    "lap_time": 110000,
-                    "interval": 3000,
-                    "lap_events": [],
-                },
-                #
-                {"cust_id": 2, "display_name": "c", "lap_number": 0, "lap_time": -1, "interval": 0, "lap_events": []},
-                {
-                    "cust_id": 2,
-                    "display_name": "c",
-                    "lap_number": 1,
-                    "lap_time": 120000,
-                    "interval": 2000,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 2,
-                    "display_name": "c",
-                    "lap_number": 2,
-                    "lap_time": 120000,
-                    "interval": 4000,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 2,
-                    "display_name": "c",
-                    "lap_number": 3,
-                    "lap_time": 120000,
-                    "interval": 6000,
-                    "lap_events": [],
-                },
-            ]
-        )
-        fake_client._set_lap_data(0, lap_data_0)
 
-        lap_data_1 = pd.DataFrame(
-            [
-                {"cust_id": 0, "display_name": "a", "lap_number": 0, "lap_time": -1, "interval": 0, "lap_events": []},
-                {
-                    "cust_id": 0,
-                    "display_name": "a",
-                    "lap_number": 1,
-                    "lap_time": 100000,
-                    "interval": 0,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 0,
-                    "display_name": "a",
-                    "lap_number": 2,
-                    "lap_time": 100000,
-                    "interval": 0,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 0,
-                    "display_name": "a",
-                    "lap_number": 3,
-                    "lap_time": 100000,
-                    "interval": 0,
-                    "lap_events": [],
-                },
-                #
-                {"cust_id": 1, "display_name": "b", "lap_number": 0, "lap_time": -1, "interval": 0, "lap_events": []},
-                {
-                    "cust_id": 1,
-                    "display_name": "b",
-                    "lap_number": 1,
-                    "lap_time": 110000,
-                    "interval": 1000,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 1,
-                    "display_name": "b",
-                    "lap_number": 2,
-                    "lap_time": 110000,
-                    "interval": 1000,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 1,
-                    "display_name": "b",
-                    "lap_number": 3,
-                    "lap_time": 110000,
-                    "interval": 1000,
-                    "lap_events": [],
-                },
-                #
-                {"cust_id": 4, "display_name": "d", "lap_number": 0, "lap_time": -1, "interval": 0, "lap_events": []},
-                {
-                    "cust_id": 4,
-                    "display_name": "d",
-                    "lap_number": 1,
-                    "lap_time": 120000,
-                    "interval": 2000,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 4,
-                    "display_name": "d",
-                    "lap_number": 2,
-                    "lap_time": 120000,
-                    "interval": 2000,
-                    "lap_events": [],
-                },
-                {
-                    "cust_id": 4,
-                    "display_name": "d",
-                    "lap_number": 3,
-                    "lap_time": 120000,
-                    "interval": 2000,
-                    "lap_events": [],
-                },
-            ]
-        )
-        fake_client._set_lap_data(1, lap_data_1)
+        summary_data = [
+            {
+                "subsession_id": 0,
+                "qualifying": [
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
+                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42, "laps_complete": 3},
+                    {"cust_id": 3, "display_name": "d", "best_lap_time": 43, "laps_complete": 3},
+                ],
+                "race": [
+                    {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
+                    {"cust_id": 1, "display_name": "b", "laps_complete": 3, "average_lap_time": 11},
+                    {"cust_id": 2, "display_name": "c", "laps_complete": 3, "average_lap_time": 12},
+                    # {"cust_id": 3, "display_name": "d", "laps_complete": 3, "average_lap_time": 130},
+                ],
+            },
+            {
+                "subsession_id": 1,
+                "qualifying": [
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
+                    {"cust_id": 4, "display_name": "e", "best_lap_time": 43, "laps_complete": 3},
+                ],
+                "race": [
+                    {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
+                    {"cust_id": 1, "display_name": "b", "laps_complete": 3, "average_lap_time": 11},
+                    {"cust_id": 4, "display_name": "e", "laps_complete": 3, "average_lap_time": 12},
+                ],
+            },
+        ]
 
-        qualy_data_0 = pd.DataFrame(
-            [
-                {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "finish_position": 0, "laps_complete": 3},
-                {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "finish_position": 3, "laps_complete": 4},
-                {"cust_id": 2, "display_name": "c", "best_lap_time": 42, "finish_position": 1, "laps_complete": 3},
-                {"cust_id": 3, "display_name": "d", "best_lap_time": 43, "finish_position": 2, "laps_complete": 3},
-            ]
-        )
-        qualy_data_1 = pd.DataFrame(
-            [
-                {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "finish_position": 0, "laps_complete": 3},
-                {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "finish_position": 2, "laps_complete": 4},
-                {"cust_id": 4, "display_name": "e", "best_lap_time": 43, "finish_position": 1, "laps_complete": 3},
-            ]
-        )
-
-        fake_client._set_qualy_result(0, qualy_data_0)
-        fake_client._set_qualy_result(1, qualy_data_1)
+        _generate_data(summary_data, fake_client)
 
         rating_df, result_df = core.compute_ratings(
             config,
@@ -374,7 +200,7 @@ class TestComputeRatings:
                     "laps_complete": [3, 3, 3, 0, 3, 3, 3],
                     "total_time": ["30.000", "33.000", "36.000", "-", "30.000", "33.000", "36.000"],
                     "penalty": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    "interval": ["0.000", "3.000", "6.000", "-3L", "0.000", "1.000", "2.000"],
+                    "interval": ["0.000", "3.000", "6.000", "-3L", "0.000", "3.000", "6.000"],
                     "finish_position": [1, 2, 3, 4, 1, 2, 3],
                     "average_lap_time": ["10.000", "11.000", "12.000", "-", "10.000", "11.000", "12.000"],
                     "start_position": [1, 4, 2, 3, 1, 3, 2],
