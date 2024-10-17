@@ -149,7 +149,10 @@ def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame, qualy_df: pd
     # Drop formation lap
     lap_df = lap_df[lap_df["lap"] > 0]
 
-    lap_df["total_time"] = lap_df[["user_id", "lap_time"]].groupby("user_id").cumsum()
+    lap_df["total_time"] = lap_df.sort_values("lap")[["user_id", "lap_time"]].groupby("user_id").cumsum()
+    lap_df["time_from_finish"] = (
+        lap_df.sort_values("lap", ascending=False)[["user_id", "lap_time"]].groupby("user_id").cumsum() * -1
+    )
 
     # Compute each drivers total penalty
     if penalty_df is None or len(penalty_df) == 0:
@@ -166,19 +169,39 @@ def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame, qualy_df: pd
     lap_df["total_time"] = lap_df["total_time"] + lap_df["penalty"]
     lap_df["interval"] = lap_df["interval"] - lap_df["penalty"]
 
-    # Compute race end time
-    race_end_time = lap_df[lap_df["lap"] == lap_df["lap"].max()]["total_time"].min()
+    # If the final interval with penalty is greather than lap time, that driver would have been penalized across the final lap??
+    finish_lap_df = lap_df.sort_values("lap").groupby("user_id").last().reset_index()
+    # Identify any drivers where (interval - penalty) < lap_time
+    drivers_penalized_across_last_lap = finish_lap_df[finish_lap_df["interval"] * -1 > finish_lap_df["lap_time"]][
+        "user_id"
+    ]
+    if len(drivers_penalized_across_last_lap) > 0:
+        x = drivers_penalized_across_last_lap.to_list()
 
-    # Find the last lap for each driver. That is the _first_ lap that ends ON or AFTER the race end time
-    finish_lap_df = (
-        lap_df[lap_df["total_time"] >= race_end_time]
-        .sort_values(["user_id", "total_time"])
-        .groupby("user_id")
-        .first()
-        .reset_index()
-    )
+        y = finish_lap_df[finish_lap_df["user_id"].isin(x)][["user_id", "lap"]]
+        y["lap"] = y["lap"] - 1
+        y.loc[y["lap"] < 1, "lap"] = 1
+
+        penalized_lap_df = lap_df.merge(y, on=["user_id", "lap"], how="inner")
+
+        finish_lap_df = finish_lap_df[~finish_lap_df["user_id"].isin(x)]
+
+        finish_lap_df = pd.concat([finish_lap_df, penalized_lap_df])
+
+    # # Compute race end time
+    # race_end_time = lap_df[lap_df["lap"] == lap_df["lap"].max()]["total_time"].min()
+
+    # # Find the last lap for each driver. That is the _first_ lap that ends ON or AFTER the race end time
+    # finish_lap_df = (
+    #     lap_df[lap_df["total_time"] >= race_end_time]
+    #     .sort_values(["user_id", "total_time"])
+    #     .groupby("user_id")
+    #     .first()
+    #     .reset_index()
+    # )
+
     # We also need the last lap per driver, to catch disconnects
-    last_lap_df = lap_df.sort_values(["user_id", "total_time"]).groupby("user_id").last().reset_index()
+    last_lap_df = lap_df.sort_values(["user_id", "lap"]).groupby("user_id").last().reset_index()
 
     last_lap_df = (
         pd.concat([finish_lap_df, last_lap_df]).sort_values("lap").drop_duplicates(subset="user_id", keep="first")
@@ -200,6 +223,19 @@ def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame, qualy_df: pd
     # Compute interval column
     # result_df["interval"] = result_df.apply(_compute_interval, axis=1, winner=result_df.iloc[0])
     result_df = _compute_interval(result_df)
+
+    result_df["average_lap_time"] = result_df["total_time"] / result_df["laps_complete"]
+
+    fastest_lap_df = (
+        lap_df[~lap_df["incident"]]
+        .sort_values("lap_time")
+        .groupby("user_id")
+        .first()
+        .reset_index()[["user_id", "lap_time"]]
+        .rename(columns={"lap_time": "fastest_lap_time"})
+    )
+
+    result_df = result_df.merge(fastest_lap_df, on="user_id", how="left")
 
     # Compute fastest lap column
     return result_df

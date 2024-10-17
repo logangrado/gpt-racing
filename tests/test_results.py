@@ -205,6 +205,7 @@ class TestComputeResults:
                 {"user_id": 2, "lap": 2, "lap_time": 102, "interval": -4},
             ]
         )
+        lap_df["incident"] = False
 
         penalties = pd.DataFrame()
 
@@ -221,6 +222,7 @@ class TestComputeResults:
                     "interval": ["0.000", "-2.000", "-4.000"],
                     "finish_position": [0, 1, 2],
                     "average_lap_time": [100.0, 101.0, 102.0],
+                    "fastest_lap_time": [100, 101, 102],
                 }
             ),
         )
@@ -239,6 +241,7 @@ class TestComputeResults:
                 {"user_id": 2, "lap": 2, "lap_time": 100, "interval": -20},
             ]
         )
+        lap_df["incident"] = False
 
         penalties = pd.DataFrame(
             [
@@ -259,6 +262,7 @@ class TestComputeResults:
                     "interval": ["-", "-20.000", "-25.000"],
                     "finish_position": [0, 1, 2],
                     "average_lap_time": [100.0, 110.0, 112.5],
+                    "fastest_lap_time": [100, 100, 100],
                 }
             ),
         )
@@ -277,7 +281,7 @@ class TestComputeResults:
                 {"user_id": 2, "lap": 3, "lap_time": 100, "interval": -20},
             ]
         )
-
+        lap_df["incident"] = False
         penalties = pd.DataFrame(
             [
                 {"user_id": 0, "time": 15},
@@ -297,6 +301,7 @@ class TestComputeResults:
                     "interval": ["-10.000", "-", "-20.000"],
                     "finish_position": [0, 1, 2],
                     "average_lap_time": [103.33333333333333, 105.0, 106.66666666666667],
+                    "fastest_lap_time": [100, 100, 100],
                 }
             ),
         )
@@ -308,14 +313,15 @@ class TestComputeResults:
                 {"user_id": 0, "lap": 2, "lap_time": 100, "interval": 0},
                 {"user_id": 0, "lap": 3, "lap_time": 100, "interval": 0},
                 # User 1 finishes on lead lap, but they started their last lap within penalty range
-                {"user_id": 1, "lap": 1, "lap_time": 200, "interval": 100},
-                {"user_id": 1, "lap": 2, "lap_time": 90, "interval": 90},
-                {"user_id": 1, "lap": 3, "lap_time": 100, "interval": 90},
+                {"user_id": 1, "lap": 1, "lap_time": 200, "interval": -100},
+                {"user_id": 1, "lap": 2, "lap_time": 90, "interval": -90},
+                {"user_id": 1, "lap": 3, "lap_time": 100, "interval": -90},
                 # User 2 finishes one lap down, 10s behind leader
-                {"user_id": 2, "lap": 1, "lap_time": 200, "interval": 100},
-                {"user_id": 2, "lap": 2, "lap_time": 110, "interval": 110},
+                {"user_id": 2, "lap": 1, "lap_time": 200, "interval": -100},
+                {"user_id": 2, "lap": 2, "lap_time": 110, "interval": -110},
             ]
         )
+        lap_df["incident"] = False
 
         penalties = pd.DataFrame(
             [
@@ -336,9 +342,13 @@ class TestComputeResults:
                     "interval": ["0.000", "-1L", "-1L"],
                     "finish_position": [0, 1, 2],
                     "average_lap_time": [100.0, 155.0, 160.0],
+                    "fastest_lap_time": [100, 110, 90],
                 }
             ),
         )
+
+    def test_penalize_across_two_laps(self):
+        """Test what happens if we apply a penalty big enough to knock a driver down two laps!"""
 
     @pytest.mark.skip("Not implemented")
     def test_disconnected_drivers(self):
