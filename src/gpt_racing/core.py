@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
 
+from typing import Tuple
 
 import pandas as pd
+import polars as pl
+
+# from great_tables import GT
 
 from gpt_racing.iracing_data import IracingDataClient
 from gpt_racing.elo_mmr import compute_elo_mmr
 from gpt_racing.results import compute_results, infer_invalid_laps
+from gpt_racing.scoring.points import compute_points_score
 from gpt_racing import utils
 
 
-def _load_race_data(config, client):
+def _load_race_data(config, client) -> Tuple[pd.DataFrame, pd.DataFrame]:
     # Load lap data
     result_dfs = []
     name_data = []
 
-    for race_config in config.races:
+    for i, race_config in enumerate(config.races):
         # Load lap time DF
         lap_df = client.get_lap_data(race_config.subsession_id)
         lap_df = lap_df.rename(
@@ -30,16 +35,6 @@ def _load_race_data(config, client):
 
         # Infer invalid laps
         lap_df = infer_invalid_laps(lap_df)
-
-        # # Round
-        # lap_df["time"] = lap_df["time"].round(3)
-
-        # # Truncate
-        # lap_df["time"] = (lap_df["time"] * 1000).astype(int) / 1000
-
-        # import numpy as np
-
-        # lap_df["time"] = np.ceil(lap_df["time"] * 1000) / 1000
 
         # Compute results
         if race_config.penalties:
@@ -58,6 +53,11 @@ def _load_race_data(config, client):
         result_df = compute_results(lap_df, penalty_df, qualy_df)
         result_df["subsession_id"] = race_config.subsession_id
 
+        race_name = f"race_{i+1}"
+        if race_config.race_name:
+            race_name += f"_{race_config.race_name}"
+        result_df["race_name"] = race_name
+
         result_dfs.append(result_df)
         name_data.append(qualy_df[["user_id", "display_name"]].drop_duplicates())
 
@@ -67,42 +67,95 @@ def _load_race_data(config, client):
     return result_df, name_df
 
 
-def _write_outputs(rating_df, result_df, output_path):
-    rating_df = rating_df.copy()
-    result_df = result_df.copy()
-
-    # Format results, select columns
-    rating_df["rating"] = utils.format_value_with_delta(rating_df, "rating", "rating_change")
-    rating_df["rank"] = utils.format_value_with_delta(rating_df, "rank", "rank_change")
-    rating_df = rating_df[["subsession_id", "rank", "display_name", "rating"]].rename(
-        columns={"display_name": "Name", "rating": "Rating", "rank": "Rank"}
-    )
-
-    result_df["rating"] = utils.format_value_with_delta(result_df, "rating", "rating_change")
-    result_df["rank"] = utils.format_value_with_delta(result_df, "rank", "rank_change")
-    result_df = result_df[
-        [
-            "subsession_id",
-            "finish_position",
-            "display_name",
-            "interval",
-            "rating",
-            "rank",
-        ]
-    ]
-
-
 def compute_ratings(config, client):
     """
     Compute ratings given a config
     """
     result_df, name_df = _load_race_data(config, client)
+    result_df = pl.DataFrame(result_df)
+    name_df = pl.DataFrame(name_df)
 
-    contest_df = result_df[["user_id", "finish_position", "subsession_id"]].rename(
-        columns={"subsession_id": "contest_id"}
-    )
+    contest_df = result_df[["user_id", "finish_position", "subsession_id"]].rename({"subsession_id": "contest_id"})
 
-    rating_df = compute_elo_mmr(contest_df).rename(columns={"contest_id": "subsession_id"})
+    outputs = {
+        "race_results": [],
+        "standings": [],
+        "points": [],
+        "ELO": [],
+    }
+    for contest_id in contest_df["contest_id"].unique():
+        sub_contest_df = contest_df.filter(pl.col("contest_id") <= contest_id)
+
+        # if config.scoring.type == "POINTS":
+        points_df, points_summary_df = compute_points_score(sub_contest_df, config.points)
+        points_df = points_df.rename({"contest_id": "subsession_id"})
+
+        # if config.scoring.type == "ELO":
+        elo_df = compute_elo_mmr(sub_contest_df.to_pandas()).rename(columns={"contest_id": "subsession_id"})
+        elo_df = pl.DataFrame(elo_df)
+        current_elo_df = elo_df.filter(pl.col("subsession_id") == contest_id)
+
+        # JOIN POINTS
+        race_result_df = (
+            result_df.filter(pl.col("subsession_id") == contest_id)
+            .join(name_df, on="user_id")
+            .join(
+                points_df[["user_id", "subsession_id", "points"]],
+                on=["user_id", "subsession_id"],
+            )
+        )
+
+        # JOIN ELO RATING
+        race_result_df = race_result_df.join(
+            elo_df[["user_id", "subsession_id", "rating", "rating_change", "rank", "rank_change"]],
+            on=["user_id", "subsession_id"],
+        )
+
+        race_result_df = race_result_df.select(
+            "display_name",
+            "start_position",
+            "qualify_lap_time",
+            "finish_position",
+            "interval",
+            "points",
+            "rating",
+            "rating_change",
+            "laps_complete",
+            "total_time",
+            "penalty",
+            "average_lap_time",
+            "fastest_lap_time",
+        ).with_columns(pl.col("start_position") + 1, pl.col("finish_position") + 1)
+
+        # CREATE SERIES STANDINGs DATAFRAME
+        standings_df = (
+            points_df.join(result_df.select("subsession_id", "race_name").unique(), on="subsession_id")
+            .sort("subsession_id")
+            .pivot(on="race_name", index="user_id", values=["points", "drop"])
+            .join(points_summary_df.rename({"points": "points_total", "rank": "points_rank"}), on="user_id")
+            .join(
+                current_elo_df.select("user_id", "rating", "rank", "num_contests").rename(
+                    {"rank": "rating_rank", "num_contests": "num_races"}
+                ),
+                on="user_id",
+            )
+            .join(name_df, on="user_id")
+            .sort("points_rank")
+        )
+
+        outputs["race_results"].append(race_result_df)
+        outputs["standings"].append(standings_df)
+        outputs["points"].append(points_df)
+        outputs["ELO"].append(elo_df)
+
+    return outputs
+    # ============================================
+
+    _render_standings(standings_df)
+    import ipdb
+
+    ipdb.set_trace()
+    pass
 
     # Join ratings and names onto result_df
     result_df = (

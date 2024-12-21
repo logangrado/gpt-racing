@@ -197,7 +197,7 @@ def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame, qualy_df: pd
     # Finally, create the finish order dataframe
     result_df = (
         finish_lap_df[["user_id", "lap", "total_time", "penalty", "interval"]]
-        .sort_values(by=["lap", "total_time"], ascending=[False, True])
+        .sort_values(by=["lap", "interval"], ascending=False)
         .rename(columns={"lap": "laps_complete"})
         .reset_index(drop=True)
     )

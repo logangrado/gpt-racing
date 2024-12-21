@@ -60,6 +60,7 @@ class TestComputeRatings:
     def test_single_race_fake(self, fake_client):
         config = RatingConfig.model_validate(
             {
+                "scoring": {"type": "ELO"},
                 "races": [{"subsession_id": 0}],
             },
         )
@@ -127,9 +128,10 @@ class TestComputeRatings:
             check_dtype=False,
         )
 
-    def test_multi_race_fake(self, fake_client, tmp_path):
+    def test_multi_race_fake(self, fake_client):
         config = RatingConfig.model_validate(
             {
+                "scoring": {"type": "ELO"},
                 "races": [
                     {"subsession_id": 0},
                     {"subsession_id": 1},
@@ -218,7 +220,296 @@ class TestComputeRatings:
             check_dtype=False,
         )
 
-        # Check output artifacts
+
+class TestPointsScoring:
+    def test_single_race_fake(self, fake_client):
+        config = RatingConfig.model_validate(
+            {
+                "scoring": {"type": "POINTS", "points": [10, 5, 3]},
+                "races": [
+                    {
+                        "subsession_id": 0,
+                    },
+                ],
+            },
+        )
+        summary_data = [
+            {
+                "subsession_id": 0,
+                "qualifying": [
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
+                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42, "laps_complete": 3},
+                    {"cust_id": 3, "display_name": "d", "best_lap_time": 43, "laps_complete": 3},
+                ],
+                "race": [
+                    {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
+                    {"cust_id": 1, "display_name": "b", "laps_complete": 3, "average_lap_time": 11},
+                    {"cust_id": 2, "display_name": "c", "laps_complete": 3, "average_lap_time": 12},
+                ],
+            }
+        ]
+
+        _generate_data(summary_data, fake_client)
+
+        rating_df, result_df = core.compute_ratings(config, client=fake_client)
+
+        import ipdb
+
+        ipdb.set_trace()
+        pass
+        # Check result dataframes
+        pd.testing.assert_frame_equal(
+            rating_df,
+            pd.DataFrame(
+                {
+                    "display_name": ["a", "b", "c", "d"],
+                    "user_id": [0, 1, 2, 3],
+                    "rating": [1771, 1579, 1421, 1229],
+                    "rating_change": [271, 79, -79, -271],
+                    "rank": [1, 2, 3, 4],
+                    "rank_change": [pd.NA, pd.NA, pd.NA, pd.NA],
+                    "subsession_id": [0, 0, 0, 0],
+                }
+            ),
+            check_dtype=False,
+        )
+
+        pd.testing.assert_frame_equal(
+            result_df,
+            pd.DataFrame(
+                {
+                    "user_id": [0, 1, 2, 3],
+                    "laps_complete": [3, 3, 3, 0],
+                    "total_time": ["30.000", "33.000", "36.000", "-"],
+                    "penalty": [0.0, 0.0, 0.0, 0.0],
+                    "interval": ["0.000", "3.000", "6.000", "-3L"],
+                    "finish_position": [1, 2, 3, 4],
+                    "average_lap_time": ["10.000", "11.000", "12.000", "-"],
+                    "start_position": [1, 4, 2, 3],
+                    "qualify_lap_time": ["0.004", "0.004", "0.004", "0.004"],
+                    "subsession_id": [0, 0, 0, 0],
+                    "rating": [1771, 1579, 1421, 1229],
+                    "rating_change": [271, 79, -79, -271],
+                    "num_contests": [1, 1, 1, 1],
+                    "participated": [True, True, True, True],
+                    "rank": [1, 2, 3, 4],
+                    "rank_change": [pd.NA, pd.NA, pd.NA, pd.NA],
+                    "display_name": ["a", "b", "c", "d"],
+                }
+            ),
+            check_dtype=False,
+        )
+
+    def test_multi_race_fake(self, fake_client):
+        config = RatingConfig.model_validate(
+            {
+                "scoring": {"type": "POINTS", "points": [10, 5, 3]},
+                "races": [
+                    {"subsession_id": 0},
+                    {"subsession_id": 1},
+                ],
+            },
+        )
+
+        summary_data = [
+            {
+                "subsession_id": 0,
+                "qualifying": [
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
+                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42, "laps_complete": 3},
+                    {"cust_id": 3, "display_name": "d", "best_lap_time": 43, "laps_complete": 3},
+                ],
+                "race": [
+                    {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
+                    {"cust_id": 1, "display_name": "b", "laps_complete": 3, "average_lap_time": 11},
+                    {"cust_id": 2, "display_name": "c", "laps_complete": 3, "average_lap_time": 12},
+                    # {"cust_id": 3, "display_name": "d", "laps_complete": 3, "average_lap_time": 130},
+                ],
+            },
+            {
+                "subsession_id": 1,
+                "qualifying": [
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
+                    {"cust_id": 4, "display_name": "e", "best_lap_time": 43, "laps_complete": 3},
+                ],
+                "race": [
+                    {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
+                    {"cust_id": 1, "display_name": "b", "laps_complete": 3, "average_lap_time": 11},
+                    {"cust_id": 4, "display_name": "e", "laps_complete": 3, "average_lap_time": 12},
+                ],
+            },
+        ]
+
+        _generate_data(summary_data, fake_client)
+
+        rating_df, result_df = core.compute_ratings(
+            config,
+            client=fake_client,
+        )
+        import ipdb
+
+        ipdb.set_trace()
+        pass
+
+        # Check result dataframes
+        pd.testing.assert_frame_equal(
+            rating_df,
+            pd.DataFrame(
+                {
+                    "display_name": ["a", "b", "c", "d", "a", "b", "c", "e", "d"],
+                    "user_id": [0, 1, 2, 3, 0, 1, 2, 4, 3],
+                    "rating": [1771, 1579, 1421, 1229, 1793, 1586, 1421, 1387, 1229],
+                    "rating_change": [271, 79, -79, -271, 22, 7, pd.NA, -113, pd.NA],
+                    "rank": [1, 2, 3, 4, 1, 2, 3, 4, 5],
+                    "rank_change": [pd.NA, pd.NA, pd.NA, pd.NA, 0, 0, 0, pd.NA, 1],
+                    "subsession_id": [0, 0, 0, 0, 1, 1, 1, 1, 1],
+                }
+            ),
+            check_dtype=False,
+        )
+
+        pd.testing.assert_frame_equal(
+            result_df,
+            pd.DataFrame(
+                {
+                    "user_id": [0, 1, 2, 3, 0, 1, 4],
+                    "laps_complete": [3, 3, 3, 0, 3, 3, 3],
+                    "total_time": ["30.000", "33.000", "36.000", "-", "30.000", "33.000", "36.000"],
+                    "penalty": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    "interval": ["0.000", "3.000", "6.000", "-3L", "0.000", "3.000", "6.000"],
+                    "finish_position": [1, 2, 3, 4, 1, 2, 3],
+                    "average_lap_time": ["10.000", "11.000", "12.000", "-", "10.000", "11.000", "12.000"],
+                    "start_position": [1, 4, 2, 3, 1, 3, 2],
+                    "qualify_lap_time": ["0.004", "0.004", "0.004", "0.004", "0.004", "0.004", "0.004"],
+                    "subsession_id": [0, 0, 0, 0, 1, 1, 1],
+                    "rating": [1771, 1579, 1421, 1229, 1793, 1586, 1387],
+                    "rating_change": [271, 79, -79, -271, 22, 7, -113],
+                    "num_contests": [1, 1, 1, 1, 2, 2, 1],
+                    "participated": [True, True, True, True, True, True, True],
+                    "rank": [1, 2, 3, 4, 1, 2, 4],
+                    "rank_change": [pd.NA, pd.NA, pd.NA, pd.NA, 0, 0, pd.NA],
+                    "display_name": ["a", "b", "c", "d", "a", "b", "e"],
+                }
+            ),
+            check_dtype=False,
+        )
+
+    def test_multi_race_with_drop_fake(self, fake_client):
+        config = RatingConfig.model_validate(
+            {
+                "scoring": {
+                    "type": "POINTS",
+                    "points": [10, 5, 3],
+                    "drop_races": 1,
+                },
+                "races": [
+                    {"subsession_id": 0},
+                    {"subsession_id": 1},
+                    {"subsession_id": 2},
+                ],
+            },
+        )
+
+        summary_data = [
+            {
+                "subsession_id": 0,
+                "qualifying": [
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
+                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42, "laps_complete": 3},
+                    {"cust_id": 3, "display_name": "d", "best_lap_time": 43, "laps_complete": 3},
+                ],
+                "race": [
+                    {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
+                    {"cust_id": 1, "display_name": "b", "laps_complete": 3, "average_lap_time": 11},
+                    {"cust_id": 2, "display_name": "c", "laps_complete": 3, "average_lap_time": 12},
+                    # {"cust_id": 3, "display_name": "d", "laps_complete": 3, "average_lap_time": 130},
+                ],
+            },
+            {
+                "subsession_id": 1,
+                "qualifying": [
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
+                    {"cust_id": 4, "display_name": "e", "best_lap_time": 43, "laps_complete": 3},
+                ],
+                "race": [
+                    {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
+                    {"cust_id": 1, "display_name": "b", "laps_complete": 3, "average_lap_time": 11},
+                    {"cust_id": 4, "display_name": "e", "laps_complete": 3, "average_lap_time": 12},
+                ],
+            },
+            {
+                "subsession_id": 2,
+                "qualifying": [
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
+                    {"cust_id": 4, "display_name": "e", "best_lap_time": 43, "laps_complete": 3},
+                ],
+                "race": [
+                    {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
+                    {"cust_id": 1, "display_name": "b", "laps_complete": 3, "average_lap_time": 11},
+                    {"cust_id": 4, "display_name": "e", "laps_complete": 3, "average_lap_time": 12},
+                ],
+            },
+        ]
+
+        _generate_data(summary_data, fake_client)
+
+        out = core.compute_ratings(
+            config,
+            client=fake_client,
+        )
+        import ipdb
+
+        ipdb.set_trace()
+        pass
+
+        # Check result dataframes
+        pd.testing.assert_frame_equal(
+            rating_df,
+            pd.DataFrame(
+                {
+                    "display_name": ["a", "b", "c", "d", "a", "b", "c", "e", "d"],
+                    "user_id": [0, 1, 2, 3, 0, 1, 2, 4, 3],
+                    "rating": [1771, 1579, 1421, 1229, 1793, 1586, 1421, 1387, 1229],
+                    "rating_change": [271, 79, -79, -271, 22, 7, pd.NA, -113, pd.NA],
+                    "rank": [1, 2, 3, 4, 1, 2, 3, 4, 5],
+                    "rank_change": [pd.NA, pd.NA, pd.NA, pd.NA, 0, 0, 0, pd.NA, 1],
+                    "subsession_id": [0, 0, 0, 0, 1, 1, 1, 1, 1],
+                }
+            ),
+            check_dtype=False,
+        )
+
+        pd.testing.assert_frame_equal(
+            result_df,
+            pd.DataFrame(
+                {
+                    "user_id": [0, 1, 2, 3, 0, 1, 4],
+                    "laps_complete": [3, 3, 3, 0, 3, 3, 3],
+                    "total_time": ["30.000", "33.000", "36.000", "-", "30.000", "33.000", "36.000"],
+                    "penalty": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    "interval": ["0.000", "3.000", "6.000", "-3L", "0.000", "3.000", "6.000"],
+                    "finish_position": [1, 2, 3, 4, 1, 2, 3],
+                    "average_lap_time": ["10.000", "11.000", "12.000", "-", "10.000", "11.000", "12.000"],
+                    "start_position": [1, 4, 2, 3, 1, 3, 2],
+                    "qualify_lap_time": ["0.004", "0.004", "0.004", "0.004", "0.004", "0.004", "0.004"],
+                    "subsession_id": [0, 0, 0, 0, 1, 1, 1],
+                    "rating": [1771, 1579, 1421, 1229, 1793, 1586, 1387],
+                    "rating_change": [271, 79, -79, -271, 22, 7, -113],
+                    "num_contests": [1, 1, 1, 1, 2, 2, 1],
+                    "participated": [True, True, True, True, True, True, True],
+                    "rank": [1, 2, 3, 4, 1, 2, 4],
+                    "rank_change": [pd.NA, pd.NA, pd.NA, pd.NA, 0, 0, pd.NA],
+                    "display_name": ["a", "b", "c", "d", "a", "b", "e"],
+                }
+            ),
+            check_dtype=False,
+        )
 
 
 class _TestComputeRatings:
