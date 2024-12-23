@@ -1,4 +1,10 @@
 {
+  points: {
+    drop_races: 1,
+    points: [
+      10,
+    ],
+  },
   races: [
     {
       subsession_id: 66010063,
@@ -66,6 +72,9 @@
       subsession_id: 71591637,
       penalties: [],
     },
-
+    {
+      subsession_id: 72206506,
+      penalties: [],
+    },
   ],
 }
