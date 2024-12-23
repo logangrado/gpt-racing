@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from iracingdataapi.client import irDataClient
 
-from gpt_racing import SECRETS_PATH, CACHE_PATH
+from gpt_racing import SECRETS_PATH, CACHE_PATH, logger
 
 
 def _load_secrets(path):
@@ -26,7 +26,7 @@ def _load_client() -> irDataClient:
     Else, loads client using existing username/password
     """
     if SECRETS_PATH.exists():
-        print(f"Loading credentials from {SECRETS_PATH}")
+        logger.info(f"Loading credentials from {SECRETS_PATH}")
         with open(SECRETS_PATH, "r") as f:
             secrets = json.load(f)
 
@@ -49,7 +49,7 @@ def _load_client() -> irDataClient:
         with open(SECRETS_PATH, "w") as f:
             json.dump(data, f)
 
-    print(f"Authenticated with account '{client.username}'")
+    logger.info(f"Authenticated with account '{client.username}'")
     return client
 
 
@@ -184,14 +184,14 @@ class CachedIRClient:
 
             # Check for cache.
             if data_path.is_file():
-                print("Reading cache")
+                logger.info("Reading cache")
                 with open(data_path, "r") as f:
                     result = json.load(f)
             else:
-                print("Retrieving result")
+                logger.info("Retrieving result")
                 result = func(*args, **kwargs)
                 data_path.parent.mkdir(exist_ok=True, parents=True)
-                print("Writing cache")
+                logger.info("Writing cache")
                 with open(data_path, "w") as f:
                     json.dump(result, f)
 

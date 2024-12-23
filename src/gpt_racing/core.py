@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from typing import Tuple
+import functools
 
 import pandas as pd
 import polars as pl
@@ -14,12 +15,21 @@ from gpt_racing.scoring.points import compute_points_score
 from gpt_racing import utils
 
 
-def _load_race_data(config, client) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def _load_race_data(race_configs, client) -> Tuple[pl.DataFrame, pl.DataFrame]:
     # Load lap data
     result_dfs = []
     name_data = []
+    session_metadata = []
 
-    for i, race_config in enumerate(config.races):
+    for i, race_config in enumerate(race_configs):
+        race_result_df = client.get_race_result(race_config.subsession_id)
+        session_metadata += [
+            {
+                "subsession_id": race_config.subsession_id,
+                "session_end_time": race_result_df.iloc[0]["session_end_time"],
+            }
+        ]
+
         # Load lap time DF
         lap_df = client.get_lap_data(race_config.subsession_id)
         lap_df = lap_df.rename(
@@ -64,18 +74,63 @@ def _load_race_data(config, client) -> Tuple[pd.DataFrame, pd.DataFrame]:
     result_df = pd.concat(result_dfs).reset_index(drop=True)
     name_df = pd.concat(name_data).drop_duplicates().reset_index(drop=True)
 
+    result_df = pl.DataFrame(result_df)
+    name_df = pl.DataFrame(name_df)
+
+    session_mdf = pl.DataFrame(session_metadata)
+    # session_mdf = session_mdf.with_columns(pl.col("session_end_time").cast(pl.Date).alias("session_end_time"))
+
+    result_df = result_df.join(session_mdf["subsession_id", "session_end_time"], how="left", on="subsession_id")
+
     return result_df, name_df
+
+
+def _compute_elo_previous_seasons(elo_config, client):
+    all_races = functools.reduce(lambda x, y: x + y, [x.races for x in elo_config.previous_seasons])
+
+    result_df, _ = _load_race_data(all_races, client)
+
+    return _compute_elo_from_result_df(result_df, elo_config)
+
+
+def _compute_elo_from_result_df(result_df: pl.DataFrame, elo_config, players=None, past_elo_df=None):
+    contest_df = result_df[["user_id", "finish_position", "subsession_id", "session_end_time"]].rename(
+        {"subsession_id": "contest_id", "session_end_time": "contest_date"}
+    )
+    if past_elo_df is not None:
+        past_elo_df = past_elo_df.rename({"subsession_id": "contest_id"})
+
+    elo_df, players = compute_elo_mmr(contest_df, elo_config, players, past_elo_df)
+    elo_df = pl.DataFrame(elo_df).rename({"contest_id": "subsession_id"})
+
+    return elo_df, players
 
 
 def compute_ratings(config, client):
     """
     Compute ratings given a config
     """
-    result_df, name_df = _load_race_data(config, client)
+    players = None
+    past_elo_df = None
+    if config.elo.previous_seasons:
+        past_elo_df, past_players = _compute_elo_previous_seasons(config.elo, client)
+
+    result_df, name_df = _load_race_data(config.races, client)
     result_df = pl.DataFrame(result_df)
     name_df = pl.DataFrame(name_df)
 
-    contest_df = result_df[["user_id", "finish_position", "subsession_id"]].rename({"subsession_id": "contest_id"})
+    race_points_type_df = pl.DataFrame(
+        [
+            {
+                "points_type": race.points_type if race.points_type else config.points.default,
+                "subsession_id": race.subsession_id,
+            }
+            for race in config.races
+        ]
+    )
+    contest_df = result_df[["user_id", "finish_position", "subsession_id", "session_end_time"]].join(
+        race_points_type_df, on="subsession_id"
+    )
 
     outputs = {
         "race_results": [],
@@ -83,21 +138,22 @@ def compute_ratings(config, client):
         "points": [],
         "ELO": [],
     }
-    for contest_id in contest_df["contest_id"].unique():
-        sub_contest_df = contest_df.filter(pl.col("contest_id") <= contest_id)
+    for subsession_id in contest_df["subsession_id"].unique():
+        sub_contest_df = contest_df.filter(pl.col("subsession_id") <= subsession_id)
 
-        # if config.scoring.type == "POINTS":
+        # POINTS
         points_df, points_summary_df = compute_points_score(sub_contest_df, config.points)
-        points_df = points_df.rename({"contest_id": "subsession_id"})
+        current_points_df = points_df.filter(pl.col("subsession_id") == subsession_id).sort(
+            "finish_position", descending=True
+        )
 
-        # if config.scoring.type == "ELO":
-        elo_df = compute_elo_mmr(sub_contest_df.to_pandas()).rename(columns={"contest_id": "subsession_id"})
-        elo_df = pl.DataFrame(elo_df)
-        current_elo_df = elo_df.filter(pl.col("subsession_id") == contest_id)
+        # ELO
+        elo_df, _ = _compute_elo_from_result_df(sub_contest_df, config.elo, past_players, past_elo_df)
+        current_elo_df = elo_df.filter(pl.col("subsession_id") == subsession_id)
 
         # JOIN POINTS
         race_result_df = (
-            result_df.filter(pl.col("subsession_id") == contest_id)
+            result_df.filter(pl.col("subsession_id") == subsession_id)
             .join(name_df, on="user_id")
             .join(
                 points_df[["user_id", "subsession_id", "points"]],
@@ -107,7 +163,7 @@ def compute_ratings(config, client):
 
         # JOIN ELO RATING
         race_result_df = race_result_df.join(
-            elo_df[["user_id", "subsession_id", "rating", "rating_change", "rank", "rank_change"]],
+            current_elo_df[["user_id", "subsession_id", "rating", "rating_change", "rank", "rank_change"]],
             on=["user_id", "subsession_id"],
         )
 
@@ -145,50 +201,7 @@ def compute_ratings(config, client):
 
         outputs["race_results"].append(race_result_df)
         outputs["standings"].append(standings_df)
-        outputs["points"].append(points_df)
-        outputs["ELO"].append(elo_df)
+        outputs["points"].append(current_points_df)
+        outputs["ELO"].append(current_elo_df)
 
     return outputs
-    # ============================================
-
-    _render_standings(standings_df)
-    import ipdb
-
-    ipdb.set_trace()
-    pass
-
-    # Join ratings and names onto result_df
-    result_df = (
-        result_df.merge(rating_df, on=["subsession_id", "user_id"], how="inner")
-        .merge(name_df, on="user_id", how="left")
-        .sort_values(["subsession_id", "finish_position"])
-    )
-
-    # Join names onto rating df, select/rename
-    rating_df = (
-        rating_df.merge(name_df, on="user_id")[
-            [
-                "display_name",
-                "user_id",
-                "rating",
-                "rating_change",
-                "rank",
-                "rank_change",
-                "subsession_id",
-            ]
-        ]
-        .sort_values(["subsession_id", "rank"])
-        .reset_index(drop=True)
-    )
-
-    # Increment columns that start at zero
-    inc_cols = ["start_position", "finish_position"]
-    for col in inc_cols:
-        result_df[col] += 1
-
-    # Format output columns
-    time_cols = ["total_time", "qualify_lap_time", "average_lap_time"]
-    for col in time_cols:
-        result_df[col] = result_df[col].apply(utils.seconds_to_str)
-
-    return rating_df, result_df
