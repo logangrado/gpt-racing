@@ -160,14 +160,18 @@ def compute_elo_mmr(
     all_rounds_df = all_rounds_df.join(contest_counts, on=["user_id", "contest_id"], how="left")
 
     # COMPUTE RANK
-    rank_df = all_rounds_df.filter(pl.col("num_valid_contests") >= elo_config.min_races).with_columns(
-        pl.col("rating").rank("min", descending=True).over("contest_id").cast(pl.Int32).alias("rank")
-    )["user_id", "contest_id", "rank"]
-    all_rounds_df = all_rounds_df.join(rank_df, on=["user_id", "contest_id"], how="left")
+    all_rounds_df = all_rounds_df.join(
+        all_rounds_df.filter(pl.col("num_valid_contests") >= elo_config.min_races).with_columns(
+            pl.col("rating").rank("min", descending=True).over("contest_id").cast(pl.Int32).alias("rank")
+        )["user_id", "contest_id", "rank"],
+        on=["user_id", "contest_id"],
+        how="left",
+    )
 
     # COMPUTE RANK CHANGE
-    all_rounds_df = all_rounds_df.with_columns(pl.col("rank").shift(1).over("user_id").alias("rank_previous"))
-    all_rounds_df = all_rounds_df.with_columns((pl.col("rank") - pl.col("rank_previous")).alias("rank_change"))
+    all_rounds_df = all_rounds_df.with_columns(
+        (pl.col("rank") - pl.col("rank").shift(1).over("user_id")).alias("rank_change")
+    )
 
     all_rounds_df = all_rounds_df.sort(
         ["contest_id", "rank", "rating"], nulls_last=True, descending=[False, False, True]

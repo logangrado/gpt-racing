@@ -68,6 +68,12 @@ def _load_race_data(race_configs, client) -> Tuple[pl.DataFrame, pl.DataFrame]:
             race_name += f"_{race_config.race_name}"
         result_df["race_name"] = race_name
 
+        result_df = result_df.merge(
+            race_result_df[["cust_id", "incidents"]].rename(
+                columns={"cust_id": "user_id", "incidents": "num_incidents"}
+            )
+        )
+
         result_dfs.append(result_df)
         name_data.append(qualy_df[["user_id", "display_name"]].drop_duplicates())
 
@@ -128,9 +134,17 @@ def compute_ratings(config, client):
             for race in config.races
         ]
     )
-    contest_df = result_df[["user_id", "finish_position", "subsession_id", "session_end_time"]].join(
-        race_points_type_df, on="subsession_id"
-    )
+    contest_df = result_df[
+        [
+            "user_id",
+            "finish_position",
+            "subsession_id",
+            "session_end_time",
+            "fastest_lap_time",
+            "num_incidents",
+            "laps_complete",
+        ]
+    ].join(race_points_type_df, on="subsession_id")
 
     outputs = {
         "race_results": [],
@@ -142,10 +156,8 @@ def compute_ratings(config, client):
         sub_contest_df = contest_df.filter(pl.col("subsession_id") <= subsession_id)
 
         # POINTS
-        points_df, points_summary_df = compute_points_score(sub_contest_df, config.points)
-        current_points_df = points_df.filter(pl.col("subsession_id") == subsession_id).sort(
-            "finish_position", descending=True
-        )
+        points_df = compute_points_score(sub_contest_df, config.points)
+        current_points_df = points_df.filter(pl.col("subsession_id") == subsession_id).sort("finish_position")
 
         # ELO
         elo_df, _ = _compute_elo_from_result_df(sub_contest_df, config.elo, past_players, past_elo_df)
@@ -167,28 +179,38 @@ def compute_ratings(config, client):
             on=["user_id", "subsession_id"],
         )
 
-        race_result_df = race_result_df.select(
-            "display_name",
-            "start_position",
-            "qualify_lap_time",
-            "finish_position",
-            "interval",
-            "points",
-            "rating",
-            "rating_change",
-            "laps_complete",
-            "total_time",
-            "penalty",
-            "average_lap_time",
-            "fastest_lap_time",
-        ).with_columns(pl.col("start_position") + 1, pl.col("finish_position") + 1)
+        race_result_df = (
+            race_result_df.select(
+                "display_name",
+                "start_position",
+                "qualify_lap_time",
+                "finish_position",
+                "interval",
+                "points",
+                "rating",
+                "rating_change",
+                "laps_complete",
+                "total_time",
+                "penalty",
+                "average_lap_time",
+                "fastest_lap_time",
+            )
+            .with_columns(pl.col("start_position") + 1, pl.col("finish_position") + 1)
+            .sort("finish_position")
+        )
 
         # CREATE SERIES STANDINGs DATAFRAME
         standings_df = (
             points_df.join(result_df.select("subsession_id", "race_name").unique(), on="subsession_id")
             .sort("subsession_id")
-            .pivot(on="race_name", index="user_id", values=["points", "drop"])
-            .join(points_summary_df.rename({"points": "points_total", "rank": "points_rank"}), on="user_id")
+            .pivot(on="race_name", index="user_id", values=["points", "drop", "fastest_lap", "cleanest_driver"])
+            .join(
+                current_points_df["user_id", "cumulative_points", "rank", "rank_change"].rename(
+                    {"cumulative_points": "points_total", "rank": "points_rank", "rank_change": "points_rank_change"}
+                ),
+                on="user_id",
+            )
+            # .join(points_summary_df.rename({"points": "points_total", "rank": "points_rank"}), on="user_id")
             .join(
                 current_elo_df.select("user_id", "rating", "rank", "num_contests").rename(
                     {"rank": "rating_rank", "num_contests": "num_races"}

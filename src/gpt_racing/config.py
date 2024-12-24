@@ -22,9 +22,19 @@ class Race(BaseModel):
 
 
 class PointsConfig(BaseModel):
+    class FastestLapConfig(BaseModel):
+        points: int = 1
+        must_be_on_lead_lap: bool = True
+
+    class CleanestDriverConfig(BaseModel):
+        points: int = 1
+        must_be_on_lead_lap: bool = True
+
     drop_races: int = 0
     points: Union[list[int], dict[str, list[int]]]
     default: str = "default"
+    fastest_lap: Optional[FastestLapConfig] = None
+    cleanest_driver: Optional[CleanestDriverConfig] = None
 
 
 class ELOConfig(BaseModel):
