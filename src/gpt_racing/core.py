@@ -189,6 +189,8 @@ def compute_ratings(config, client):
                 "points",
                 "rating",
                 "rating_change",
+                "rank",
+                "rank_change",
                 "laps_complete",
                 "total_time",
                 "penalty",

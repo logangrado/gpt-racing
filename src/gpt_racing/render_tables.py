@@ -113,7 +113,9 @@ def render_standings(standings_df: pl.DataFrame):
     race_col_map = {"points_" + col: col.replace("_", " ").title() for col in race_cols}
 
     standings_df = standings_df.sort("points_rank").with_columns(
-        pl.col("points_rank_change").map_elements(functools.partial(_format_change_only, rank=True), return_dtype=str),
+        pl.col("points_rank_change").map_elements(
+            functools.partial(_format_change_only, rank=True), return_dtype=str, skip_nulls=False
+        ),
         pl.when(pl.col("rating_rank").is_not_null())
         .then(pl.col("rating_rank"))
         .otherwise(pl.lit(""))
@@ -123,10 +125,6 @@ def render_standings(standings_df: pl.DataFrame):
             functools.partial(_format_change_only, rank=True), return_dtype=str, skip_nulls=False
         ),
     )
-
-    show = False
-    if not standings_df["points_rank_change"].is_null().all():
-        show = True
 
     select_cols = {
         **{
@@ -188,23 +186,7 @@ def render_standings(standings_df: pl.DataFrame):
     table_html = _combine_column_headers(table_html, "Rank", ["Rank", "points_rank_change"])
     table_html = _combine_column_headers(table_html, "Rating Rank", ["Rating Rank", "rating_rank_change"])
 
-    if show:
-        _render_html(table_html)
-        # from IPython.display import display, HTML
-        # import ipdb
-
-        # ipdb.set_trace()
-
-        # display(HTML(custom_css + gt.render("html")))
-        import ipdb
-
-        ipdb.set_trace()
-        pass
-        gt.show()
-        import sys
-
-        sys.exit()
-    return gt
+    return table_html
 
 
 def _format_rating(row) -> str:
@@ -243,7 +225,19 @@ def render_race_results(df: pl.DataFrame):
         pl.col("average_lap_time").map_elements(utils.seconds_to_str, return_dtype=str),
         pl.struct(["fastest_lap_time", "fastest_lap"]).map_elements(_format_fastest_lap, return_dtype=str),
         pl.struct(["num_incidents", "cleanest_driver"]).map_elements(_format_incidents, return_dtype=str),
-        pl.struct(["rating", "rating_change"]).map_elements(_format_rating, return_dtype=str).alias("rating"),
+        # pl.struct(["rating", "rating_change"]).map_elements(_format_rating, return_dtype=str).alias("rating"),
+        pl.when(pl.col("rank").is_not_null()).then(pl.col("rank")).otherwise(pl.lit("")).alias("rank"),
+        # Render RATING column - None if we aren't rated
+        pl.when(pl.col("rank").is_not_null()).then(pl.col("rating")).otherwise(pl.lit("")).alias("rating"),
+        # Render rating change column
+        pl.when(pl.col("rank").is_not_null())
+        .then(
+            pl.col("rating_change").map_elements(
+                functools.partial(_format_change_only), return_dtype=str, skip_nulls=False
+            )
+        )
+        .otherwise(pl.lit(""))
+        .alias("rating_change"),
         pl.col("start_position").cast(pl.Int32),
     )
 
@@ -251,6 +245,7 @@ def render_race_results(df: pl.DataFrame):
         "finish_position": "Pos",
         "display_name": "Name",
         "rating": "Rating",
+        "rating_change": "rating_change",
         "qualify_lap_time": "Qual. Lap",
         "start_position": "Start",
         "interval": "Interval",
@@ -263,16 +258,16 @@ def render_race_results(df: pl.DataFrame):
     df = df.select(select_cols.keys()).rename(select_cols)
     gt = GT.GT(df)
 
-    # Dark mode
-    # gt = gt.tab_options(table_background_color="#333333", table_font_color="#cccccc")
-
     gt = gt.tab_options(
         data_row_padding="1px",
     )
     gt = gt.tab_style(
         style=GT.style.borders(sides="right", color="#000000", style="solid", weight="1px"),
-        locations=GT.loc.body(columns="Rating"),
+        locations=GT.loc.body(columns="rating_change"),
     )
     gt = _add_row_striping(gt)
 
-    return gt
+    table_html = gt.render("html")
+    table_html = _combine_column_headers(table_html, "Rating", ["Rating", "rating_change"])
+
+    return table_html

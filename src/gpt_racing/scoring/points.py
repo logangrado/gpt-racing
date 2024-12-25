@@ -129,28 +129,27 @@ def compute_points_score(data: pl.DataFrame, config: PointsConfig) -> pl.DataFra
             .over("user_id")
             .alias("cumulative_points")
         )
-        # Compute rank
+        # Number of races
         .with_columns(
-            pl.col("cumulative_points").rank("min", descending=True).over("subsession_id").cast(pl.Int32).alias("rank")
+            (pl.when(pl.col("finish_position").is_not_null()).then(1).otherwise(0))
+            .cum_sum()
+            .over("user_id")
+            .alias("num_races")
+        )
+        # Compute rank
+        # .with_columns(
+        #     pl.col("cumulative_points").rank("min", descending=True).over("subsession_id").cast(pl.Int32).alias("rank")
+        # )
+        # ..
+        .with_columns(
+            pl.when(pl.col("num_races") > 0)
+            .then(pl.col("cumulative_points").rank("min", descending=True).over("subsession_id"))
+            .otherwise(None)  # Fill non-matching rows with None
+            .cast(pl.Int32)
+            .alias("rank")
         )
         # Compute rank change
         .with_columns((pl.col("rank") - pl.col("rank").shift(1).over("user_id")).alias("rank_change"))
     )
 
     return out
-    # import ipdb
-
-    # ipdb.set_trace()
-    # pass
-    # # Compute cumulative points
-    # total_points = (
-    #     out.filter(~pl.col("drop"))
-    #     .group_by("user_id")
-    #     .agg(pl.sum("points"))
-    #     .with_columns(pl.col("points").rank("min", descending=True).alias("rank"))
-    # ).sort("rank", "user_id")
-
-    # import ipdb
-
-    # ipdb.set_trace()
-    # return out, total_points

@@ -60,14 +60,20 @@ def core(config):
         path = pdf_out_path / f"standings_race_{i+1}.html"
 
         with open(path, "w") as f:
-            f.write(gt.as_raw_html())
+            if isinstance(gt, str):
+                f.write(gt)
+            else:
+                f.write(gt.as_raw_html())
 
     for i, table in enumerate(out["race_results"]):
         gt = render_tables.render_race_results(table)
         path = pdf_out_path / f"result_race_{i+1}.html"
 
         with open(path, "w") as f:
-            f.write(gt.as_raw_html())
+            if isinstance(gt, str):
+                f.write(gt)
+            else:
+                f.write(gt.as_raw_html())
 
 
 if __name__ == "__main__":
