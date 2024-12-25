@@ -168,7 +168,7 @@ def compute_ratings(config, client):
             result_df.filter(pl.col("subsession_id") == subsession_id)
             .join(name_df, on="user_id")
             .join(
-                points_df[["user_id", "subsession_id", "points"]],
+                points_df[["user_id", "subsession_id", "points", "fastest_lap", "cleanest_driver"]],
                 on=["user_id", "subsession_id"],
             )
         )
@@ -194,6 +194,9 @@ def compute_ratings(config, client):
                 "penalty",
                 "average_lap_time",
                 "fastest_lap_time",
+                "num_incidents",
+                "fastest_lap",
+                "cleanest_driver",
             )
             .with_columns(pl.col("start_position") + 1, pl.col("finish_position") + 1)
             .sort("finish_position")
@@ -212,8 +215,8 @@ def compute_ratings(config, client):
             )
             # .join(points_summary_df.rename({"points": "points_total", "rank": "points_rank"}), on="user_id")
             .join(
-                current_elo_df.select("user_id", "rating", "rank", "num_contests").rename(
-                    {"rank": "rating_rank", "num_contests": "num_races"}
+                current_elo_df.select("user_id", "rating", "rank", "rank_change", "num_contests").rename(
+                    {"rank": "rating_rank", "num_contests": "num_races", "rank_change": "rating_rank_change"}
                 ),
                 on="user_id",
             )

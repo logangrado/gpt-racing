@@ -42,7 +42,7 @@ def core(config):
             print(
                 f"Path exists, and is not an output dir: {out_path}\nPlease manually remove this dir or select a new one"
             )
-            return1
+            return
 
     out_path.mkdir(parents=True)
     sentinel.touch()

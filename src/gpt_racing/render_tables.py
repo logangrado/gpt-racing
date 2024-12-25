@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import functools
 import re
 import great_tables as GT
 import polars as pl
@@ -7,24 +8,141 @@ import polars as pl
 from gpt_racing import utils
 
 
+def _add_row_striping(table):
+    return table.tab_options(row_striping_include_table_body=True, row_striping_background_color="#eeeeee")
+
+
+def _format_change(x, dx, rank=False):
+    if dx is None:
+        dx = ""
+    else:
+        if rank:
+            if dx > 0:
+                dx = f"(<span style='color:red'>↓{abs(dx)}</span>)"
+            elif dx == 0:
+                dx = "(-)"
+            else:
+                dx = f"(<span style='color:green'>↑{abs(dx)}</span>)"
+        else:
+            if dx > 0:
+                dx = f"(<span style='color:green'>+{abs(dx)}</span>)"
+            elif dx == 0:
+                dx = "(-)"
+            else:
+                dx = f"(<span style='color:red'>-{abs(dx)}</span>)"
+
+    # Center on space
+    out = f"""<div style='display: flex; align-items: center; line-height: 1; width: auto;'><div style='flex: 1; text-align: right; padding-right: 4px;'>{x}</div><div style='flex: 1; text-align: left; padding-left: 4px;'>{dx}</div></div>"""
+
+    out = f"""
+    <div class="progress-ww">
+      <div><span>{x}</span> - <span>{dx}</span></div>
+    </div>
+    """
+
+    return out
+
+
+def _format_change_only(dx, rank=False):
+    if dx is None:
+        dx = ""
+    else:
+        if rank:
+            if dx > 0:
+                dx = f"(<span style='color:red'>↓{abs(dx)}</span>)"
+            elif dx == 0:
+                dx = "(-)"
+            else:
+                dx = f"(<span style='color:green'>↑{abs(dx)}</span>)"
+        else:
+            if dx > 0:
+                dx = f"(<span style='color:green'>+{abs(dx)}</span>)"
+            elif dx == 0:
+                dx = "(-)"
+            else:
+                dx = f"(<span style='color:red'>-{abs(dx)}</span>)"
+
+    return dx
+
+
+def _combine_column_headers(html, label, columns):
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(html)
+    # Find the header row with class 'gt_col_headings'
+    header_row = soup.find("tr", class_="gt_col_headings")
+    if not header_row:
+        raise ValueError("Header row with class 'gt_col_headings' not found.")
+
+    col_headers = header_row.find_all("th")
+
+    # Get col header indices
+    col_header_idx = [i for i, c in enumerate(col_headers) if c["id"] in (columns)]
+    if len(col_header_idx) != len(columns):
+        raise ValueError("Missing some columns")
+
+    if len([True for x, y in zip(col_header_idx[1:], col_header_idx[:-1]) if (x - y) > 1]) > 0:
+        raise ValueError("Some columns are not next to eachother")
+
+    col_headers[col_header_idx[0]]["id"] = label
+    col_headers[col_header_idx[0]]["colspan"] = str(len(columns))
+    col_headers[col_header_idx[0]]["class"][-1] = "gt_center"
+
+    for i in col_header_idx[1:][::-1]:
+        col_headers[i].decompose()
+    return str(soup)
+
+
+def _render_html(html):
+    import tempfile
+    import webbrowser
+    from pathlib import Path
+    import time
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path = Path(tmpdir) / "page.html"
+        with open(path, "w") as f:
+            f.write(html)
+
+        webbrowser.open("file://" + str(path))
+        time.sleep(5)
+
+
 def render_standings(standings_df: pl.DataFrame):
     race_cols = [col.replace("points_", "") for col in standings_df.columns if col.startswith("points_race_")]
     race_col_map = {"points_" + col: col.replace("_", " ").title() for col in race_cols}
 
+    standings_df = standings_df.sort("points_rank").with_columns(
+        pl.col("points_rank_change").map_elements(functools.partial(_format_change_only, rank=True), return_dtype=str),
+        pl.when(pl.col("rating_rank").is_not_null())
+        .then(pl.col("rating_rank"))
+        .otherwise(pl.lit(""))
+        .alias("rating_rank"),
+        pl.when(pl.col("rating_rank").is_not_null()).then(pl.col("rating")).otherwise(pl.lit("")).alias("rating"),
+        pl.col("rating_rank_change").map_elements(
+            functools.partial(_format_change_only, rank=True), return_dtype=str, skip_nulls=False
+        ),
+    )
+
+    show = False
+    if not standings_df["points_rank_change"].is_null().all():
+        show = True
+
     select_cols = {
         **{
             "points_rank": "Rank",
+            "points_rank_change": "points_rank_change",
             "display_name": "Name",
+            "rating": "Rating",
+            "rating_rank": "Rating Rank",
+            "rating_rank_change": "rating_rank_change",
         },
         **race_col_map,
         **{
             "points_total": "Total Points",
-            "rating": "Rating",
-            "rating_rank": "Rating Rank",
         },
     }
 
-    standings_df = standings_df.sort("points_rank")
     df = standings_df.select(select_cols.keys()).rename(select_cols)
 
     # Format None values in race cols
@@ -35,7 +153,7 @@ def render_standings(standings_df: pl.DataFrame):
 
     gt = gt.tab_style(
         style=GT.style.borders(sides="right", color="#000000", style="solid", weight="1px"),
-        locations=GT.loc.body(columns="Name"),
+        locations=GT.loc.body(columns="rating_rank_change"),
     )
 
     gt = gt.tab_style(
@@ -62,27 +180,60 @@ def render_standings(standings_df: pl.DataFrame):
     gt = gt.tab_options(
         data_row_padding="1px",
     )
-    #     .tab_options(
-    # source_notes_font_size='x-small',
-    # source_notes_padding=3,
-    # table_font_names=system_fonts("humanist"),
-    # data_row_padding='1px',
-    # heading_background_color='antiquewhite',
-    # source_notes_background_color='antiquewhite',
-    # column_labels_background_color='antiquewhite',
-    # table_background_color='snow',
-    # data_row_padding_horizontal=3,
-    # column_labels_padding_horizontal=58
-    # ) \
 
+    gt = _add_row_striping(gt)
+    gt = gt.tab_style(style=GT.style.text(align="right"), locations=GT.loc.body(columns="Rating Rank"))
+
+    table_html = gt.render("html")
+    table_html = _combine_column_headers(table_html, "Rank", ["Rank", "points_rank_change"])
+    table_html = _combine_column_headers(table_html, "Rating Rank", ["Rating Rank", "rating_rank_change"])
+
+    if show:
+        _render_html(table_html)
+        # from IPython.display import display, HTML
+        # import ipdb
+
+        # ipdb.set_trace()
+
+        # display(HTML(custom_css + gt.render("html")))
+        import ipdb
+
+        ipdb.set_trace()
+        pass
+        gt.show()
+        import sys
+
+        sys.exit()
     return gt
 
 
 def _format_rating(row) -> str:
-    out = f"{row['rating']} ("
     if row["rating_change"] > 0:
-        out += "+"
-    out = out + f"{row['rating_change']})"
+        rating_change = f"<span style='color:green'>+{row['rating_change']}</span>"
+    else:
+        rating_change = f"<span style='color:red'>{row['rating_change']}</span>"
+
+    # Center on space
+    out = f"""
+        <div style='display: flex; align-items: center; line-height: 1; width: 120px;'>
+            <div style='flex: 1; text-align: right; padding-right: 4px;'>{row['rating']}</div>
+            <div style='flex: 1; text-align: left; padding-left: 4px;'>({rating_change})</div>
+        </div>
+    """
+    return out
+
+
+def _format_fastest_lap(row) -> str:
+    out = utils.seconds_to_str(row["fastest_lap_time"])
+    if row["fastest_lap"]:
+        out = f"<span style='color:DarkViolet; font-weight:bold'>{out}</span>"
+    return out
+
+
+def _format_incidents(row) -> str:
+    out = str(row["num_incidents"])
+    if row["cleanest_driver"]:
+        out = f"<span style='color:#007BFF; font-weight:bold'>{out}</span>"
     return out
 
 
@@ -90,7 +241,8 @@ def render_race_results(df: pl.DataFrame):
     df = df.sort("finish_position").with_columns(
         pl.col("qualify_lap_time").map_elements(utils.seconds_to_str, return_dtype=str),
         pl.col("average_lap_time").map_elements(utils.seconds_to_str, return_dtype=str),
-        pl.col("fastest_lap_time").map_elements(utils.seconds_to_str, return_dtype=str),
+        pl.struct(["fastest_lap_time", "fastest_lap"]).map_elements(_format_fastest_lap, return_dtype=str),
+        pl.struct(["num_incidents", "cleanest_driver"]).map_elements(_format_incidents, return_dtype=str),
         pl.struct(["rating", "rating_change"]).map_elements(_format_rating, return_dtype=str).alias("rating"),
         pl.col("start_position").cast(pl.Int32),
     )
@@ -98,26 +250,29 @@ def render_race_results(df: pl.DataFrame):
     select_cols = {
         "finish_position": "Pos",
         "display_name": "Name",
+        "rating": "Rating",
         "qualify_lap_time": "Qual. Lap",
         "start_position": "Start",
         "interval": "Interval",
         "average_lap_time": "Avg. Lap",
         "fastest_lap_time": "Best Lap",
+        "num_incidents": "Inc",
         "points": "Points",
-        "rating": "Rating",
-        # Qual lap time
-        # Average lap time
     }
 
     df = df.select(select_cols.keys()).rename(select_cols)
     gt = GT.GT(df)
+
+    # Dark mode
+    # gt = gt.tab_options(table_background_color="#333333", table_font_color="#cccccc")
 
     gt = gt.tab_options(
         data_row_padding="1px",
     )
     gt = gt.tab_style(
         style=GT.style.borders(sides="right", color="#000000", style="solid", weight="1px"),
-        locations=GT.loc.body(columns="Name"),
+        locations=GT.loc.body(columns="Rating"),
     )
+    gt = _add_row_striping(gt)
 
     return gt
