@@ -18,7 +18,8 @@ def _load_config(path):
 
 @click.command
 @click.argument("config")
-def core(config):
+@click.argument("out_path")
+def core(config, out_path):
     from gpt_racing.config import RatingConfig
     from gpt_racing import core
     from gpt_racing.iracing_data import IracingDataClient
@@ -33,7 +34,7 @@ def core(config):
     # render_tables.render_standings(out["standings"][-1]).show()
 
     # Write outputs
-    out_path = Path("out")
+    out_path = Path(out_path)
     sentinel = out_path / ".sentinel"
     if out_path.is_dir():
         if sentinel.is_file():

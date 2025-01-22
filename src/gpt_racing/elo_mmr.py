@@ -79,16 +79,139 @@ def _write_config(config, config_path):
         json.dump(config, f)
 
 
-def compute_elo_mmr(
-    data: pl.DataFrame, elo_config, players=None, history=None
-) -> Tuple[pd.DataFrame, dict[int, elommr.Player]]:
-    elo_mmr = elommr.EloMMR(
-        drift_per_sec=0,
-        weight_limit=1,
-    )
+class ELOMMR:
+    def __init__(self, elo_config):
+        self._elo_mmr = elommr.EloMMR(
+            drift_per_sec=0,
+            weight_limit=1,
+        )
+        self._players = {}
+        self._config = elo_config
+        self._participation_df = None
+        self._history = []
 
-    if players is None:
+    def _get_or_create_player(self, player_id):
+        player = self._players.get(player_id)
+
+        if player is None:
+            player = elommr.Player()
+            self._players[player_id] = player
+
+        return player
+
+    def _update_participation_record(self, contest_df):
+        participation_df = contest_df["contest_id", "contest_date", "user_id"]
+
+        if self._participation_df is None:
+            self._participation_df = participation_df
+        else:
+            self._participation_df = pl.concat([self._participation_df, participation_df])
+
+    def update(self, df: pl.DataFrame):
+        """
+        Update ratings with a dataframe of contests
+        """
+        for (contest_id, contest_date), contest_df in df.sort("contest_id").group_by(
+            "contest_id", "contest_date", maintain_order=True
+        ):
+            standings = []
+            self._update_participation_record(contest_df)
+
+            for row in contest_df.iter_rows(named=True):
+                player = self._get_or_create_player(row["user_id"])
+
+                standings.append(
+                    (
+                        player,
+                        row["finish_position"],
+                        row["finish_position"] + (contest_df["finish_position"] == row["finish_position"]).sum() - 1,
+                    )
+                )
+
+            self._elo_mmr.round_update(standings=standings, contest_time=contest_date.timestamp())
+
+            # Need to record all ratings each time
+            round_data = []
+            for user_id, player in self._players.items():
+                # Collect for all users, regardless of participation
+                num_contests = len(player.event_history)
+                current_rating = player.event_history[-1].mu
+                last_rating = 1500 if num_contests < 2 else player.event_history[-2].mu
+                rating_change = current_rating - last_rating
+                participated = any(contest_df["user_id"] == user_id)
+
+                round_data.append(
+                    {
+                        "user_id": user_id,
+                        "rating": current_rating,
+                        "rating_change": rating_change,
+                        "num_contests": num_contests,
+                        "participated": participated,
+                    }
+                )
+            round_df = pl.DataFrame(round_data).with_columns(
+                pl.lit(contest_id).alias("contest_id").cast(df["contest_id"].dtype),
+                pl.lit(contest_date).alias("contest_date"),
+            )
+            self._history.append(round_df)
+
+    def collect_results(self):
+        # Collect results. Collect for all existing players, even if they didn't compete in this round
+        all_rounds_df = pl.concat(self._history)
+
+        contest_counts = (
+            all_rounds_df.join(all_rounds_df["user_id", "contest_date", "participated"], on="user_id", suffix="_y")
+            .filter(
+                (pl.col("contest_date_y") >= pl.col("contest_date") - self._config.time_window)
+                & (pl.col("contest_date_y") <= pl.col("contest_date"))
+                & pl.col("participated_y")
+            )
+            .group_by("user_id", "contest_id")
+            .agg(pl.len().alias("num_valid_contests"))
+        )
+
+        all_rounds_df = all_rounds_df.join(contest_counts, on=["user_id", "contest_id"], how="left")
+
+        # COMPUTE RANK
+        # all_rounds_df = all_rounds_df.join(
+        #     all_rounds_df.filter(pl.col("num_valid_contests") >= elo_config.min_races).with_columns(
+        #         pl.col("rating").rank("min", descending=True).over("contest_id").cast(pl.Int32).alias("rank")
+        #     )["user_id", "contest_id", "rank"],
+        #     on=["user_id", "contest_id"],
+        #     how="left",
+        # )
+        all_rounds_df = all_rounds_df.with_columns(
+            pl.when(pl.col("num_valid_contests") >= self._config.min_races)
+            .then(pl.col("rating").rank("min", descending=True).over("contest_id"))
+            .otherwise(None)  # Fill non-matching rows with None
+            .cast(pl.Int32)
+            .alias("rank")
+        )
+
+        # COMPUTE RANK CHANGE
+        all_rounds_df = all_rounds_df.with_columns(
+            (pl.col("rank") - pl.col("rank").shift(1).over("user_id")).alias("rank_change")
+        )
+
+        all_rounds_df = all_rounds_df.sort(
+            ["contest_id", "rank", "rating"], nulls_last=True, descending=[False, False, True]
+        )
+
+        # if history is not None:
+        #     all_rounds_df = all_rounds_df.join(history, on="contest_id", how="anti")
+
+        return all_rounds_df
+
+
+def compute_elo_mmr(data: pl.DataFrame, elo_config, elo_state) -> Tuple[pd.DataFrame, tuple]:
+    if elo_state is None:
+        elo_mmr = elommr.EloMMR(
+            drift_per_sec=0,
+            weight_limit=1,
+        )
         players = {}
+    else:
+        elo_mmr, players = elo_state
 
     round_dfs = []
     for (contest_id, contest_date), contest_df in data.sort("contest_id").group_by(
@@ -143,8 +266,8 @@ def compute_elo_mmr(
         round_dfs.append(round_df)
 
     all_rounds_df = pl.concat(round_dfs)
-    if history is not None:
-        all_rounds_df = pl.concat([history[all_rounds_df.columns], all_rounds_df])
+    # if history is not None:
+    #     all_rounds_df = pl.concat([history[all_rounds_df.columns], all_rounds_df])
 
     contest_counts = (
         all_rounds_df.join(all_rounds_df["user_id", "contest_date", "participated"], on="user_id", suffix="_y")
@@ -160,12 +283,19 @@ def compute_elo_mmr(
     all_rounds_df = all_rounds_df.join(contest_counts, on=["user_id", "contest_id"], how="left")
 
     # COMPUTE RANK
-    all_rounds_df = all_rounds_df.join(
-        all_rounds_df.filter(pl.col("num_valid_contests") >= elo_config.min_races).with_columns(
-            pl.col("rating").rank("min", descending=True).over("contest_id").cast(pl.Int32).alias("rank")
-        )["user_id", "contest_id", "rank"],
-        on=["user_id", "contest_id"],
-        how="left",
+    # all_rounds_df = all_rounds_df.join(
+    #     all_rounds_df.filter(pl.col("num_valid_contests") >= elo_config.min_races).with_columns(
+    #         pl.col("rating").rank("min", descending=True).over("contest_id").cast(pl.Int32).alias("rank")
+    #     )["user_id", "contest_id", "rank"],
+    #     on=["user_id", "contest_id"],
+    #     how="left",
+    # )
+    all_rounds_df = all_rounds_df.with_columns(
+        pl.when(pl.col("num_valid_contests") >= elo_config.min_races)
+        .then(pl.col("rating").rank("min", descending=True).over("contest_id"))
+        .otherwise(None)  # Fill non-matching rows with None
+        .cast(pl.Int32)
+        .alias("rank")
     )
 
     # COMPUTE RANK CHANGE
@@ -177,10 +307,10 @@ def compute_elo_mmr(
         ["contest_id", "rank", "rating"], nulls_last=True, descending=[False, False, True]
     )
 
-    if history is not None:
-        all_rounds_df = all_rounds_df.join(history, on="contest_id", how="anti")
+    # if history is not None:
+    #     all_rounds_df = all_rounds_df.join(history, on="contest_id", how="anti")
 
-    return all_rounds_df, players
+    return all_rounds_df, (elo_mmr, players)
 
 
 def _compute_elo_mmr_rust(data: pd.DataFrame) -> pd.DataFrame:

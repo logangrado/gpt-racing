@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import pandas as pd
+import polars as pl
 
 
 def _format_value_with_delta_helper(value, delta):
@@ -18,6 +19,15 @@ def _format_value_with_delta_helper(value, delta):
 
 def format_value_with_delta(df, value_col, delta_col):
     return df.apply(lambda x: _format_value_with_delta_helper(x[value_col], x[delta_col]), axis=1)
+
+
+def require_columns(df: pl.DataFrame, cols: list[str]):
+    """
+    Raise error if dataframe is missing required columns
+    """
+    missing_cols = [col for col in cols if col not in df.columns]
+    if missing_cols:
+        raise ValueError(f"Missing required columns: {missing_cols}")
 
 
 def seconds_to_str(seconds, precision=3):

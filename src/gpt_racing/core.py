@@ -9,7 +9,7 @@ import polars as pl
 # from great_tables import GT
 
 from gpt_racing.iracing_data import IracingDataClient
-from gpt_racing.elo_mmr import compute_elo_mmr
+from gpt_racing.elo_mmr import compute_elo_mmr, ELOMMR
 from gpt_racing.results import compute_results, infer_invalid_laps
 from gpt_racing.scoring.points import compute_points_score
 from gpt_racing import utils
@@ -91,35 +91,42 @@ def _load_race_data(race_configs, client) -> Tuple[pl.DataFrame, pl.DataFrame]:
     return result_df, name_df
 
 
-def _compute_elo_previous_seasons(elo_config, client):
+def _compute_elo_previous_seasons(elo_config, client, elo_mmr):
     all_races = functools.reduce(lambda x, y: x + y, [x.races for x in elo_config.previous_seasons])
 
     result_df, _ = _load_race_data(all_races, client)
 
-    return _compute_elo_from_result_df(result_df, elo_config)
+    for subsession_id in result_df["subsession_id"].unique():
+        this_contest_df = result_df.filter(pl.col("subsession_id") == subsession_id)
+        elo_mmr = _compute_elo_from_result_df(this_contest_df, elo_config, elo_mmr)
+
+    return elo_mmr
 
 
-def _compute_elo_from_result_df(result_df: pl.DataFrame, elo_config, players=None, past_elo_df=None):
+def _compute_elo_from_result_df(result_df: pl.DataFrame, elo_config, elo_mmr):
     contest_df = result_df[["user_id", "finish_position", "subsession_id", "session_end_time"]].rename(
         {"subsession_id": "contest_id", "session_end_time": "contest_date"}
     )
-    if past_elo_df is not None:
-        past_elo_df = past_elo_df.rename({"subsession_id": "contest_id"})
 
-    elo_df, players = compute_elo_mmr(contest_df, elo_config, players, past_elo_df)
-    elo_df = pl.DataFrame(elo_df).rename({"contest_id": "subsession_id"})
+    elo_mmr.update(contest_df)
+    # elo_df, elo_state = compute_elo_mmr(contest_df, elo_config, elo_state)
+    # elo_df = pl.DataFrame(elo_df).rename({"contest_id": "subsession_id"})
 
-    return elo_df, players
+    # elo_mmr.update(contest_df)
+
+    return elo_mmr
 
 
 def compute_ratings(config, client):
     """
     Compute ratings given a config
     """
-    players = None
-    past_elo_df = None
+    # players = None
+    # past_elo_df = None
+    elo_mmr = ELOMMR(config.elo)
+
     if config.elo.previous_seasons:
-        past_elo_df, past_players = _compute_elo_previous_seasons(config.elo, client)
+        elo_mmr = _compute_elo_previous_seasons(config.elo, client, elo_mmr)
 
     result_df, name_df = _load_race_data(config.races, client)
     result_df = pl.DataFrame(result_df)
@@ -154,13 +161,16 @@ def compute_ratings(config, client):
     }
     for subsession_id in contest_df["subsession_id"].unique():
         sub_contest_df = contest_df.filter(pl.col("subsession_id") <= subsession_id)
+        this_contest_df = contest_df.filter(pl.col("subsession_id") == subsession_id)
 
         # POINTS
         points_df = compute_points_score(sub_contest_df, config.points)
         current_points_df = points_df.filter(pl.col("subsession_id") == subsession_id).sort("finish_position")
 
         # ELO
-        elo_df, _ = _compute_elo_from_result_df(sub_contest_df, config.elo, past_players, past_elo_df)
+        elo_mmr = _compute_elo_from_result_df(this_contest_df, config.elo, elo_mmr)
+        elo_df = elo_mmr.collect_results()
+        elo_df = elo_df.rename({"contest_id": "subsession_id"})
         current_elo_df = elo_df.filter(pl.col("subsession_id") == subsession_id)
 
         # JOIN POINTS
