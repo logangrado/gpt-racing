@@ -137,10 +137,6 @@ def compute_points_score(data: pl.DataFrame, config: PointsConfig) -> pl.DataFra
             .alias("num_races")
         )
         # Compute rank
-        # .with_columns(
-        #     pl.col("cumulative_points").rank("min", descending=True).over("subsession_id").cast(pl.Int32).alias("rank")
-        # )
-        # ..
         .with_columns(
             pl.when(pl.col("num_races") > 0)
             .then(pl.col("cumulative_points").rank("min", descending=True).over("subsession_id"))
