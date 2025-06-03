@@ -125,6 +125,36 @@ def _format_rank_value(value):
     return str(value)
 
 
+def _format_rating(row) -> str:
+    if row["rating_change"] > 0:
+        rating_change = f"<span style='color:green'>+{row['rating_change']}</span>"
+    else:
+        rating_change = f"<span style='color:red'>{row['rating_change']}</span>"
+
+    # Center on space
+    out = f"""
+        <div style='display: flex; align-items: center; line-height: 1; width: 120px;'>
+            <div style='flex: 1; text-align: right; padding-right: 4px;'>{row['rating']}</div>
+            <div style='flex: 1; text-align: left; padding-left: 4px;'>({rating_change})</div>
+        </div>
+    """
+    return out
+
+
+def _format_fastest_lap(row) -> str:
+    out = utils.seconds_to_str(row["fastest_lap_time"])
+    if row["fastest_lap"]:
+        out = f"<span style='color:DarkViolet; font-weight:bold'>{out}</span>"
+    return out
+
+
+def _format_incidents(row) -> str:
+    out = str(row["num_incidents"])
+    if row["cleanest_driver"]:
+        out = f"<span style='color:#007BFF; font-weight:bold'>{out}</span>"
+    return out
+
+
 def render_standings(standings_df: pl.DataFrame):
     race_cols = [col.replace("points_", "") for col in standings_df.columns if col.startswith("points_race_")]
     race_col_map = {"points_" + col: col.replace("_", " ").title() for col in race_cols}
@@ -222,57 +252,44 @@ def render_standings(standings_df: pl.DataFrame):
     return table_html
 
 
-def _format_rating(row) -> str:
-    if row["rating_change"] > 0:
-        rating_change = f"<span style='color:green'>+{row['rating_change']}</span>"
-    else:
-        rating_change = f"<span style='color:red'>{row['rating_change']}</span>"
-
-    # Center on space
-    out = f"""
-        <div style='display: flex; align-items: center; line-height: 1; width: 120px;'>
-            <div style='flex: 1; text-align: right; padding-right: 4px;'>{row['rating']}</div>
-            <div style='flex: 1; text-align: left; padding-left: 4px;'>({rating_change})</div>
-        </div>
-    """
-    return out
-
-
-def _format_fastest_lap(row) -> str:
-    out = utils.seconds_to_str(row["fastest_lap_time"])
-    if row["fastest_lap"]:
-        out = f"<span style='color:DarkViolet; font-weight:bold'>{out}</span>"
-    return out
-
-
-def _format_incidents(row) -> str:
-    out = str(row["num_incidents"])
-    if row["cleanest_driver"]:
-        out = f"<span style='color:#007BFF; font-weight:bold'>{out}</span>"
-    return out
-
-
 def render_race_results(df: pl.DataFrame):
+    show_provisional_rating = True
+
     df = df.sort("finish_position").with_columns(
         pl.col("qualify_lap_time").map_elements(utils.seconds_to_str, return_dtype=str),
         pl.col("average_lap_time").map_elements(utils.seconds_to_str, return_dtype=str),
         pl.struct(["fastest_lap_time", "fastest_lap"]).map_elements(_format_fastest_lap, return_dtype=str),
         pl.struct(["num_incidents", "cleanest_driver"]).map_elements(_format_incidents, return_dtype=str),
-        # pl.struct(["rating", "rating_change"]).map_elements(_format_rating, return_dtype=str).alias("rating"),
-        pl.when(pl.col("rank").is_not_null()).then(pl.col("rank")).otherwise(pl.lit("")).alias("rank"),
-        # Render RATING column - None if we aren't rated
-        pl.when(pl.col("rank").is_not_null()).then(pl.col("rating")).otherwise(pl.lit("")).alias("rating"),
-        # Render rating change column
-        pl.when(pl.col("rank").is_not_null())
-        .then(
-            pl.col("rating_change").map_elements(
-                functools.partial(_format_change_only), return_dtype=str, skip_nulls=False
-            )
-        )
-        .otherwise(pl.lit(""))
-        .alias("rating_change"),
         pl.col("start_position").cast(pl.Int32),
     )
+
+    if show_provisional_rating:
+        df = df.with_columns(
+            pl.struct(["rating", "rank"])
+            .map_elements(lambda s: _format_rating_value(s["rating"], s["rank"]), return_dtype=str, skip_nulls=False)
+            .alias("rating"),
+            pl.col("rank").map_elements(_format_rank_value, return_dtype=str, skip_nulls=False),
+            pl.col("rating_change").map_elements(
+                functools.partial(_format_change_only), return_dtype=str, skip_nulls=False
+            ),
+        )
+
+    else:
+        df = df.with_columns(
+            # pl.struct(["rating", "rating_change"]).map_elements(_format_rating, return_dtype=str).alias("rating"),
+            pl.when(pl.col("rank").is_not_null()).then(pl.col("rank")).otherwise(pl.lit("")).alias("rank"),
+            # Render RATING column - None if we aren't rated
+            pl.when(pl.col("rank").is_not_null()).then(pl.col("rating")).otherwise(pl.lit("")).alias("rating"),
+            # Render rating change column
+            pl.when(pl.col("rank").is_not_null())
+            .then(
+                pl.col("rating_change").map_elements(
+                    functools.partial(_format_change_only), return_dtype=str, skip_nulls=False
+                )
+            )
+            .otherwise(pl.lit(""))
+            .alias("rating_change"),
+        )
 
     select_cols = {
         "finish_position": "Pos",
