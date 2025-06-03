@@ -1,7 +1,8 @@
 [project]
 name = "gpt-racing"
 version = "0.1.0"
-description = ""
+description = "Add your description here"
+readme = "README.md"
 authors = [
     {name = "Logan Grado", email = "grado.logan@gmail.com"},
 ]
@@ -22,23 +23,16 @@ dependencies = [
     "loggerado>=0.2.0",
 ]
 requires-python = ">=3.11"
-readme = "README.md"
-license = {text = "MIT"}
 
 [build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.pdm.dev-dependencies]
+[dependency-groups]
 dev = [
-    "ipython>=8.15.0",
+    "black>=25.1.0",
+    "flake8>=7.2.0",
     "ipdb>=0.13.13",
-    "pytest>=7.4.2",
-]
-jupyter = [
-    "jupyter>=1.0.0",
-    "jupyterlab>=4.0.9",
-    "matplotlib>=3.8.2",
-    "pyqt6>=6.6.1",
-    "ipympl>=0.9.3",
+    "ipython>=9.3.0",
+    "pytest>=8.4.0",
 ]
