@@ -42,21 +42,31 @@ def _compute_drop_races(df: pl.DataFrame, num_drop_races: int) -> pl.DataFrame:
 
 
 def _add_fastest_lap(df, config):
+    """Always add fastest lap, even if we don't score on it"""
     if config is None:
-        return df
+        must_be_on_lead_lap = True
+        points = 0
+    else:
+        must_be_on_lead_lap = config.must_be_on_lead_lap
+        points = config.points
 
     df = df.with_columns((pl.col("fastest_lap_time") == pl.col("fastest_lap_time").min()).alias("fastest_lap"))
 
     lead_lap_expr = True
-    if config.must_be_on_lead_lap:
+    if must_be_on_lead_lap:
         lead_lap_expr = pl.col("laps_complete") == pl.col("laps_complete").max()
-    df = df.with_columns((pl.col("points") + (pl.col("fastest_lap") & lead_lap_expr) * config.points).alias("points"))
+    df = df.with_columns((pl.col("points") + (pl.col("fastest_lap") & lead_lap_expr) * points).alias("points"))
     return df
 
 
 def _add_cleanest_driver(df, config):
+    """Always cleanest driver, even if we don't score on it"""
     if config is None:
-        return df
+        must_be_on_lead_lap = True
+        points = 0
+    else:
+        must_be_on_lead_lap = config.must_be_on_lead_lap
+        points = config.points
 
     df = df.with_columns(
         (
@@ -66,11 +76,9 @@ def _add_cleanest_driver(df, config):
     )
 
     lead_lap_expr = True
-    if config.must_be_on_lead_lap:
+    if must_be_on_lead_lap:
         lead_lap_expr = pl.col("laps_complete") == pl.col("laps_complete").max()
-    df = df.with_columns(
-        (pl.col("points") + (pl.col("cleanest_driver") & lead_lap_expr) * config.points).alias("points")
-    )
+    df = df.with_columns((pl.col("points") + (pl.col("cleanest_driver") & lead_lap_expr) * points).alias("points"))
     return df
 
 
