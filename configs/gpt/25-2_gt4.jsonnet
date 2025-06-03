@@ -19,6 +19,17 @@
     {
       subsession_id: 77351364,
       race_name: 'Summit',
+      penalties: [
+        // Facciolo
+        { user_id: 335343, time: 5 },
+        // Green
+        { user_id: 48282, time: 5 },
+        // Neilsen
+        { user_id: 407523, time: 5 },
+        // Yost
+        { user_id: 282802, time: 5 },
+
+      ],
     },
   ],
 }
