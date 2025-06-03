@@ -9,7 +9,7 @@ import polars as pl
 # from great_tables import GT
 
 from gpt_racing.iracing_data import IracingDataClient
-from gpt_racing.elo_mmr import compute_elo_mmr, ELOMMR
+from gpt_racing.elo_mmr import ELOMMR
 from gpt_racing.results import compute_results, infer_invalid_laps
 from gpt_racing.scoring.points import compute_points_score
 from gpt_racing import utils
@@ -125,7 +125,7 @@ def compute_ratings(config, client):
     # past_elo_df = None
     elo_mmr = ELOMMR(config.elo)
 
-    if config.elo.previous_seasons:
+    if config.elo and config.elo.previous_seasons:
         elo_mmr = _compute_elo_previous_seasons(config.elo, client, elo_mmr)
 
     result_df, name_df = _load_race_data(config.races, client)
