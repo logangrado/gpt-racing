@@ -108,19 +108,52 @@ def _render_html(html):
         time.sleep(5)
 
 
+def _format_rating_value(value, change):
+    out = str(value)
+    color = "DimGrey"
+    color = "coral"
+    color = "LightCoral"
+    if change is None:
+        out = f"<span style='color:{color}'>{out}*</span>"
+
+    return out
+
+
+def _format_rank_value(value):
+    if value is None:
+        return ""
+    return str(value)
+
+
 def render_standings(standings_df: pl.DataFrame):
     race_cols = [col.replace("points_", "") for col in standings_df.columns if col.startswith("points_race_")]
     race_col_map = {"points_" + col: col.replace("_", " ").title() for col in race_cols}
+
+    show_provisional_rating = True
+    if show_provisional_rating:
+        # Expression when we are
+        standings_df = standings_df.with_columns(
+            pl.struct(["rating", "rating_rank"])
+            .map_elements(
+                lambda s: _format_rating_value(s["rating"], s["rating_rank"]), return_dtype=str, skip_nulls=False
+            )
+            .alias("rating"),
+            pl.col("rating_rank").map_elements(_format_rank_value, return_dtype=str, skip_nulls=False),
+        )
+    else:
+        # Expression if we aren't displaying rank
+        standings_df = standings_df.with_columns(
+            pl.when(pl.col("rating_rank").is_not_null())
+            .then(pl.col("rating_rank"))
+            .otherwise(pl.lit(""))
+            .alias("rating_rank"),
+            pl.when(pl.col("rating_rank").is_not_null()).then(pl.col("rating")).otherwise(pl.lit("")).alias("rating"),
+        )
 
     standings_df = standings_df.sort("points_rank").with_columns(
         pl.col("points_rank_change").map_elements(
             functools.partial(_format_change_only, rank=True), return_dtype=str, skip_nulls=False
         ),
-        pl.when(pl.col("rating_rank").is_not_null())
-        .then(pl.col("rating_rank"))
-        .otherwise(pl.lit(""))
-        .alias("rating_rank"),
-        pl.when(pl.col("rating_rank").is_not_null()).then(pl.col("rating")).otherwise(pl.lit("")).alias("rating"),
         pl.col("rating_rank_change").map_elements(
             functools.partial(_format_change_only, rank=True), return_dtype=str, skip_nulls=False
         ),
