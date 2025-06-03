@@ -31,5 +31,19 @@
       subsession_id: 74170897,
       race_name: 'Motegi',
     },
+    {
+      subsession_id: 74512470,
+      race_name: 'Watkins Glen',
+    },
+    {
+      subsession_id: 74849000,
+      race_name: 'Road America',
+    },
+    {
+      subsession_id: 75196373,
+      race_name: 'Mt Panorama',
+    },
+    { subsession_id: 75512497, race_name: 'Hockenheimring' },
+    { subsession_id: 75823595, race_name: 'Spa' },
   ],
 }
