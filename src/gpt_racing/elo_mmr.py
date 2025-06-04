@@ -158,16 +158,23 @@ class ELOMMR:
         # Collect results. Collect for all existing players, even if they didn't compete in this round
         all_rounds_df = pl.concat(self._history)
 
-        contest_counts = (
-            all_rounds_df.join(all_rounds_df["user_id", "contest_date", "participated"], on="user_id", suffix="_y")
-            .filter(
-                (pl.col("contest_date_y") >= pl.col("contest_date") - self._config.time_window)
-                & (pl.col("contest_date_y") <= pl.col("contest_date"))
-                & pl.col("participated_y")
+        if self._config.time_window:
+            contest_counts = (
+                all_rounds_df.join(all_rounds_df["user_id", "contest_date", "participated"], on="user_id", suffix="_y")
+                .filter(
+                    (pl.col("contest_date_y") >= pl.col("contest_date") - self._config.time_window)
+                    & (pl.col("contest_date_y") <= pl.col("contest_date"))
+                    & pl.col("participated_y")
+                )
+                .group_by("user_id", "contest_id")
+                .agg(pl.len().alias("num_valid_contests"))
             )
-            .group_by("user_id", "contest_id")
-            .agg(pl.len().alias("num_valid_contests"))
-        )
+        else:
+            contest_counts = all_rounds_df.select(["user_id", "contest_id"]).with_columns(pl.lit(1).alias("_temp"))
+            contest_counts = contest_counts.with_columns(
+                pl.col("_temp").cum_sum().over("user_id").alias("num_valid_contests")
+            )
+            contest_counts = contest_counts.drop("_temp")
 
         all_rounds_df = all_rounds_df.join(contest_counts, on=["user_id", "contest_id"], how="left")
 
