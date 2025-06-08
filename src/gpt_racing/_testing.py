@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import textwrap
+
 import pandas as pd
 import polars as pl
 from polars.testing import assert_frame_equal as _assert_frame_equal
@@ -175,3 +177,74 @@ def assert_frame_equal(actual, expected, *args, **kwargs):
         _assert_frame_equal(actual, expected, *args, **kwargs)
     except Exception as e:
         raise AssertionError(f"Dataframes do not match\nActual data:\n{actual.to_dict(as_series=False)}") from e
+
+
+def _assert_object_equal(actual, expected, frame_kwargs):
+    assert type(actual) == type(expected), f"Types do not match: {type(actual)}, {type(expected)}"
+
+    if isinstance(actual, dict):
+        for key in sorted(actual.keys()):
+            try:
+                assert_object_equal(actual[key], expected[key], frame_kwargs)
+            except Exception as e:
+                raise AssertionError(f"Error comparing values at key '{key}':\n{textwrap.indent(str(e),'  ')}") from e
+
+    elif isinstance(actual, pl.DataFrame):
+        assert_frame_equal(actual, expected, **frame_kwargs)
+
+    elif isinstance(actual, list):
+        if not len(actual) == len(expected):
+            raise AssertionError(f"Expected {len(expected)}, got {len(actual)}")
+        for i, (a, b) in enumerate(zip(actual, expected)):
+            try:
+                assert_object_equal(a, b, frame_kwargs)
+            except Exception as e:
+                raise AssertionError(f"Error comparing values at index '{i}':\n{textwrap.indent(str(e),'  ')}") from e
+
+    else:
+        raise NotImplementedError(f"Comparison not implemented for leaf type: {type(actual)}")
+
+
+def _compare_objects(actual, expected, frame_kwargs, path="root"):
+    errors = []
+
+    if type(actual) != type(expected):
+        errors.append(f"{path}: Types do not match: {type(actual)} != {type(expected)}")
+        return errors
+
+    if isinstance(actual, dict):
+        actual_keys = set(actual.keys())
+        expected_keys = set(expected.keys())
+        for key in sorted(actual_keys | expected_keys):
+            sub_path = f"{path}.{key}"
+            if key not in actual:
+                errors.append(f"{sub_path}: Key missing in actual")
+            elif key not in expected:
+                errors.append(f"{sub_path}: Key missing in expected")
+            else:
+                errors.extend(_compare_objects(actual[key], expected[key], frame_kwargs, path=sub_path))
+
+    elif isinstance(actual, list):
+        if len(actual) != len(expected):
+            errors.append(f"{path}: List length mismatch: {len(actual)} != {len(expected)}")
+        for i, (a, b) in enumerate(zip(actual, expected)):
+            sub_path = f"{path}[{i}]"
+            errors.extend(_compare_objects(a, b, frame_kwargs, path=sub_path))
+
+    elif isinstance(actual, pl.DataFrame):
+        try:
+            assert_frame_equal(actual, expected, **frame_kwargs)
+        except AssertionError as e:
+            errors.append(f"{path}: DataFrame mismatch:\n{textwrap.indent(str(e), '  ')}")
+
+    else:
+        if actual != expected:
+            errors.append(f"{path}: Value mismatch: {actual!r} != {expected!r}")
+
+    return errors
+
+
+def assert_object_equal(actual, expected, frame_kwargs={}):
+    errors = _compare_objects(actual, expected, frame_kwargs)
+    if errors:
+        raise AssertionError("Objects do not match:\n" + "\n".join(textwrap.indent(e, "  ") for e in errors))
