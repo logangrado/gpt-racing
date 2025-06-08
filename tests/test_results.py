@@ -217,8 +217,8 @@ class TestComputeResults:
                 {
                     "user_id": [1, 0, 2],
                     "laps_complete": [2, 2, 2],
-                    "total_time": [200, 202, 204],
-                    "penalty": [0, 0, 0],
+                    "total_time": [200.0, 202.0, 204.0],
+                    "penalty": [0.0, 0.0, 0.0],
                     "interval": ["0.000", "-2.000", "-4.000"],
                     "finish_position": [0, 1, 2],
                     "average_lap_time": [100.0, 101.0, 102.0],
