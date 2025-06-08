@@ -4,83 +4,22 @@ import tempfile
 from pathlib import Path
 import json
 import shutil
-from typing import Tuple
+from typing import Tuple, Optional
 
 import subprocess
 
 import elommr
 import numpy as np
 import polars as pl
-import pandas as pd
 
-from gpt_racing import ELO_MMR_PATH, ELO_MMR_CACHE_PATH, ELO_MMR_RESULT_PATH
-
-
-def _write_data(data, path):
-    path.mkdir(parents=True)
-
-    contest_df = data[["contest_id", "contest_time"]].drop_duplicates().sort_values("contest_time")
-    contest_df["contest_index"] = np.arange(len(contest_df))
-
-    data = data.merge(contest_df[["contest_id", "contest_index"]], on="contest_id")
-
-    for (contest_index, contest_id), contest_df in data.groupby(["contest_index", "contest_id"]):
-        contest_dest = path / f"{contest_index}.json"
-        contest_data = {}
-
-        contest_data["name"] = str(contest_id)
-        contest_data["time_seconds"] = 1
-        contest_data["standings"] = []
-        for i, row in contest_df.iterrows():
-            contest_data["standings"].append(
-                [str(row["user_id"]), int(row["finish_position"]), int(row["finish_position"])]
-            )
-
-        with open(contest_dest, "w") as f:
-            json.dump(contest_data, f, indent=2)
-
-
-def _read_result(path):
-    # Read all_players result
-    csv_path = path / "all_players.csv"
-    result = pd.read_csv(csv_path)
-    result = result.rename(
-        columns={
-            "handle": "user_id",
-            "display_rating": "rating",
-        }
-    )
-
-    import ipdb
-
-    ipdb.set_trace()
-    pass
-    result = result[["rank", "user_id", "rating", "num_contests"]]
-
-    players_path = path / "players"
-    player_dfs = []
-    for player_path in players_path.glob("*.csv"):
-        player_df = pd.read_csv(player_path)
-        player_df["user_id"] = player_path.stem
-        player_dfs.append(player_df)
-
-    player_df = pd.concat(player_dfs)
-
-    import ipdb
-
-    ipdb.set_trace()
-    pass
-
-    return result
-
-
-def _write_config(config, config_path):
-    with open(config_path, "w") as f:
-        json.dump(config, f)
+from gpt_racing.config import ELOConfig
 
 
 class ELOMMR:
-    def __init__(self, elo_config):
+    def __init__(self, elo_config: Optional[ELOConfig] = None):
+        if elo_config is None:
+            elo_config = ELOConfig()
+
         self._elo_mmr = elommr.EloMMR(
             drift_per_sec=0,
             weight_limit=1,

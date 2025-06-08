@@ -2,6 +2,7 @@
 
 import pandas as pd
 import polars as pl
+from polars.testing import assert_frame_equal as _assert_frame_equal
 
 
 def _generate_qualy_data(session_data):
@@ -167,3 +168,10 @@ def generate_data(summary_data, fake_client):
         fake_client._set_race_result(
             session["subsession_id"], _generate_race_result(session["subsession_id"], session["race"])
         )
+
+
+def assert_frame_equal(actual, expected, *args, **kwargs):
+    try:
+        _assert_frame_equal(actual, expected, *args, **kwargs)
+    except Exception as e:
+        raise AssertionError(f"Dataframes do not match\nActual data:\n{actual.to_dict(as_series=False)}") from e
