@@ -3,6 +3,13 @@
 import pytest
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--update-refs",
+        action="store_true",
+    )
+
+
 @pytest.fixture(scope="session")
 def client():
     from gpt_racing import iracing_data

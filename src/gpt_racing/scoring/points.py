@@ -43,6 +43,9 @@ def _compute_drop_races(df: pl.DataFrame, num_drop_races: int) -> pl.DataFrame:
 
 def _add_fastest_lap(df, config):
     """Always add fastest lap, even if we don't score on it"""
+    if "fastest_lap_time" not in df:
+        return df
+
     if config is None:
         must_be_on_lead_lap = True
         points = 0
@@ -56,11 +59,15 @@ def _add_fastest_lap(df, config):
     if must_be_on_lead_lap:
         lead_lap_expr = pl.col("laps_complete") == pl.col("laps_complete").max()
     df = df.with_columns((pl.col("points") + (pl.col("fastest_lap") & lead_lap_expr) * points).alias("points"))
+
     return df
 
 
 def _add_cleanest_driver(df, config):
     """Always cleanest driver, even if we don't score on it"""
+    if "num_incidents" not in df:
+        return df
+
     if config is None:
         must_be_on_lead_lap = True
         points = 0
@@ -82,7 +89,7 @@ def _add_cleanest_driver(df, config):
     return df
 
 
-def compute_points_score(data: pl.DataFrame, config: PointsConfig) -> pl.DataFrame:
+def compute_points_score(data: pl.DataFrame, config: PointsConfig, default_points_type="default") -> pl.DataFrame:
     """
     Compute points scoring from a results dataframe
 
@@ -107,6 +114,11 @@ def compute_points_score(data: pl.DataFrame, config: PointsConfig) -> pl.DataFra
             for k, v in points_dict.items()
         ]
     )
+
+    if "points_type" not in data:
+        data = data.with_columns(pl.lit(default_points_type).alias("points_type"))
+    else:
+        data = data.with_columns(pl.col("points_type").fill_null(default_points_type))
 
     # Join points!
     out = data.join(points_df, on=["finish_position", "points_type"], how="left", coalesce=True)

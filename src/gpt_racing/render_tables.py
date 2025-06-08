@@ -4,6 +4,7 @@ import functools
 import re
 import great_tables as GT
 import polars as pl
+from bs4 import BeautifulSoup
 
 from gpt_racing import utils
 
@@ -66,8 +67,6 @@ def _format_change_only(dx, rank=False):
 
 
 def _combine_column_headers(html, label, columns):
-    from bs4 import BeautifulSoup
-
     soup = BeautifulSoup(html)
     # Find the header row with class 'gt_col_headings'
     header_row = soup.find("tr", class_="gt_col_headings")
@@ -79,7 +78,9 @@ def _combine_column_headers(html, label, columns):
     # Get col header indices
     col_header_idx = [i for i, c in enumerate(col_headers) if c["id"] in (columns)]
     if len(col_header_idx) != len(columns):
-        raise ValueError("Missing some columns")
+        found_ids = {c["id"] for c in col_headers}
+        missing = [col for col in columns if col not in found_ids]
+        raise ValueError(f"Missing columns: {missing}")
 
     if len([True for x, y in zip(col_header_idx[1:], col_header_idx[:-1]) if (x - y) > 1]) > 0:
         raise ValueError("Some columns are not next to eachother")
@@ -245,11 +246,36 @@ def render_standings(standings_df: pl.DataFrame):
     gt = _add_row_striping(gt)
     gt = gt.tab_style(style=GT.style.text(align="right"), locations=GT.loc.body(columns="Rating Rank"))
 
-    table_html = gt.render("html")
+    table_html = _fix_gt_id(gt.render("html"))
     table_html = _combine_column_headers(table_html, "Rank", ["Rank", "points_rank_change"])
-    table_html = _combine_column_headers(table_html, "Rating Rank", ["Rating Rank", "rating_rank_change"])
+    table_html = _combine_column_headers(table_html, "Rating Rank", ["Rating-Rank", "rating_rank_change"])
 
     return table_html
+
+
+def _fix_gt_id(html: str) -> str:
+    """
+    Replace the randomly generated gt HTML ID with a constant '000000'.
+
+    This modifies both the ID attribute on the <div> and all CSS selectors
+    that reference it (e.g., '#randomid table', etc).
+    """
+    # Match the first id="..." in the <div>
+    match = re.search(r'<div id="([^"]+)"', html)
+    if not match:
+        return html  # No ID found, return unchanged
+
+    original_id = match.group(1)
+    fixed_id = "abc123"
+
+    # Replace all occurrences of the original ID in the HTML
+    html = html.replace(f'id="{original_id}"', f'id="{fixed_id}"')
+    html = html.replace(f"#{original_id} ", f"#{fixed_id} ")
+    html = html.replace(f"#{original_id}\n", f"#{fixed_id}\n")  # in case of newline
+    html = html.replace(f"#{original_id}.", f"#{fixed_id}.")  # in case of classes
+    html = html.replace(f"#{original_id}{{", f"#{fixed_id}{{")  # in case of direct open
+
+    return html
 
 
 def render_race_results(df: pl.DataFrame):
@@ -317,7 +343,7 @@ def render_race_results(df: pl.DataFrame):
     )
     gt = _add_row_striping(gt)
 
-    table_html = gt.render("html")
+    table_html = _fix_gt_id(gt.render("html"))
     table_html = _combine_column_headers(table_html, "Rating", ["Rating", "rating_change"])
 
     return table_html

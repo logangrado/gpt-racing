@@ -16,10 +16,7 @@ def _load_config(path):
     return config
 
 
-@click.command
-@click.argument("config")
-@click.argument("out_path")
-def core(config, out_path):
+def core_entrypoint(config, out_path, _overwrite=False):
     from gpt_racing.config import RatingConfig
     from gpt_racing import core
     from gpt_racing.iracing_data import IracingDataClient
@@ -29,15 +26,13 @@ def core(config, out_path):
     config = RatingConfig(**_load_config(config))
     client = IracingDataClient()
 
-    out = core.compute_ratings(config, client)
-
     # render_tables.render_standings(out["standings"][-1]).show()
 
     # Write outputs
     out_path = Path(out_path)
     sentinel = out_path / ".sentinel"
     if out_path.is_dir():
-        if sentinel.is_file():
+        if sentinel.is_file() or _overwrite:
             shutil.rmtree(out_path)
         else:
             print(
@@ -45,6 +40,7 @@ def core(config, out_path):
             )
             return
 
+    out = core.compute_ratings(config, client)
     out_path.mkdir(parents=True)
     sentinel.touch()
 
@@ -75,6 +71,13 @@ def core(config, out_path):
                 f.write(gt)
             else:
                 f.write(gt.as_raw_html())
+
+
+@click.command
+@click.argument("config")
+@click.argument("out_path")
+def core(config, out_path):
+    core_entrypoint(config, out_path)
 
 
 if __name__ == "__main__":

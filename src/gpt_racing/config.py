@@ -37,13 +37,18 @@ class PointsConfig(BaseModel):
     cleanest_driver: Optional[CleanestDriverConfig] = None
 
 
-class ELOConfig(BaseModel):
-    previous_seasons: Optional[List["RatingConfig"]] = None
-    min_races: int = 1
-    time_window: datetime.timedelta
-
-
 class RatingConfig(BaseModel):
     races: List[Race]
+    elo: Optional["ELOConfig"] = pydantic.Field(default_factory=lambda: ELOConfig())  # forward ref as default
     points: Optional[PointsConfig] = None
-    elo: Optional[ELOConfig] = None
+
+
+class ELOConfig(BaseModel):
+    previous_seasons: Optional[List[RatingConfig]] = None
+    min_races: int = 1
+    time_window: Optional[datetime.timedelta] = None
+
+
+# Resolve forward refs
+ELOConfig.model_rebuild()
+RatingConfig.model_rebuild()

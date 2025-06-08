@@ -176,6 +176,8 @@ def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame, qualy_df: pd
 
     # Add penalties for each driver to all laps
     lap_df = lap_df.merge(penalty_df, on="user_id", how="left")
+    lap_df["penalty"] = pd.to_numeric(lap_df["penalty"], errors="coerce")  # Fix fillna warning
+
     lap_df["penalty"] = lap_df["penalty"].fillna(0)
 
     # Drop penalized laps, if required
@@ -210,6 +212,8 @@ def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame, qualy_df: pd
 
     time_df = total_time.join(total_laps)
     time_df = time_df.reset_index().merge(penalty_df, how="left")
+
+    time_df["penalty"] = pd.to_numeric(time_df["penalty"], errors="coerce")  # Fix fillna warning
     time_df["average_lap_time"] = (time_df["lap_time"] + time_df["penalty"].fillna(0)) / time_df["lap"]
 
     result_df = result_df.merge(time_df[["user_id", "average_lap_time"]], on="user_id")

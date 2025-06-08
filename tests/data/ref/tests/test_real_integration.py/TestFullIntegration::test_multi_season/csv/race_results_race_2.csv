@@ -1,0 +1,11 @@
+display_name,start_position,qualify_lap_time,finish_position,interval,points,rating,rating_change,rank,rank_change,laps_complete,total_time,penalty,average_lap_time,fastest_lap_time,num_incidents,fastest_lap,cleanest_driver
+Derek M Cyphers,1,100.7603,1,1L,25,1954,53,1,-1,35,3610.9343,0.0,103.16955142857142,100.9703,3,false,false
+Lennie Holland,5,101.1776,2,1L,21,1842,122,,,35,3640.6441,0.0,104.01840285714286,101.5839,4,false,false
+Ross Yost,8,101.9818,3,1L,18,1856,13,3,-1,35,3646.323,0.0,104.18065714285714,101.8507,8,false,false
+Logan Grado,6,101.5677,4,1L,17,1734,73,8,-3,35,3647.2559,0.0,104.20731142857143,101.6916,10,false,false
+Nick Melaragno2,3,101.0217,5,1L,16,1739,239,,,35,3649.887,0.0,104.28248571428571,101.8165,19,false,false
+Matthew Siddall,2,100.7685,6,1L,15,1769,-107,6,3,35,3650.1641,0.0,104.29040285714285,100.7315,9,false,false
+David Fernandes,7,101.9799,7,1L,14,1675,-24,,,35,3679.8466,0.0,105.13847428571428,102.2783,10,false,false
+Dale Green,10,103.9983,8,-0.001,13,1592,-15,,,34,3500.233,0.0,102.94802941176471,61.51729999999999,4,true,false
+Nick Facciolo,4,101.1124,9,-2L,12,1625,-151,,,32,3358.4498,0.0,104.95155625,102.0103,12,false,false
+Jesse Lyon2,9,103.0429,10,-22L,11,1496,-83,20,3,12,1232.0854,0.0,102.67378333333333,101.1687,1,false,false
