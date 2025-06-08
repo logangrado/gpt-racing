@@ -179,32 +179,6 @@ def assert_frame_equal(actual, expected, *args, **kwargs):
         raise AssertionError(f"Dataframes do not match\nActual data:\n{actual.to_dict(as_series=False)}") from e
 
 
-def _assert_object_equal(actual, expected, frame_kwargs):
-    assert type(actual) == type(expected), f"Types do not match: {type(actual)}, {type(expected)}"
-
-    if isinstance(actual, dict):
-        for key in sorted(actual.keys()):
-            try:
-                assert_object_equal(actual[key], expected[key], frame_kwargs)
-            except Exception as e:
-                raise AssertionError(f"Error comparing values at key '{key}':\n{textwrap.indent(str(e),'  ')}") from e
-
-    elif isinstance(actual, pl.DataFrame):
-        assert_frame_equal(actual, expected, **frame_kwargs)
-
-    elif isinstance(actual, list):
-        if not len(actual) == len(expected):
-            raise AssertionError(f"Expected {len(expected)}, got {len(actual)}")
-        for i, (a, b) in enumerate(zip(actual, expected)):
-            try:
-                assert_object_equal(a, b, frame_kwargs)
-            except Exception as e:
-                raise AssertionError(f"Error comparing values at index '{i}':\n{textwrap.indent(str(e),'  ')}") from e
-
-    else:
-        raise NotImplementedError(f"Comparison not implemented for leaf type: {type(actual)}")
-
-
 def _compare_objects(actual, expected, frame_kwargs, path="root"):
     errors = []
 
