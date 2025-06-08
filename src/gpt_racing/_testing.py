@@ -16,7 +16,9 @@ def _generate_lap_data(session_data):
 
     df = df.rename({"average_lap_time": "lap_time"})
 
-    df = df.with_columns(pl.col("laps_complete").map_elements(lambda x: range(x + 1)).alias("lap_number"))
+    df = df.with_columns(
+        pl.col("laps_complete").map_elements(lambda x: range(x + 1), return_dtype=list[int]).alias("lap_number")
+    )
 
     df = df.explode("lap_number")
 
