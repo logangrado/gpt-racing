@@ -167,3 +167,48 @@ class TestPointsScoring:
         )
 
         assert_frame_equal(result, expected, check_dtypes=False)
+
+    def test_multi_contest_drop_weeks_regression(self):
+        """
+        We had an error when calculating "cumulative_points" and then
+        rank_change, when we have a drop week.
+
+        For example, if we had 1 drop week, and a driver was first both weeks,
+        the cumulative points would be [0, 5], instead of [5,5], and as a result
+        the rank_change would be incorrect as well
+        """
+        data = pl.DataFrame(
+            [
+                {"user_id": 0, "contest_id": 0, "finish_position": 0},
+                {"user_id": 0, "contest_id": 1, "finish_position": 0},
+                {"user_id": 1, "contest_id": 0, "finish_position": 2},
+                {"user_id": 1, "contest_id": 1, "finish_position": 1},
+                {"user_id": 2, "contest_id": 0, "finish_position": 1},
+                {"user_id": 2, "contest_id": 1, "finish_position": 2},
+            ]
+        )
+        data = data.with_columns(pl.col("contest_id").alias("subsession_id"))
+
+        data = data.with_columns(pl.col("contest_id").alias("contest_time"))
+
+        config = PointsConfig.model_validate({"points": [5, 4, 3, 2], "drop_races": 1})
+        result = compute_points_score(data, config)
+
+        expected = pl.DataFrame(
+            {
+                "user_id": [0, 1, 2, 0, 1, 2],
+                "contest_id": [0, 0, 0, 1, 1, 1],
+                "finish_position": [0, 2, 1, 0, 1, 2],
+                "subsession_id": [0, 0, 0, 1, 1, 1],
+                "contest_time": [0, 0, 0, 1, 1, 1],
+                "points_type": ["default", "default", "default", "default", "default", "default"],
+                "points": [5, 3, 4, 5, 4, 3],
+                "cumulative_points": [5, 3, 4, 5, 4, 4],
+                "num_races": [1, 1, 1, 2, 2, 2],
+                "rank": [1, 3, 2, 1, 2, 2],
+                "rank_change": [None, None, None, 0, -1, 0],
+                "drop": [True, True, False, False, False, True],
+            }
+        )
+
+        assert_frame_equal(result, expected, check_dtypes=False)

@@ -89,9 +89,13 @@ def _add_cleanest_driver(df, config):
     return df
 
 
-def compute_points_score(data: pl.DataFrame, config: PointsConfig, default_points_type="default") -> pl.DataFrame:
+def _compute_points_score_for_subsession(
+    data: pl.DataFrame, config: PointsConfig, default_points_type="default"
+) -> pl.DataFrame:
     """
-    Compute points scoring from a results dataframe
+    HELPER to compute points scoring from a results dataframe
+
+    We need to do this inner loop in order to calculate cumulative points/drop weeks correctly
 
     Parameters
     ----------
@@ -164,8 +168,47 @@ def compute_points_score(data: pl.DataFrame, config: PointsConfig, default_point
             .cast(pl.Int32)
             .alias("rank")
         )
-        # Compute rank change
-        .with_columns((pl.col("rank") - pl.col("rank").shift(1).over("user_id")).alias("rank_change"))
+    )
+
+    return out
+
+
+def compute_points_score(data: pl.DataFrame, config: PointsConfig, default_points_type="default") -> pl.DataFrame:
+    """
+    Compute points scoring from a results dataframe
+
+    Parameters
+    ----------
+    data : Dataframe with the following columns:
+        user_id
+        finish_position
+        subsession_id
+    config : Points scoring config
+
+    Returns
+    -------
+    """
+
+    # We need to compute points for each subsession as we go, in order to correctly account for drop weeks.
+    # Can probably optimize this in the future
+    out = []
+    final_df = None
+    for contest_time in data["contest_time"].unique().sort():
+        df = data.filter(pl.col("contest_time") <= contest_time)
+        result = _compute_points_score_for_subsession(data=df, config=config, default_points_type=default_points_type)
+
+        final_df = result
+        out.append(result.filter(pl.col("contest_time") == contest_time))
+
+    out = pl.concat(out)
+
+    # Finally, compute rank change out here
+    out = out.with_columns((pl.col("rank") - pl.col("rank").shift(1).over("user_id")).alias("rank_change"))
+
+    # Need to take drop_week bool from final_df
+    out = out.drop("drop").join(
+        final_df.select(["user_id", "subsession_id", "drop"]),
+        on=["user_id", "subsession_id"],
     )
 
     return out
