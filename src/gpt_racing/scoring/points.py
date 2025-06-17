@@ -90,7 +90,10 @@ def _add_cleanest_driver(df, config):
 
 
 def _compute_points_score_for_subsession(
-    data: pl.DataFrame, config: PointsConfig, default_points_type="default"
+    data: pl.DataFrame,
+    config: PointsConfig,
+    all_user_ids: list,
+    default_points_type="default",
 ) -> pl.DataFrame:
     """
     HELPER to compute points scoring from a results dataframe
@@ -134,7 +137,7 @@ def _compute_points_score_for_subsession(
 
     # Ensure each user has an entry per contest. If they didn't participate, they get null points/finish position
     out = out.join(
-        out.select("user_id").unique().join(out.select("subsession_id").unique(), how="cross"),
+        pl.DataFrame(all_user_ids).join(out.select("subsession_id").unique(), how="cross"),
         on=("user_id", "subsession_id"),
         how="full",
         coalesce=True,
@@ -148,7 +151,7 @@ def _compute_points_score_for_subsession(
         out.sort("subsession_id")
         # Compute cumulative points
         .with_columns(
-            (pl.when(pl.col("drop")).then(0).otherwise(pl.col("points")))
+            (pl.when(pl.col("drop")).then(0).otherwise(pl.col("points").fill_null(0)))
             .cum_sum()
             .over("user_id")
             .alias("cumulative_points")
@@ -193,12 +196,15 @@ def compute_points_score(data: pl.DataFrame, config: PointsConfig, default_point
     # Can probably optimize this in the future
     out = []
     final_df = None
-    for contest_time in data["contest_time"].unique().sort():
-        df = data.filter(pl.col("contest_time") <= contest_time)
-        result = _compute_points_score_for_subsession(data=df, config=config, default_points_type=default_points_type)
+    for subsession_id in data["subsession_id"].unique().sort():
+        df = data.filter(pl.col("subsession_id") <= subsession_id)
+
+        result = _compute_points_score_for_subsession(
+            data=df, config=config, default_points_type=default_points_type, all_user_ids=data["user_id"].unique()
+        )
 
         final_df = result
-        out.append(result.filter(pl.col("contest_time") == contest_time))
+        out.append(result.filter(pl.col("subsession_id") == subsession_id))
 
     out = pl.concat(out)
 

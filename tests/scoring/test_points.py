@@ -32,11 +32,11 @@ class TestPointsScoring:
                 "contest_time": [0, 0, 0],
                 "points_type": ["default", "default", "default"],
                 "points": [5, 2, 0],
-                "drop": [False, False, False],
                 "cumulative_points": [5, 2, 0],
                 "num_races": [1, 1, 1],
                 "rank": [1, 2, 3],
                 "rank_change": [None, None, None],
+                "drop": [False, False, False],
             },
         )
 
@@ -83,11 +83,11 @@ class TestPointsScoring:
                     "default",
                 ],
                 "points": [5, 2, 0, None, 5, 2, None, 0, None, 5, 2, 0],
-                "drop": [False, False, False, False, False, False, False, False, False, False, False, False],
-                "cumulative_points": [5, 2, 0, None, 10, 4, None, 0, None, 9, 2, 0],
+                "cumulative_points": [5, 2, 0, 0, 10, 4, 0, 0, 10, 9, 2, 0],
                 "num_races": [1, 1, 1, 0, 2, 2, 1, 1, 2, 3, 2, 2],
-                "rank": [1, 2, 3, None, 1, 2, None, 3, None, 1, 2, 3],
-                "rank_change": [None, None, None, None, 0, 0, None, None, None, -1, None, 0],
+                "rank": [1, 2, 3, None, 1, 2, 3, 3, 1, 2, 3, 4],
+                "rank_change": [None, None, None, None, 0, 0, 0, None, 0, 0, 0, 1],
+                "drop": [False, False, False, False, False, False, False, False, False, False, False, False],
             }
         )
 
@@ -96,16 +96,19 @@ class TestPointsScoring:
     def test_multi_contest_drop_weeks(self):
         data = pl.DataFrame(
             [
-                {"user_id": 0, "contest_id": 0, "finish_position": 3},
-                {"user_id": 0, "contest_id": 1, "finish_position": 2},
-                {"user_id": 0, "contest_id": 2, "finish_position": 1},
-                {"user_id": 0, "contest_id": 3, "finish_position": 0},
-                {"user_id": 1, "contest_id": 0, "finish_position": 2},
-                {"user_id": 1, "contest_id": 1, "finish_position": 1},
-                {"user_id": 1, "contest_id": 2, "finish_position": 0},
-                {"user_id": 2, "contest_id": 0, "finish_position": 1},
-                {"user_id": 2, "contest_id": 1, "finish_position": 0},
                 {"user_id": 3, "contest_id": 0, "finish_position": 0},
+                {"user_id": 2, "contest_id": 0, "finish_position": 1},
+                {"user_id": 1, "contest_id": 0, "finish_position": 2},
+                {"user_id": 0, "contest_id": 0, "finish_position": 3},
+                #
+                {"user_id": 2, "contest_id": 1, "finish_position": 0},
+                {"user_id": 1, "contest_id": 1, "finish_position": 1},
+                {"user_id": 0, "contest_id": 1, "finish_position": 2},
+                #
+                {"user_id": 1, "contest_id": 2, "finish_position": 0},
+                {"user_id": 0, "contest_id": 2, "finish_position": 1},
+                #
+                {"user_id": 0, "contest_id": 3, "finish_position": 0},
             ]
         )
         data = data.with_columns(pl.col("contest_id").alias("subsession_id"))
@@ -141,6 +144,10 @@ class TestPointsScoring:
                     None,
                 ],
                 "points": [2, 3, 4, 5, 3, 4, 5, None, 4, 5, None, None, 5, None, None, None],
+                "cumulative_points": [2, 3, 4, 5, 5, 7, 9, 5, 7, 9, 9, 5, 9, 9, 9, 5],
+                "num_races": [1, 1, 1, 1, 2, 2, 2, 1, 3, 3, 2, 1, 4, 3, 2, 1],
+                "rank": [4, 3, 2, 1, 3, 2, 1, 3, 3, 1, 1, 4, 1, 1, 1, 4],
+                "rank_change": [None, None, None, None, -1, -1, -1, 2, 0, -1, 0, 1, -2, 0, 0, 0],
                 "drop": [
                     True,
                     True,
@@ -159,10 +166,6 @@ class TestPointsScoring:
                     True,
                     False,
                 ],
-                "cumulative_points": [0, 0, 4, 5, 0, 4, 9, 5, 4, 9, 9, 5, 9, 9, 9, None],
-                "num_races": [1, 1, 1, 1, 2, 2, 2, 1, 3, 3, 2, 1, 4, 3, 2, 1],
-                "rank": [3, 3, 2, 1, 4, 3, 1, 2, 4, 1, 1, 3, 1, 1, 1, None],
-                "rank_change": [None, None, None, None, 1, 0, -1, 1, 0, -2, 0, 1, -3, 0, 0, None],
             }
         )
 
