@@ -8,6 +8,10 @@ def pytest_addoption(parser):
         "--update-refs",
         action="store_true",
     )
+    parser.addoption(
+        "--show",
+        action="store_true",
+    )
 
 
 @pytest.fixture(scope="session")
