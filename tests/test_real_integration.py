@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import shutil
+import subprocess
 
 import pytest
 
@@ -39,6 +40,9 @@ def _compare_files(actual, expected):
 def compare_output(request, test_id):
     def _compare_output(out_dir):
         ref_dir = REF_BASE_PATH / test_id
+
+        if request.config.getoption("show"):
+            subprocess.run(["open", out_dir])
 
         if request.config.getoption("update_refs"):
             if ref_dir.is_dir():
