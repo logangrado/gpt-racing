@@ -94,21 +94,21 @@ def _load_race_data(race_configs, client) -> Tuple[pl.DataFrame, pl.DataFrame]:
 def _compute_elo_previous_seasons(elo_config, client, elo_mmr):
     all_races = functools.reduce(lambda x, y: x + y, [x.races for x in elo_config.previous_seasons])
 
-    result_df, _ = _load_race_data(all_races, client)
+    result_df, name_df = _load_race_data(all_races, client)
 
     for subsession_id in result_df["subsession_id"].unique():
         this_contest_df = result_df.filter(pl.col("subsession_id") == subsession_id)
-        elo_mmr = _compute_elo_from_result_df(this_contest_df, elo_config, elo_mmr)
+        elo_mmr = _compute_elo_from_result_df(this_contest_df, elo_config, elo_mmr, name_df)
 
     return elo_mmr
 
 
-def _compute_elo_from_result_df(result_df: pl.DataFrame, elo_config, elo_mmr):
+def _compute_elo_from_result_df(result_df: pl.DataFrame, elo_config, elo_mmr, name_df):
     contest_df = result_df[["user_id", "finish_position", "subsession_id", "session_end_time"]].rename(
         {"subsession_id": "contest_id", "session_end_time": "contest_date"}
     )
 
-    elo_mmr.update(contest_df)
+    elo_mmr.update(contest_df, name_df)
     # elo_df, elo_state = compute_elo_mmr(contest_df, elo_config, elo_state)
     # elo_df = pl.DataFrame(elo_df).rename({"contest_id": "subsession_id"})
 
@@ -168,7 +168,7 @@ def compute_ratings(config, client):
         current_points_df = points_df.filter(pl.col("subsession_id") == subsession_id).sort("finish_position")
 
         # ELO
-        elo_mmr = _compute_elo_from_result_df(this_contest_df, config.elo, elo_mmr)
+        elo_mmr = _compute_elo_from_result_df(this_contest_df, config.elo, elo_mmr, name_df)
         elo_df = elo_mmr.collect_results()
         elo_df = elo_df.rename({"contest_id": "subsession_id"})
         current_elo_df = elo_df.filter(pl.col("subsession_id") == subsession_id)
@@ -235,6 +235,9 @@ def compute_ratings(config, client):
             .join(name_df, on="user_id")
             .sort("points_rank")
         )
+
+        # Also need display_name in elo_df
+        current_elo_df = current_elo_df.join(standings_df["user_id", "display_name"].unique(), on="user_id", how="left")
 
         outputs["race_results"].append(race_result_df)
         outputs["standings"].append(standings_df)

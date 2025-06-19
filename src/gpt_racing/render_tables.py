@@ -332,7 +332,7 @@ def render_race_results(df: pl.DataFrame):
     }
 
     df = df.select(select_cols.keys()).rename(select_cols)
-    gt = GT.GT(df)
+    gt = GT.GT(df).tab_header(title="Race Result")
 
     gt = gt.tab_options(
         data_row_padding="1px",
@@ -345,5 +345,78 @@ def render_race_results(df: pl.DataFrame):
 
     table_html = _fix_gt_id(gt.render("html"))
     table_html = _combine_column_headers(table_html, "Rating", ["Rating", "rating_change"])
+
+    return table_html
+
+
+def render_ratings(df):
+    show_provisional_rating = True
+
+    df = df.sort(["rank", "rating"], descending=[False, True], nulls_last=True)
+
+    # Drop those with 0 contests
+    df = df.filter(pl.col("num_valid_contests") > 0)
+
+    if show_provisional_rating:
+        df = df.with_columns(
+            pl.struct(["rating", "rank"])
+            .map_elements(lambda s: _format_rating_value(s["rating"], s["rank"]), return_dtype=str, skip_nulls=False)
+            .alias("rating"),
+            pl.col("rank").map_elements(_format_rank_value, return_dtype=str, skip_nulls=False),
+            pl.col("rating_change").map_elements(
+                functools.partial(_format_change_only), return_dtype=str, skip_nulls=False
+            ),
+        )
+
+    else:
+        df = df.with_columns(
+            # pl.struct(["rating", "rating_change"]).map_elements(_format_rating, return_dtype=str).alias("rating"),
+            pl.when(pl.col("rank").is_not_null()).then(pl.col("rank")).otherwise(pl.lit("")).alias("rank"),
+            # Render RATING column - None if we aren't rated
+            pl.when(pl.col("rank").is_not_null()).then(pl.col("rating")).otherwise(pl.lit("")).alias("rating"),
+            # Render rating change column
+            pl.when(pl.col("rank").is_not_null())
+            .then(
+                pl.col("rating_change").map_elements(
+                    functools.partial(_format_change_only), return_dtype=str, skip_nulls=False
+                )
+            )
+            .otherwise(pl.lit(""))
+            .alias("rating_change"),
+        )
+
+    df = df.with_columns(
+        # pl.col("points_rank_change").map_elements(
+        #     functools.partial(_format_change_only, rank=True), return_dtype=str, skip_nulls=False
+        # ),
+        pl.col("rank_change").map_elements(
+            functools.partial(_format_change_only, rank=True), return_dtype=str, skip_nulls=False
+        ),
+    )
+
+    select_cols = {
+        "rank": "Rank",
+        "rank_change": "rank_change",
+        "display_name": "Name",
+        "rating": "Rating",
+        "rating_change": "rating_change",
+        "num_contests": "Races",
+    }
+
+    df = df.select(select_cols.keys()).rename(select_cols)
+    gt = GT.GT(df).tab_header(title="ELO")
+
+    gt = gt.tab_options(
+        data_row_padding="1px",
+    )
+    gt = gt.tab_style(
+        style=GT.style.borders(sides="right", color="#000000", style="solid", weight="1px"),
+        locations=GT.loc.body(columns="Name"),
+    )
+    gt = _add_row_striping(gt)
+
+    table_html = _fix_gt_id(gt.render("html"))
+    table_html = _combine_column_headers(table_html, "Rating", ["Rating", "rating_change"])
+    table_html = _combine_column_headers(table_html, "Rank", ["Rank", "rank_change"])
 
     return table_html

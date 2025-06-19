@@ -16,6 +16,14 @@ def _load_config(path):
     return config
 
 
+def _render_and_write_table(gt, path):
+    with open(path, "w") as f:
+        if isinstance(gt, str):
+            f.write(gt)
+        else:
+            f.write(gt.as_raw_html())
+
+
 def core_entrypoint(config, out_path, _overwrite=False):
     from gpt_racing.config import RatingConfig
     from gpt_racing import core
@@ -53,24 +61,17 @@ def core_entrypoint(config, out_path, _overwrite=False):
     pdf_out_path = out_path / "pdf"
     pdf_out_path.mkdir(parents=True, exist_ok=True)
     for i, table in enumerate(out["standings"]):
-        gt = render_tables.render_standings(table)
-        path = pdf_out_path / f"standings_race_{i+1}.html"
-
-        with open(path, "w") as f:
-            if isinstance(gt, str):
-                f.write(gt)
-            else:
-                f.write(gt.as_raw_html())
+        _render_and_write_table(
+            gt=render_tables.render_standings(table), path=pdf_out_path / f"standings_race_{i+1}.html"
+        )
 
     for i, table in enumerate(out["race_results"]):
-        gt = render_tables.render_race_results(table)
-        path = pdf_out_path / f"result_race_{i+1}.html"
+        _render_and_write_table(
+            gt=render_tables.render_race_results(table), path=pdf_out_path / f"results_race_{i+1}.html"
+        )
 
-        with open(path, "w") as f:
-            if isinstance(gt, str):
-                f.write(gt)
-            else:
-                f.write(gt.as_raw_html())
+    for i, table in enumerate(out["ELO"]):
+        _render_and_write_table(gt=render_tables.render_ratings(table), path=pdf_out_path / f"elo_race_{i+1}.html")
 
 
 @click.command

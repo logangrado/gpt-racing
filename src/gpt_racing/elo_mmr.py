@@ -27,6 +27,7 @@ class ELOMMR:
         self._players = {}
         self._config = elo_config
         self._participation_df = None
+        self._name_df = None
         self._history = []
 
     def _get_or_create_player(self, player_id):
@@ -46,10 +47,18 @@ class ELOMMR:
         else:
             self._participation_df = pl.concat([self._participation_df, participation_df])
 
-    def update(self, df: pl.DataFrame):
+    def _update_name_df(self, name_df: pl.DataFrame):
+        if self._name_df is None:
+            self._name_df = name_df
+        else:
+            self._name_df = pl.concat([self._name_df, name_df]).unique()
+
+    def update(self, df: pl.DataFrame, name_df: pl.DataFrame):
         """
         Update ratings with a dataframe of contests
         """
+        self._update_name_df(name_df)
+
         for (contest_id, contest_date), contest_df in df.sort("contest_id").group_by(
             "contest_id", "contest_date", maintain_order=True
         ):
@@ -118,13 +127,13 @@ class ELOMMR:
         all_rounds_df = all_rounds_df.join(contest_counts, on=["user_id", "contest_id"], how="left")
 
         # COMPUTE RANK
-        all_rounds_df = all_rounds_df.with_columns(
-            pl.when(pl.col("num_valid_contests") >= self._config.min_races)
-            .then(pl.col("rating").rank("min", descending=True).over("contest_id"))
-            .otherwise(None)  # Fill non-matching rows with None
-            .cast(pl.Int32)
-            .alias("rank")
+        rank_df = (
+            all_rounds_df.filter(pl.col("num_valid_contests") >= self._config.min_races)
+            .with_columns(pl.col("rating").rank("min", descending=True).over("contest_id").cast(pl.Int32).alias("rank"))
+            .select(["user_id", "contest_id", "rank"])
         )
+
+        all_rounds_df = all_rounds_df.join(rank_df, on=["user_id", "contest_id"], how="left")
 
         # COMPUTE RANK CHANGE
         all_rounds_df = all_rounds_df.with_columns(
@@ -141,5 +150,8 @@ class ELOMMR:
             .otherwise(pl.lit(None))
             .alias("rating_change")
         ).drop("last_rating")
+
+        # Join in names
+        all_rounds_df = all_rounds_df.join(self._name_df, on="user_id", how="left")
 
         return all_rounds_df
