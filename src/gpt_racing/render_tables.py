@@ -156,6 +156,31 @@ def _format_incidents(row) -> str:
     return out
 
 
+def _fix_gt_id(html: str) -> str:
+    """
+    Replace the randomly generated gt HTML ID with a constant '000000'.
+
+    This modifies both the ID attribute on the <div> and all CSS selectors
+    that reference it (e.g., '#randomid table', etc).
+    """
+    # Match the first id="..." in the <div>
+    match = re.search(r'<div id="([^"]+)"', html)
+    if not match:
+        return html  # No ID found, return unchanged
+
+    original_id = match.group(1)
+    fixed_id = "abc123"
+
+    # Replace all occurrences of the original ID in the HTML
+    html = html.replace(f'id="{original_id}"', f'id="{fixed_id}"')
+    html = html.replace(f"#{original_id} ", f"#{fixed_id} ")
+    html = html.replace(f"#{original_id}\n", f"#{fixed_id}\n")  # in case of newline
+    html = html.replace(f"#{original_id}.", f"#{fixed_id}.")  # in case of classes
+    html = html.replace(f"#{original_id}{{", f"#{fixed_id}{{")  # in case of direct open
+
+    return html
+
+
 def render_standings(standings_df: pl.DataFrame):
     race_cols = [col.replace("points_", "") for col in standings_df.columns if col.startswith("points_race_")]
     race_col_map = {"points_" + col: col.replace("_", " ").title() for col in race_cols}
@@ -251,31 +276,6 @@ def render_standings(standings_df: pl.DataFrame):
     table_html = _combine_column_headers(table_html, "Rating Rank", ["Rating-Rank", "rating_rank_change"])
 
     return table_html
-
-
-def _fix_gt_id(html: str) -> str:
-    """
-    Replace the randomly generated gt HTML ID with a constant '000000'.
-
-    This modifies both the ID attribute on the <div> and all CSS selectors
-    that reference it (e.g., '#randomid table', etc).
-    """
-    # Match the first id="..." in the <div>
-    match = re.search(r'<div id="([^"]+)"', html)
-    if not match:
-        return html  # No ID found, return unchanged
-
-    original_id = match.group(1)
-    fixed_id = "abc123"
-
-    # Replace all occurrences of the original ID in the HTML
-    html = html.replace(f'id="{original_id}"', f'id="{fixed_id}"')
-    html = html.replace(f"#{original_id} ", f"#{fixed_id} ")
-    html = html.replace(f"#{original_id}\n", f"#{fixed_id}\n")  # in case of newline
-    html = html.replace(f"#{original_id}.", f"#{fixed_id}.")  # in case of classes
-    html = html.replace(f"#{original_id}{{", f"#{fixed_id}{{")  # in case of direct open
-
-    return html
 
 
 def render_race_results(df: pl.DataFrame):
@@ -400,7 +400,7 @@ def render_ratings(df):
         "display_name": "Name",
         "rating": "Rating",
         "rating_change": "rating_change",
-        "num_contests": "Races",
+        "num_valid_contests": "Races",
     }
 
     df = df.select(select_cols.keys()).rename(select_cols)
