@@ -1,20 +1,51 @@
 #!/usr/bin/env python3
 
 import getpass
-import json
 import hashlib
 import inspect
+import json
 
 import numpy as np
 import pandas as pd
+from iracing_oauth_client import Config, IRacingOAuthClient
 from iracingdataapi.client import irDataClient
 
-from gpt_racing import SECRETS_PATH, CACHE_PATH, logger
+from gpt_racing import CACHE_PATH, SECRETS_PATH, logger
+from gpt_racing.vault import vault
 
 
-def _load_secrets(path):
-    with open(path, "r") as f:
-        return json.load(f)
+def _get_iracing_oauth_client():
+    config = Config()
+
+    # Create OAuth client
+    client = IRacingOAuthClient(
+        client_id=vault["client_id"],
+        client_secret=vault["client_secret"],
+        username=vault["username"],
+        password=vault["password"],
+        request_timeout=config.request_timeout,
+        token_refresh_buffer_seconds=config.token_refresh_buffer_seconds,
+        log_level=config.log_level,
+        log_format=config.log_format,
+        ir_env=config.ir_env,
+    )
+
+    # Authenticate
+    if client.authenticate():
+        print("Successfully authenticated!")
+        print(f"Token expires at: {client.token_expires_at}")
+    else:
+        print("Authentication failed!")
+
+    return client
+
+
+def _get_token() -> str:
+    oauth_client = _get_iracing_oauth_client()
+
+    token = str(oauth_client.access_token)
+
+    return token
 
 
 def _load_client() -> irDataClient:
@@ -25,32 +56,10 @@ def _load_client() -> irDataClient:
 
     Else, loads client using existing username/password
     """
-    if SECRETS_PATH.exists():
-        logger.info(f"Loading credentials from {SECRETS_PATH}")
-        with open(SECRETS_PATH, "r") as f:
-            secrets = json.load(f)
 
-        client = irDataClient(username=secrets["username"], password="")
-        client.encoded_password = secrets["encoded_password"]
+    ir_client = irDataClient(access_token=_get_token())
 
-    else:
-        print("Enter your iRacing username/password.")
-        print(f"Your password will be stored encrypted in {SECRETS_PATH}")
-        username = input("Username: ")
-        password = getpass.getpass("Password: ")
-
-        client = irDataClient(username=username, password=password)
-
-        client.member_info()
-
-        # get the encoded password
-        data = {"username": username, "encoded_password": client.encoded_password}
-
-        with open(SECRETS_PATH, "w") as f:
-            json.dump(data, f)
-
-    logger.info(f"Authenticated with account '{client.username}'")
-    return client
+    return ir_client
 
 
 def _get_race_result(result: dict) -> pd.DataFrame:
