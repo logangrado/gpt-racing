@@ -1,3 +1,7 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *secret*
+.ipynb_checkpoints
+.cache
+notebooks
+out
