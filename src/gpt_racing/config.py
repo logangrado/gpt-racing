@@ -47,6 +47,7 @@ class ELOConfig(BaseModel):
     previous_seasons: Optional[List[RatingConfig]] = None
     min_races: int = 1
     time_window: Optional[datetime.timedelta] = None
+    weight: float = 1
 
 
 # Resolve forward refs

@@ -22,7 +22,9 @@ class ELOMMR:
 
         self._elo_mmr = elommr.EloMMR(
             drift_per_sec=0,
-            weight_limit=1,
+            sig_limit=50,
+            weight_limit=elo_config.weight,
+            # noob_delay=[0.7, 0.5, 0.3],
         )
         self._players = {}
         self._config = elo_config
