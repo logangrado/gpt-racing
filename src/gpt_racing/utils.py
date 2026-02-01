@@ -48,9 +48,9 @@ def seconds_to_str(seconds, precision=3):
     if hours == 0 and minutes == 0:
         out = f"{seconds:.{precision}f}"
     elif hours == 0:
-        out = f"{minutes}:{seconds:0{precision+3}.{precision}f}"
+        out = f"{minutes}:{seconds:0{precision + 3}.{precision}f}"
     else:
-        out = f"{hours}:{minutes:02d}:{seconds:0{precision+3}.{precision}f}"
+        out = f"{hours}:{minutes:02d}:{seconds:0{precision + 3}.{precision}f}"
 
     if negative:
         out = "-" + out

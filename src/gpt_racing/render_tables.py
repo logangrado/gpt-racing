@@ -2,6 +2,7 @@
 
 import functools
 import re
+
 import great_tables as GT
 import polars as pl
 from bs4 import BeautifulSoup
@@ -44,26 +45,34 @@ def _format_change(x, dx, rank=False):
     return out
 
 
-def _format_change_only(dx, rank=False):
-    if dx is None:
-        dx = ""
+def _format_change_only(
+    dx: float, rank: bool = False, skip_zero: bool = False, precision: int = 0, invert_color: bool = False
+) -> str:
+    if dx is None or (skip_zero and dx == 0):
+        out = ""
     else:
-        if rank:
-            if dx > 0:
-                dx = f"(<span style='color:red'>↓{abs(dx)}</span>)"
-            elif dx == 0:
-                dx = "(-)"
-            else:
-                dx = f"(<span style='color:green'>↑{abs(dx)}</span>)"
+        val_fmt = utils.seconds_to_str(abs(dx), precision=precision)
+
+        color = None
+        if dx == 0:
+            out = "(-)"
         else:
             if dx > 0:
-                dx = f"(<span style='color:green'>+{abs(dx)}</span>)"
-            elif dx == 0:
-                dx = "(-)"
-            else:
-                dx = f"(<span style='color:red'>-{abs(dx)}</span>)"
+                color = "green" if not invert_color else "red"
+                if rank:
+                    symbol = "↑"
+                else:
+                    symbol = "+"
 
-    return dx
+            else:
+                color = "red" if not invert_color else "green"
+                if rank:
+                    symbol = "↓"
+                else:
+                    symbol = "-"
+
+            out = f"(<span style='color:{color}'>{symbol}{val_fmt}</span>)"
+    return out
 
 
 def _combine_column_headers(html, label, columns):
@@ -96,9 +105,9 @@ def _combine_column_headers(html, label, columns):
 
 def _render_html(html):
     import tempfile
+    import time
     import webbrowser
     from pathlib import Path
-    import time
 
     with tempfile.TemporaryDirectory() as tmpdir:
         path = Path(tmpdir) / "page.html"
@@ -135,7 +144,7 @@ def _format_rating(row) -> str:
     # Center on space
     out = f"""
         <div style='display: flex; align-items: center; line-height: 1; width: 120px;'>
-            <div style='flex: 1; text-align: right; padding-right: 4px;'>{row['rating']}</div>
+            <div style='flex: 1; text-align: right; padding-right: 4px;'>{row["rating"]}</div>
             <div style='flex: 1; text-align: left; padding-left: 4px;'>({rating_change})</div>
         </div>
     """
@@ -289,6 +298,13 @@ def render_race_results(df: pl.DataFrame):
         pl.col("start_position").cast(pl.Int32),
     )
 
+    # Format penalty column
+    df = df.with_columns(
+        pl.col("penalty").map_elements(
+            lambda x: _format_change_only(x, rank=False, skip_zero=True, invert_color=True), return_dtype=str
+        )
+    )
+
     if show_provisional_rating:
         df = df.with_columns(
             pl.struct(["rating", "rank"])
@@ -325,6 +341,7 @@ def render_race_results(df: pl.DataFrame):
         "qualify_lap_time": "Qual. Lap",
         "start_position": "Start",
         "interval": "Interval",
+        "penalty": "penalty",
         "average_lap_time": "Avg. Lap",
         "fastest_lap_time": "Best Lap",
         "num_incidents": "Inc",
@@ -332,7 +349,17 @@ def render_race_results(df: pl.DataFrame):
     }
 
     df = df.select(select_cols.keys()).rename(select_cols)
-    gt = GT.GT(df).tab_header(title="Race Result")
+    gt = (
+        GT.GT(df)
+        .tab_header(title="Race Result")
+        .tab_style(
+            style=[
+                GT.style.css("font-variant-numeric: tabular-nums; font-feature-settings: 'tnum';"),
+                GT.style.text(align="right"),
+            ],
+            locations=GT.loc.body(columns=["Interval", "Qual. Lap", "Avg. Lap", "Best Lap"]),
+        )
+    )
 
     gt = gt.tab_options(
         data_row_padding="1px",
@@ -344,7 +371,12 @@ def render_race_results(df: pl.DataFrame):
     gt = _add_row_striping(gt)
 
     table_html = _fix_gt_id(gt.render("html"))
-    table_html = _combine_column_headers(table_html, "Rating", ["Rating", "rating_change"])
+    table_html = _combine_column_headers(
+        table_html,
+        "Rating",
+        ["Rating", "rating_change"],
+    )
+    table_html = _combine_column_headers(table_html, "Interval", ["Interval", "penalty"])
 
     return table_html
 
