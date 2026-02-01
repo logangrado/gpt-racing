@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 
-from typing import Tuple
 import functools
+from typing import Tuple
 
 import pandas as pd
 import polars as pl
 
-# from great_tables import GT
-
-from gpt_racing.iracing_data import IracingDataClient
+from gpt_racing import utils
 from gpt_racing.elo_mmr import ELOMMR
+
+# from great_tables import GT
+from gpt_racing.iracing_data import IracingDataClient
 from gpt_racing.results import compute_results, infer_invalid_laps
 from gpt_racing.scoring.points import compute_points_score
-from gpt_racing import utils
 
 
 def _load_race_data(race_configs, client) -> Tuple[pl.DataFrame, pl.DataFrame]:
@@ -63,7 +63,7 @@ def _load_race_data(race_configs, client) -> Tuple[pl.DataFrame, pl.DataFrame]:
         result_df = compute_results(lap_df, penalty_df, qualy_df)
         result_df["subsession_id"] = race_config.subsession_id
 
-        race_name = f"race_{i+1}"
+        race_name = f"race_{i + 1}"
         if race_config.race_name:
             race_name += f"_{race_config.race_name}"
         result_df["race_name"] = race_name
@@ -235,9 +235,6 @@ def compute_ratings(config, client):
             .join(name_df, on="user_id")
             .sort("points_rank")
         )
-
-        # Also need display_name in elo_df
-        current_elo_df = current_elo_df.join(standings_df["user_id", "display_name"].unique(), on="user_id", how="left")
 
         outputs["race_results"].append(race_result_df)
         outputs["standings"].append(standings_df)
