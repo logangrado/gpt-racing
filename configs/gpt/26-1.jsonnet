@@ -27,5 +27,14 @@
         { user_id: 603983, time: 5 },
       ],
     },
+    {
+      subsession_id: 83060140,
+      race_name: 'Roat Atlanta',
+      penalties: [
+        { user_id: 335343, time: 5 },
+        { user_id: 464635, time: 5 },
+        { user_id: 622340, time: 5 },
+      ],
+    },
   ],
 }
