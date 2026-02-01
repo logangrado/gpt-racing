@@ -3,7 +3,6 @@
 from typing import Tuple
 
 import polars as pl
-
 from gpt_racing.config import PointsConfig
 
 
@@ -26,14 +25,16 @@ def _compute_drop_races(df: pl.DataFrame, num_drop_races: int) -> pl.DataFrame:
         coalesce=True,
     )
 
-    # n_drop_races = min((n_contests - num_drop_races), num_drop_races)
-    # Drop a race when drop_order < n_drop_races
-
-    # out = out.with_columns((pl.min(pl.col("num_contests") - num_drop_races), num_drop_races).alias("num_drop_races"))
     out = out.with_columns(
-        (pl.col("drop_order") < (pl.min_horizontal(pl.col("num_contests") - num_drop_races, num_drop_races))).alias(
-            "drop"
-        )
+        (
+            pl.col("drop_order")
+            < (
+                pl.min_horizontal(
+                    pl.col("num_contests") - 1,  # num_drop_races,
+                    num_drop_races,
+                )
+            )
+        ).alias("drop")
     )
 
     out = out.drop("drop_order", "num_contests")
