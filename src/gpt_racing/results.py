@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from gpt_racing import utils
 
@@ -175,6 +175,11 @@ def compute_results(lap_df: pd.DataFrame, penalty_df: pd.DataFrame, qualy_df: pd
     penalty_df = penalty_df.groupby("user_id").sum().reset_index()
 
     # Add penalties for each driver to all laps
+    unmatched_users = set(penalty_df["user_id"]) - set(lap_df["user_id"])
+    if unmatched_users:
+        raise ValueError(
+            f"Found {len(unmatched_users)} user_ids in penalty_df not present in lap_df: {unmatched_users}"
+        )
     lap_df = lap_df.merge(penalty_df, on="user_id", how="left")
     lap_df["penalty"] = pd.to_numeric(lap_df["penalty"], errors="coerce")  # Fix fillna warning
 
