@@ -300,7 +300,6 @@ class TestPointsScoring:
                         "rank_change": [None, None, None],
                         "rating_change": [213, 0, -213],
                         "display_name": ["c", "b", "a"],
-                        "display_name_right": ["c", "b", "a"],
                     }
                 )
             ],
@@ -513,7 +512,6 @@ class TestPointsScoring:
                         "rank_change": [None, None, None],
                         "rating_change": [213, 0, -213],
                         "display_name": ["c", "b", "a"],
-                        "display_name_right": ["c", "b", "a"],
                     }
                 ),
                 pl.DataFrame(
@@ -534,7 +532,6 @@ class TestPointsScoring:
                         "rank_change": [0, None, 1, 1],
                         "rating_change": [None, -49, -65, -57],
                         "display_name": ["c", "e", "b", "a"],
-                        "display_name_right": ["c", "e", "b", "a"],
                     }
                 ),
             ],
@@ -834,7 +831,6 @@ class TestPointsScoring:
                         "rank_change": [None, None, None],
                         "rating_change": [213, 0, -213],
                         "display_name": ["c", "b", "a"],
-                        "display_name_right": ["c", "b", "a"],
                     }
                 ),
                 pl.DataFrame(
@@ -855,7 +851,6 @@ class TestPointsScoring:
                         "rank_change": [0, None, 1, 1],
                         "rating_change": [None, -49, -65, -57],
                         "display_name": ["c", "e", "b", "a"],
-                        "display_name_right": ["c", "e", "b", "a"],
                     }
                 ),
                 pl.DataFrame(
@@ -876,7 +871,6 @@ class TestPointsScoring:
                         "rank_change": [0, 0, 0, 0],
                         "rating_change": [None, -5, -22, 36],
                         "display_name": ["c", "e", "b", "a"],
-                        "display_name_right": ["c", "e", "b", "a"],
                     }
                 ),
             ],

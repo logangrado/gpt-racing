@@ -1,19 +1,12 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
 import datetime
 
-import pytest
-import pandas as pd
 import polars as pl
-
-from polars.testing import assert_frame_equal
-
-from gpt_racing import core
+from gpt_racing import _testing, core
+from gpt_racing._testing import assert_object_equal
 from gpt_racing.config import RatingConfig
-
-from gpt_racing import _testing
-from gpt_racing._testing import assert_object_equal, generate_data
+from polars.testing import assert_frame_equal
 
 
 def _df_to_schema_str(df):
@@ -99,8 +92,8 @@ class TestIntegration:
                         "finish_position": [1, 2, 3],
                         "interval": ["0.000", "-3.000", "-6.000"],
                         "points": [3, 2, 1],
-                        "rating": [1715, 1500, 1285],
-                        "rating_change": [215, 0, -215],
+                        "rating": [1713, 1500, 1287],
+                        "rating_change": [213, 0, -213],
                         "rank": [1, 2, 3],
                         "rank_change": [None, None, None],
                         "laps_complete": [3, 3, 3],
@@ -145,7 +138,7 @@ class TestIntegration:
                         "points_total": [3, 2, 1],
                         "points_rank": [1, 2, 3],
                         "points_rank_change": [None, None, None],
-                        "rating": [1715, 1500, 1285],
+                        "rating": [1713, 1500, 1287],
                         "rating_rank": [1, 2, 3],
                         "rating_rank_change": [None, None, None],
                         "num_races": [1, 1, 1],
@@ -216,7 +209,7 @@ class TestIntegration:
                 pl.DataFrame(
                     {
                         "user_id": [2, 1, 0],
-                        "rating": [1715, 1500, 1285],
+                        "rating": [1713, 1500, 1287],
                         "num_contests": [1, 1, 1],
                         "participated": [True, True, True],
                         "subsession_id": [0, 0, 0],
@@ -228,7 +221,8 @@ class TestIntegration:
                         "num_valid_contests": [1, 1, 1],
                         "rank": [1, 2, 3],
                         "rank_change": [None, None, None],
-                        "rating_change": [215, 0, -215],
+                        "rating_change": [213, 0, -213],
+                        "display_name": ["c", "b", "a"],
                     },
                     schema={
                         "user_id": pl.Int64,
@@ -241,6 +235,7 @@ class TestIntegration:
                         "rank": pl.Int32,
                         "rank_change": pl.Int32,
                         "rating_change": pl.Int64,
+                        "display_name": pl.String,
                     },
                 ),
             ],
