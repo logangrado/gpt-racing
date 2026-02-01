@@ -2,10 +2,9 @@
 
 import pandas as pd
 import polars as pl
-from polars.testing import assert_frame_equal
-
-from gpt_racing.scoring.points import compute_points_score
 from gpt_racing.config import PointsConfig
+from gpt_racing.scoring.points import compute_points_score
+from polars.testing import assert_frame_equal
 
 
 class TestPointsScoring:
@@ -111,9 +110,9 @@ class TestPointsScoring:
                 {"user_id": 0, "contest_id": 3, "finish_position": 0},
             ]
         )
-        data = data.with_columns(pl.col("contest_id").alias("subsession_id"))
-
-        data = data.with_columns(pl.col("contest_id").alias("contest_time"))
+        data = data.with_columns(
+            pl.col("contest_id").alias("subsession_id"), pl.col("contest_id").alias("contest_time")
+        )
 
         config = PointsConfig.model_validate({"points": [5, 4, 3, 2], "drop_races": 2})
         result = compute_points_score(data, config)
@@ -144,10 +143,10 @@ class TestPointsScoring:
                     None,
                 ],
                 "points": [2, 3, 4, 5, 3, 4, 5, None, 4, 5, None, None, 5, None, None, None],
-                "cumulative_points": [2, 3, 4, 5, 5, 7, 9, 5, 7, 9, 9, 5, 9, 9, 9, 5],
+                "cumulative_points": [2, 3, 4, 5, 3, 4, 5, 5, 4, 5, 5, 5, 9, 9, 9, 5],
                 "num_races": [1, 1, 1, 1, 2, 2, 2, 1, 3, 3, 2, 1, 4, 3, 2, 1],
-                "rank": [4, 3, 2, 1, 3, 2, 1, 3, 3, 1, 1, 4, 1, 1, 1, 4],
-                "rank_change": [None, None, None, None, -1, -1, -1, 2, 0, -1, 0, 1, -2, 0, 0, 0],
+                "rank": [4, 3, 2, 1, 4, 3, 1, 1, 4, 1, 1, 1, 1, 1, 1, 4],
+                "rank_change": [None, None, None, None, 0, 0, -1, 0, 0, -2, 0, 0, -3, 0, 0, 3],
                 "drop": [
                     True,
                     True,

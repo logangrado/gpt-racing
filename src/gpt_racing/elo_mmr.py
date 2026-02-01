@@ -1,15 +1,8 @@
 #!/usr/bin/env python3
 
-import tempfile
-from pathlib import Path
-import json
-import shutil
-from typing import Tuple, Optional
-
-import subprocess
+from typing import Optional
 
 import elommr
-import numpy as np
 import polars as pl
 
 from gpt_racing.config import ELOConfig

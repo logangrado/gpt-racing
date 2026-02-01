@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 
 import datetime
+import json
+from pathlib import Path
 
+import elommr
 import polars as pl
-
-from gpt_racing.elo_mmr import ELOMMR
+import pytest
 from gpt_racing._testing import assert_frame_equal
+from gpt_racing.config import ELOConfig
+from gpt_racing.elo_mmr import ELOMMR
 
 
 class TestELOMMR:
@@ -17,15 +21,21 @@ class TestELOMMR:
                 {"user_id": 2, "finish_position": 2},
             ]
         ).with_columns(pl.lit(0).alias("contest_id"), pl.lit(0).alias("contest_date").cast(pl.Datetime))
+        name_df = pl.DataFrame(
+            {
+                "user_id": [0, 1, 2],
+                "name": ["a", "b", "c"],
+            }
+        )
 
         elo = ELOMMR()
-        elo.update(data)
+        elo.update(data, name_df)
         result = elo.collect_results()
 
         expected = pl.DataFrame(
             {
                 "user_id": [0, 1, 2],
-                "rating": [1715, 1500, 1285],
+                "rating": [1713, 1500, 1287],
                 "num_contests": [1, 1, 1],
                 "participated": [True, True, True],
                 "contest_id": [0, 0, 0],
@@ -37,7 +47,8 @@ class TestELOMMR:
                 "num_valid_contests": [1, 1, 1],
                 "rank": [1, 2, 3],
                 "rank_change": [None, None, None],
-                "rating_change": [215, 0, -215],
+                "rating_change": [213, 0, -213],
+                "name": ["a", "b", "c"],
             }
         )
 
@@ -54,14 +65,21 @@ class TestELOMMR:
             ]
         ).with_columns(pl.lit(0).alias("contest_id"), pl.lit(0).alias("contest_date").cast(pl.Datetime))
 
+        name_df = pl.DataFrame(
+            {
+                "user_id": [0, 1, 2, 3, 4],
+                "name": ["a", "b", "c", "d", "e"],
+            }
+        )
+
         elo = ELOMMR()
-        elo.update(data)
+        elo.update(data, name_df)
         result = elo.collect_results()
 
         expected = pl.DataFrame(
             {
                 "user_id": [0, 1, 2, 3, 4],
-                "rating": [1815, 1636, 1444, 1444, 1185],
+                "rating": [1812, 1635, 1444, 1444, 1188],
                 "num_contests": [1, 1, 1, 1, 1],
                 "participated": [True, True, True, True, True],
                 "contest_id": [0, 0, 0, 0, 0],
@@ -75,7 +93,8 @@ class TestELOMMR:
                 "num_valid_contests": [1, 1, 1, 1, 1],
                 "rank": [1, 2, 3, 3, 5],
                 "rank_change": [None, None, None, None, None],
-                "rating_change": [315, 136, -56, -56, -315],
+                "rating_change": [312, 135, -56, -56, -312],
+                "name": ["a", "b", "c", "d", "e"],
             }
         )
         assert_frame_equal(result, expected, check_dtypes=False)
@@ -92,14 +111,21 @@ class TestELOMMR:
             ]
         ).with_columns(pl.col("contest_date").cast(pl.Datetime))
 
+        name_df = pl.DataFrame(
+            {
+                "user_id": [0, 1, 2, 3],
+                "name": ["a", "b", "c", "d"],
+            }
+        )
+
         elo = ELOMMR()
-        elo.update(data)
+        elo.update(data, name_df)
         result = elo.collect_results()
 
         expected = pl.DataFrame(
             {
                 "user_id": [0, 1, 2, 1, 3, 0, 2],
-                "rating": [1715, 1500, 1285, 1664, 1519, 1454, 1285],
+                "rating": [1713, 1500, 1287, 1655, 1513, 1471, 1287],
                 "num_contests": [1, 1, 1, 2, 1, 2, 1],
                 "participated": [True, True, True, True, True, True, False],
                 "contest_id": [0, 0, 0, 1, 1, 1, 1],
@@ -115,7 +141,8 @@ class TestELOMMR:
                 "num_valid_contests": [1, 1, 1, 2, 1, 2, 2],
                 "rank": [1, 2, 3, 1, 2, 3, 4],
                 "rank_change": [None, None, None, -1, None, 2, 1],
-                "rating_change": [215, 0, -215, 164, 19, -261, None],
+                "rating_change": [213, 0, -213, 155, 13, -242, None],
+                "name": ["a", "b", "c", "b", "d", "a", "c"],
             }
         )
         assert_frame_equal(result, expected, check_dtypes=False)

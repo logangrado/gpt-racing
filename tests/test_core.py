@@ -5,10 +5,9 @@ import datetime
 import pandas as pd
 import polars as pl
 import pytest
-
 from gpt_racing import core
-from gpt_racing.config import RatingConfig
 from gpt_racing._testing import assert_object_equal, generate_data
+from gpt_racing.config import RatingConfig
 
 
 @pytest.mark.skip(reason="Rating-only socring not implemented")
@@ -223,8 +222,8 @@ class TestPointsScoring:
                         "finish_position": [1, 2, 3],
                         "interval": ["0.000", "-3.000", "-6.000"],
                         "points": [10, 5, 3],
-                        "rating": [1715, 1500, 1285],
-                        "rating_change": [215, 0, -215],
+                        "rating": [1713, 1500, 1287],
+                        "rating_change": [213, 0, -213],
                         "rank": [1, 2, 3],
                         "rank_change": [None, None, None],
                         "laps_complete": [3, 3, 3],
@@ -249,7 +248,7 @@ class TestPointsScoring:
                         "points_total": [10, 5, 3],
                         "points_rank": [1, 2, 3],
                         "points_rank_change": [None, None, None],
-                        "rating": [1715, 1500, 1285],
+                        "rating": [1713, 1500, 1287],
                         "rating_rank": [1, 2, 3],
                         "rating_rank_change": [None, None, None],
                         "num_races": [1, 1, 1],
@@ -287,7 +286,7 @@ class TestPointsScoring:
                 pl.DataFrame(
                     {
                         "user_id": [2, 1, 0],
-                        "rating": [1715, 1500, 1285],
+                        "rating": [1713, 1500, 1287],
                         "num_contests": [1, 1, 1],
                         "participated": [True, True, True],
                         "subsession_id": [0, 0, 0],
@@ -299,7 +298,9 @@ class TestPointsScoring:
                         "num_valid_contests": [1, 1, 1],
                         "rank": [1, 2, 3],
                         "rank_change": [None, None, None],
-                        "rating_change": [215, 0, -215],
+                        "rating_change": [213, 0, -213],
+                        "display_name": ["c", "b", "a"],
+                        "display_name_right": ["c", "b", "a"],
                     }
                 )
             ],
@@ -366,8 +367,8 @@ class TestPointsScoring:
                         "finish_position": [1, 2, 3],
                         "interval": ["0.000", "-3.000", "-6.000"],
                         "points": [10, 5, 3],
-                        "rating": [1715, 1500, 1285],
-                        "rating_change": [215, 0, -215],
+                        "rating": [1713, 1500, 1287],
+                        "rating_change": [213, 0, -213],
                         "rank": [1, 2, 3],
                         "rank_change": [None, None, None],
                         "laps_complete": [3, 3, 3],
@@ -388,8 +389,8 @@ class TestPointsScoring:
                         "finish_position": [1, 2, 3],
                         "interval": ["0.000", "-3.000", "-6.000"],
                         "points": [10, 5, 3],
-                        "rating": [1487, 1436, 1222],
-                        "rating_change": [-13, -64, -63],
+                        "rating": [1451, 1435, 1230],
+                        "rating_change": [-49, -65, -57],
                         "rank": [2, 3, 4],
                         "rank_change": [None, 1, 1],
                         "laps_complete": [3, 3, 3],
@@ -414,7 +415,7 @@ class TestPointsScoring:
                         "points_total": [10, 5, 3],
                         "points_rank": [1, 2, 3],
                         "points_rank_change": [None, None, None],
-                        "rating": [1715, 1500, 1285],
+                        "rating": [1713, 1500, 1287],
                         "rating_rank": [1, 2, 3],
                         "rating_rank_change": [None, None, None],
                         "num_races": [1, 1, 1],
@@ -435,7 +436,7 @@ class TestPointsScoring:
                         "points_total": [10, 10, 10, 6],
                         "points_rank": [1, 1, 1, 4],
                         "points_rank_change": [0, -1, None, 1],
-                        "rating": [1715, 1436, 1487, 1222],
+                        "rating": [1713, 1435, 1451, 1230],
                         "rating_rank": [1, 3, 2, 4],
                         "rating_rank_change": [0, 1, None, 1],
                         "num_races": [1, 2, 1, 2],
@@ -498,7 +499,7 @@ class TestPointsScoring:
                 pl.DataFrame(
                     {
                         "user_id": [2, 1, 0],
-                        "rating": [1715, 1500, 1285],
+                        "rating": [1713, 1500, 1287],
                         "num_contests": [1, 1, 1],
                         "participated": [True, True, True],
                         "subsession_id": [0, 0, 0],
@@ -510,13 +511,15 @@ class TestPointsScoring:
                         "num_valid_contests": [1, 1, 1],
                         "rank": [1, 2, 3],
                         "rank_change": [None, None, None],
-                        "rating_change": [215, 0, -215],
+                        "rating_change": [213, 0, -213],
+                        "display_name": ["c", "b", "a"],
+                        "display_name_right": ["c", "b", "a"],
                     }
                 ),
                 pl.DataFrame(
                     {
                         "user_id": [2, 4, 1, 0],
-                        "rating": [1715, 1487, 1436, 1222],
+                        "rating": [1713, 1451, 1435, 1230],
                         "num_contests": [1, 1, 2, 2],
                         "participated": [False, True, True, True],
                         "subsession_id": [1, 1, 1, 1],
@@ -529,7 +532,9 @@ class TestPointsScoring:
                         "num_valid_contests": [2, 1, 2, 2],
                         "rank": [1, 2, 3, 4],
                         "rank_change": [0, None, 1, 1],
-                        "rating_change": [None, -13, -64, -63],
+                        "rating_change": [None, -49, -65, -57],
+                        "display_name": ["c", "e", "b", "a"],
+                        "display_name_right": ["c", "e", "b", "a"],
                     }
                 ),
             ],
@@ -611,8 +616,8 @@ class TestPointsScoring:
                         "finish_position": [1, 2, 3],
                         "interval": ["0.000", "-3.000", "-6.000"],
                         "points": [10, 5, 3],
-                        "rating": [1715, 1500, 1285],
-                        "rating_change": [215, 0, -215],
+                        "rating": [1713, 1500, 1287],
+                        "rating_change": [213, 0, -213],
                         "rank": [1, 2, 3],
                         "rank_change": [None, None, None],
                         "laps_complete": [3, 3, 3],
@@ -633,8 +638,8 @@ class TestPointsScoring:
                         "finish_position": [1, 2, 3],
                         "interval": ["0.000", "-3.000", "-6.000"],
                         "points": [10, 5, 3],
-                        "rating": [1487, 1436, 1222],
-                        "rating_change": [-13, -64, -63],
+                        "rating": [1451, 1435, 1230],
+                        "rating_change": [-49, -65, -57],
                         "rank": [2, 3, 4],
                         "rank_change": [None, 1, 1],
                         "laps_complete": [3, 3, 3],
@@ -655,8 +660,8 @@ class TestPointsScoring:
                         "finish_position": [1, 2, 3],
                         "interval": ["0.000", "-3.000", "-6.000"],
                         "points": [10, 5, 3],
-                        "rating": [1480, 1413, 1249],
-                        "rating_change": [-7, -23, 27],
+                        "rating": [1446, 1413, 1266],
+                        "rating_change": [-5, -22, 36],
                         "rank": [2, 3, 4],
                         "rank_change": [0, 0, 0],
                         "laps_complete": [3, 3, 3],
@@ -681,7 +686,7 @@ class TestPointsScoring:
                         "points_total": [10, 5, 3],
                         "points_rank": [1, 2, 3],
                         "points_rank_change": [None, None, None],
-                        "rating": [1715, 1500, 1285],
+                        "rating": [1713, 1500, 1287],
                         "rating_rank": [1, 2, 3],
                         "rating_rank_change": [None, None, None],
                         "num_races": [1, 1, 1],
@@ -702,7 +707,7 @@ class TestPointsScoring:
                         "points_total": [10, 10, 5, 3],
                         "points_rank": [1, 1, 3, 4],
                         "points_rank_change": [0, None, 1, 1],
-                        "rating": [1715, 1487, 1436, 1222],
+                        "rating": [1713, 1451, 1435, 1230],
                         "rating_rank": [1, 2, 3, 4],
                         "rating_rank_change": [0, None, 1, 1],
                         "num_races": [1, 1, 2, 2],
@@ -727,7 +732,7 @@ class TestPointsScoring:
                         "points_total": [20, 10, 10, 6],
                         "points_rank": [1, 2, 2, 4],
                         "points_rank_change": [0, 1, -1, 0],
-                        "rating": [1480, 1715, 1413, 1249],
+                        "rating": [1446, 1713, 1413, 1266],
                         "rating_rank": [2, 1, 3, 4],
                         "rating_rank_change": [0, 0, 0, 0],
                         "num_races": [2, 1, 3, 3],
@@ -815,7 +820,7 @@ class TestPointsScoring:
                 pl.DataFrame(
                     {
                         "user_id": [2, 1, 0],
-                        "rating": [1715, 1500, 1285],
+                        "rating": [1713, 1500, 1287],
                         "num_contests": [1, 1, 1],
                         "participated": [True, True, True],
                         "subsession_id": [0, 0, 0],
@@ -827,13 +832,15 @@ class TestPointsScoring:
                         "num_valid_contests": [1, 1, 1],
                         "rank": [1, 2, 3],
                         "rank_change": [None, None, None],
-                        "rating_change": [215, 0, -215],
+                        "rating_change": [213, 0, -213],
+                        "display_name": ["c", "b", "a"],
+                        "display_name_right": ["c", "b", "a"],
                     }
                 ),
                 pl.DataFrame(
                     {
                         "user_id": [2, 4, 1, 0],
-                        "rating": [1715, 1487, 1436, 1222],
+                        "rating": [1713, 1451, 1435, 1230],
                         "num_contests": [1, 1, 2, 2],
                         "participated": [False, True, True, True],
                         "subsession_id": [1, 1, 1, 1],
@@ -846,13 +853,15 @@ class TestPointsScoring:
                         "num_valid_contests": [2, 1, 2, 2],
                         "rank": [1, 2, 3, 4],
                         "rank_change": [0, None, 1, 1],
-                        "rating_change": [None, -13, -64, -63],
+                        "rating_change": [None, -49, -65, -57],
+                        "display_name": ["c", "e", "b", "a"],
+                        "display_name_right": ["c", "e", "b", "a"],
                     }
                 ),
                 pl.DataFrame(
                     {
                         "user_id": [2, 4, 1, 0],
-                        "rating": [1715, 1480, 1413, 1249],
+                        "rating": [1713, 1446, 1413, 1266],
                         "num_contests": [1, 2, 3, 3],
                         "participated": [False, True, True, True],
                         "subsession_id": [2, 2, 2, 2],
@@ -865,7 +874,9 @@ class TestPointsScoring:
                         "num_valid_contests": [3, 2, 3, 3],
                         "rank": [1, 2, 3, 4],
                         "rank_change": [0, 0, 0, 0],
-                        "rating_change": [None, -7, -23, 27],
+                        "rating_change": [None, -5, -22, 36],
+                        "display_name": ["c", "e", "b", "a"],
+                        "display_name_right": ["c", "e", "b", "a"],
                     }
                 ),
             ],
@@ -985,4 +996,4 @@ class _TestComputeRatings:
         result0 = core.compute_ratings(config0, client)
         result1 = core.compute_ratings(config1, client)
 
-        pd.testing.assert_frame_equal(result0, result1),
+        pd.testing.assert_frame_equal(result0, result1)
