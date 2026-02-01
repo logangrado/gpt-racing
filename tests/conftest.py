@@ -23,6 +23,13 @@ def client():
     return client
 
 
+@pytest.fixture
+def test_id(request):
+    unique_id = request.node.nodeid
+    unique_id = "/".join(unique_id.split("::", 1))
+    return unique_id
+
+
 class FakeClient:
     def __init__(self):
         self._lap_data = {}
