@@ -1,0 +1,25 @@
+line-length = 120
+exclude = [
+  ".git",
+  ".venv",
+  "__pycacne__",
+]
+
+[lint]
+select = ["E","F","I"]
+ignore = [
+  "E501",
+  "E203",
+  "E251",
+]
+
+[lint.isort]
+known-first-party = ["mkdocs_auto_public_api"]
+section-order = ["future","standard-library","third-party","first-party","local-folder"]
+split-on-trailing-comma=true
+
+[format]
+quote-style='double'
+indent-style='space'
+line-ending='auto'
+
