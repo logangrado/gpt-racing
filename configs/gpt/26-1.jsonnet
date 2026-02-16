@@ -36,5 +36,15 @@
         { user_id: 622340, time: 5 },
       ],
     },
+    {
+      subsession_id: 83429093,
+      race_name: 'Imola',
+      penalties: [
+        {
+          user_id: 436882,  //Nevil
+          time: 10,
+        },
+      ],
+    },
   ],
 }
