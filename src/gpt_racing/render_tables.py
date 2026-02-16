@@ -46,32 +46,49 @@ def _format_change(x, dx, rank=False):
 
 
 def _format_change_only(
-    dx: float, rank: bool = False, skip_zero: bool = False, precision: int = 0, invert_color: bool = False
+    dx: float,
+    rank: bool = False,
+    skip_zero: bool = False,
+    precision: int = 0,
+    invert_color: bool = False,
+    is_time: bool = False,
 ) -> str:
     if dx is None or (skip_zero and dx == 0):
         out = ""
     else:
-        val_fmt = utils.seconds_to_str(abs(dx), precision=precision)
+        val_fmt = abs(dx)
+        if is_time:
+            val_fmt = utils.seconds_to_str(val_fmt, precision=precision)
 
-        color = None
         if dx == 0:
             out = "(-)"
         else:
-            if dx > 0:
-                color = "green" if not invert_color else "red"
-                if rank:
-                    symbol = "↑"
+            # Determine base color based on whether higher or lower is better
+            if rank:
+                # For ranks, lower is better
+                if dx > 0:
+                    base_color = "red"  # Rank increased (worse)
                 else:
-                    symbol = "+"
-
-            else:
-                color = "red" if not invert_color else "green"
-                if rank:
                     symbol = "↓"
+                    base_color = "green"  # Rank decreased (better)
+                    symbol = "↑"
+            else:
+                # For normal values, higher is better
+                if dx > 0:
+                    base_color = "green"  # Value increased (better)
+                    symbol = "+"
                 else:
+                    base_color = "red"  # Value decreased (worse)
                     symbol = "-"
 
+            # Apply color inversion if needed
+            if invert_color:
+                color = "red" if base_color == "green" else "green"
+            else:
+                color = base_color
+
             out = f"(<span style='color:{color}'>{symbol}{val_fmt}</span>)"
+
     return out
 
 
@@ -301,7 +318,8 @@ def render_race_results(df: pl.DataFrame):
     # Format penalty column
     df = df.with_columns(
         pl.col("penalty").map_elements(
-            lambda x: _format_change_only(x, rank=False, skip_zero=True, invert_color=True), return_dtype=str
+            lambda x: _format_change_only(x, rank=False, skip_zero=True, invert_color=True, is_time=True),
+            return_dtype=str,
         )
     )
 
