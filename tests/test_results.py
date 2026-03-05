@@ -451,6 +451,51 @@ class TestComputeResults:
             ),
         )
 
+    def test_driver_missing_from_qual(self):
+        """
+        Basic penalty test, all drivers on lead lap
+        """
+        lap_df = pd.DataFrame(
+            [
+                {"user_id": 0, "lap": 1, "lap_time": 101, "interval": -1},
+                {"user_id": 1, "lap": 1, "lap_time": 100, "interval": 0},
+                {"user_id": 1, "lap": 2, "lap_time": 100, "interval": 0},
+                {"user_id": 2, "lap": 1, "lap_time": 102, "interval": -2},
+                {"user_id": 2, "lap": 2, "lap_time": 102, "interval": -4},
+            ]
+        )
+        qualy_df = pd.DataFrame(
+            [
+                {"user_id": 1, "finish_position": 1, "best_lap_time": 12.345, "laps_complete": 1},
+                {"user_id": 2, "finish_position": 2, "best_lap_time": 32.345, "laps_complete": 2},
+            ]
+        )
+
+        lap_df["incident"] = False
+
+        penalties = pd.DataFrame()
+
+        result = compute_results(lap_df, penalties, qualy_df)
+        # fmt: off
+        import ipdb; ipdb.set_trace()
+        # fmt: on
+
+        pd.testing.assert_frame_equal(
+            result,
+            pd.DataFrame(
+                {
+                    "user_id": [1, 0, 2],
+                    "laps_complete": [2, 2, 2],
+                    "total_time": [200.0, 202.0, 204.0],
+                    "penalty": [0.0, 0.0, 0.0],
+                    "interval": ["0.000", "-2.000", "-4.000"],
+                    "finish_position": [0, 1, 2],
+                    "average_lap_time": [100.0, 101.0, 102.0],
+                    "fastest_lap_time": [100, 101, 102],
+                }
+            ),
+        )
+
     @pytest.mark.skip("Not implemented")
     def test_disconnected_drivers(self):
         """Test that disconnected drivers are placed"""
