@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -476,24 +477,24 @@ class TestComputeResults:
         penalties = pd.DataFrame()
 
         result = compute_results(lap_df, penalties, qualy_df)
-        # fmt: off
-        import ipdb; ipdb.set_trace()
-        # fmt: on
 
         pd.testing.assert_frame_equal(
             result,
             pd.DataFrame(
                 {
-                    "user_id": [1, 0, 2],
-                    "laps_complete": [2, 2, 2],
-                    "total_time": [200.0, 202.0, 204.0],
+                    "user_id": [0, 1, 2],
+                    "laps_complete": [1, 2, 2],
+                    "total_time": [101.0, 200.0, 204.0],
                     "penalty": [0.0, 0.0, 0.0],
-                    "interval": ["0.000", "-2.000", "-4.000"],
-                    "finish_position": [0, 1, 2],
-                    "average_lap_time": [100.0, 101.0, 102.0],
-                    "fastest_lap_time": [100, 101, 102],
+                    "interval": ["-1L", "0.000", "-4.000"],
+                    "finish_position": [2, 0, 1],
+                    "average_lap_time": [101.0, 100.0, 102.0],
+                    "start_position": [np.nan, 1.0, 2.0],
+                    "qualify_lap_time": [np.nan, 12.345, 32.345],
+                    "fastest_lap_time": [101, 100, 102],
                 }
             ),
+            check_dtype=False,
         )
 
     @pytest.mark.skip("Not implemented")

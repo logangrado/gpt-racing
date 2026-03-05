@@ -8,8 +8,9 @@ from gpt_racing import utils
 
 def _compute_interval(result_df):
     result_df = result_df.copy()
+    lead_lap = result_df["laps_complete"].max()
 
-    result_df["laps_down"] = result_df["laps_complete"] - result_df["laps_complete"][0]
+    result_df["laps_down"] = result_df["laps_complete"] - lead_lap
 
     # Subtract min interval, in case we penalized the leader
     result_df["interval"] = result_df["interval"] - result_df["interval"].max()
