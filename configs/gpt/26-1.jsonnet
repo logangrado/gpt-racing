@@ -46,5 +46,15 @@
         },
       ],
     },
+    {
+      subsession_id: 83800241,
+      race_name: 'Sebfing',
+      penalties: [
+        {
+          user_id: 346566,
+          time: 5,
+        },
+      ],
+    },
   ],
 }

@@ -68,8 +68,8 @@ def _format_change_only(
                 # For ranks, lower is better
                 if dx > 0:
                     base_color = "red"  # Rank increased (worse)
-                else:
                     symbol = "↓"
+                else:
                     base_color = "green"  # Rank decreased (better)
                     symbol = "↑"
             else:
