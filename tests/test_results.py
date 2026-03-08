@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import numpy as np
-import pandas as pd
+import polars as pl
+from polars.testing import assert_frame_equal
 import pytest
 
 from gpt_racing.results import compute_results, infer_invalid_laps
@@ -14,7 +14,7 @@ class TestInferInvalidLapTimes:
 
     def test_basic(self):
         """Basic test without invalid laps"""
-        lap_df = pd.DataFrame(
+        lap_df = pl.DataFrame(
             [
                 {"user_id": 0, "lap": 1, "lap_time": 100, "interval": None},
                 {"user_id": 0, "lap": 2, "lap_time": 100, "interval": None},
@@ -30,9 +30,9 @@ class TestInferInvalidLapTimes:
 
         result = infer_invalid_laps(lap_df)
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [0, 0, 0, 1, 1, 1, 2, 2, 2],
                     "lap": [1, 2, 3, 1, 2, 3, 1, 2, 3],
@@ -40,10 +40,12 @@ class TestInferInvalidLapTimes:
                     "interval": [0.0, 0.0, 0.0, -10.0, -10.0, -10.0, -20.0, -20.0, -20.0],
                 }
             ),
+            check_dtypes=False,
+            check_row_order=False,
         )
 
     def test_single_invalid(self):
-        lap_df = pd.DataFrame(
+        lap_df = pl.DataFrame(
             [
                 {"user_id": 0, "lap": 1, "lap_time": 100, "interval": None},
                 {"user_id": 0, "lap": 2, "lap_time": 100, "interval": None},
@@ -57,9 +59,9 @@ class TestInferInvalidLapTimes:
 
         result = infer_invalid_laps(lap_df)
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [0, 0, 0, 1, 1, 1],
                     "lap": [1, 2, 3, 1, 2, 3],
@@ -67,10 +69,12 @@ class TestInferInvalidLapTimes:
                     "interval": [0.0, 0.0, 0.0, -1.0, -2.0, -3.0],
                 }
             ),
+            check_dtypes=False,
+            check_row_order=False,
         )
 
     def test_single_invalid_leader(self):
-        lap_df = pd.DataFrame(
+        lap_df = pl.DataFrame(
             [
                 {"user_id": 0, "lap": 1, "lap_time": 100, "interval": None},
                 {"user_id": 0, "lap": 2, "lap_time": -1, "interval": None},
@@ -84,9 +88,9 @@ class TestInferInvalidLapTimes:
 
         result = infer_invalid_laps(lap_df)
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [0, 0, 0, 1, 1, 1],
                     "lap": [1, 2, 3, 1, 2, 3],
@@ -94,6 +98,8 @@ class TestInferInvalidLapTimes:
                     "interval": [0.0, 0.0, 0.0, -1.0, -2.0, -3.0],
                 }
             ),
+            check_dtypes=False,
+            check_row_order=False,
         )
 
     def test_all_invalid_for_a_lap(self):
@@ -102,7 +108,7 @@ class TestInferInvalidLapTimes:
 
         We will instead infer that the lead driver matched their fastest lap
         """
-        lap_df = pd.DataFrame(
+        lap_df = pl.DataFrame(
             [
                 {"user_id": 0, "lap": 1, "lap_time": 99, "interval": None},
                 {"user_id": 0, "lap": 2, "lap_time": -1, "interval": None},
@@ -116,9 +122,9 @@ class TestInferInvalidLapTimes:
 
         result = infer_invalid_laps(lap_df)
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [0, 0, 0, 1, 1, 1],
                     "lap": [1, 2, 3, 1, 2, 3],
@@ -126,10 +132,12 @@ class TestInferInvalidLapTimes:
                     "interval": [0.0, 0.0, 0.0, -2.0, -3.0, -4.0],
                 }
             ),
+            check_dtypes=False,
+            check_row_order=False,
         )
 
     def test_sequential_invalid(self):
-        lap_df = pd.DataFrame(
+        lap_df = pl.DataFrame(
             [
                 {"user_id": 0, "lap": 1, "lap_time": 100, "interval": None},
                 {"user_id": 0, "lap": 2, "lap_time": 100, "interval": None},
@@ -147,9 +155,9 @@ class TestInferInvalidLapTimes:
 
         result = infer_invalid_laps(lap_df)
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
                     "lap": [1, 2, 3, 4, 5, 1, 2, 3, 4, 5],
@@ -157,10 +165,12 @@ class TestInferInvalidLapTimes:
                     "interval": [0.0, 0.0, 0.0, 0.0, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0],
                 }
             ),
+            check_dtypes=False,
+            check_row_order=False,
         )
 
     def test_sequential_invalid_leader(self):
-        lap_df = pd.DataFrame(
+        lap_df = pl.DataFrame(
             [
                 {"user_id": 0, "lap": 1, "lap_time": 100, "interval": None},
                 {"user_id": 0, "lap": 2, "lap_time": -1, "interval": None},
@@ -178,9 +188,9 @@ class TestInferInvalidLapTimes:
 
         result = infer_invalid_laps(lap_df)
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
                     "lap": [1, 2, 3, 4, 5, 1, 2, 3, 4, 5],
@@ -188,6 +198,8 @@ class TestInferInvalidLapTimes:
                     "interval": [0.0, 0.0, 0.0, 0.0, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0],
                 }
             ),
+            check_dtypes=False,
+            check_row_order=False,
         )
 
 
@@ -196,7 +208,7 @@ class TestComputeResults:
         """
         Basic penalty test, all drivers on lead lap
         """
-        lap_df = pd.DataFrame(
+        lap_df = pl.DataFrame(
             [
                 {"user_id": 0, "lap": 1, "lap_time": 101, "interval": -1},
                 {"user_id": 0, "lap": 2, "lap_time": 101, "interval": -2},
@@ -206,15 +218,15 @@ class TestComputeResults:
                 {"user_id": 2, "lap": 2, "lap_time": 102, "interval": -4},
             ]
         )
-        lap_df["incident"] = False
+        lap_df = lap_df.with_columns(pl.lit(False).alias("incident"))
 
-        penalties = pd.DataFrame()
+        penalties = pl.DataFrame()
 
         result = compute_results(lap_df, penalties)
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [1, 0, 2],
                     "laps_complete": [2, 2, 2],
@@ -226,13 +238,59 @@ class TestComputeResults:
                     "fastest_lap_time": [100, 101, 102],
                 }
             ),
+            check_dtypes=False,
+            check_row_order=False,
+        )
+
+    def test_same_laps_tiebreaker(self):
+        """
+        When two drivers DNF on the same lap, the one who completed that lap
+        sooner (lower total_time) should get the better (lower) finish_position.
+        """
+        lap_df = pl.DataFrame(
+            [
+                # Driver 0: winner, completes all 3 laps
+                {"user_id": 0, "lap": 1, "lap_time": 100, "interval": 0},
+                {"user_id": 0, "lap": 2, "lap_time": 100, "interval": 0},
+                {"user_id": 0, "lap": 3, "lap_time": 100, "interval": 0},
+                # Driver 1: DNF after lap 2, total_time=195 (faster on those laps)
+                {"user_id": 1, "lap": 1, "lap_time": 95, "interval": -5},
+                {"user_id": 1, "lap": 2, "lap_time": 100, "interval": -10},
+                # Driver 2: DNF after lap 2, total_time=220 (slower on those laps)
+                {"user_id": 2, "lap": 1, "lap_time": 110, "interval": -10},
+                {"user_id": 2, "lap": 2, "lap_time": 110, "interval": -20},
+            ]
+        )
+        lap_df = lap_df.with_columns(pl.lit(False).alias("incident"))
+        penalties = pl.DataFrame()
+
+        result = compute_results(lap_df, penalties)
+
+        # Driver 1 (total_time=195) should beat Driver 2 (total_time=220) even though
+        # Driver 2 had a higher interval magnitude at the same lap count
+        assert_frame_equal(
+            result,
+            pl.DataFrame(
+                {
+                    "user_id": [0, 1, 2],
+                    "laps_complete": [3, 2, 2],
+                    "total_time": [300.0, 195.0, 220.0],
+                    "penalty": [0.0, 0.0, 0.0],
+                    "interval": ["0.000", "-1L", "-1L"],
+                    "finish_position": [0, 1, 2],
+                    "average_lap_time": [100.0, 97.5, 110.0],
+                    "fastest_lap_time": [100, 95, 110],
+                }
+            ),
+            check_dtypes=False,
+            check_row_order=False,
         )
 
     def test_basic_penalty(self):
         """
         Basic penalty test, all drivers on lead lap
         """
-        lap_df = pd.DataFrame(
+        lap_df = pl.DataFrame(
             [
                 {"user_id": 0, "lap": 1, "lap_time": 100, "interval": 0},
                 {"user_id": 0, "lap": 2, "lap_time": 100, "interval": 0},
@@ -242,9 +300,9 @@ class TestComputeResults:
                 {"user_id": 2, "lap": 2, "lap_time": 100, "interval": -20},
             ]
         )
-        lap_df["incident"] = False
+        lap_df = lap_df.with_columns(pl.lit(False).alias("incident"))
 
-        penalties = pd.DataFrame(
+        penalties = pl.DataFrame(
             [
                 {"user_id": 1, "time": 15},
             ]
@@ -252,9 +310,9 @@ class TestComputeResults:
 
         result = compute_results(lap_df, penalties)
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [0, 2, 1],
                     "laps_complete": [2, 2, 2],
@@ -266,10 +324,12 @@ class TestComputeResults:
                     "fastest_lap_time": [100, 100, 100],
                 }
             ),
+            check_dtypes=False,
+            check_row_order=False,
         )
 
     def test_penalize_leader(self):
-        lap_df = pd.DataFrame(
+        lap_df = pl.DataFrame(
             [
                 {"user_id": 0, "lap": 1, "lap_time": 100, "interval": 0},
                 {"user_id": 0, "lap": 2, "lap_time": 100, "interval": 0},
@@ -282,8 +342,8 @@ class TestComputeResults:
                 {"user_id": 2, "lap": 3, "lap_time": 100, "interval": -20},
             ]
         )
-        lap_df["incident"] = False
-        penalties = pd.DataFrame(
+        lap_df = lap_df.with_columns(pl.lit(False).alias("incident"))
+        penalties = pl.DataFrame(
             [
                 {"user_id": 0, "time": 15},
             ]
@@ -291,9 +351,9 @@ class TestComputeResults:
 
         result = compute_results(lap_df, penalties)
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [1, 0, 2],
                     "laps_complete": [3, 3, 3],
@@ -305,11 +365,13 @@ class TestComputeResults:
                     "fastest_lap_time": [100, 100, 100],
                 }
             ),
+            check_dtypes=False,
+            check_row_order=False,
         )
 
     def test_penalize_across_final_lap(self):
         """Test what happens if we apply a penalty big enough to knock a driver down two laps!"""
-        lap_df = pd.DataFrame(
+        lap_df = pl.DataFrame(
             [
                 {"user_id": 0, "lap": 1, "lap_time": 10, "interval": 0},
                 {"user_id": 0, "lap": 2, "lap_time": 10, "interval": 0},
@@ -333,19 +395,19 @@ class TestComputeResults:
                 {"user_id": 3, "lap": 3, "lap_time": 14, "interval": -12},
             ]
         )
-        lap_df["incident"] = False
+        lap_df = lap_df.with_columns(pl.lit(False).alias("incident"))
 
         # 6s penalty, no change in lap/position
-        penalties = pd.DataFrame(
+        penalties = pl.DataFrame(
             [
                 {"user_id": 1, "time": 6},
             ]
         )
         result = compute_results(lap_df, penalties)
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [0, 1, 2, 3],
                     "laps_complete": [4, 4, 4, 3],
@@ -357,19 +419,21 @@ class TestComputeResults:
                     "fastest_lap_time": [10, 11, 13, 14],
                 }
             ),
+            check_dtypes=False,
+            check_row_order=False,
         )
 
         # 7s penalty, exactly on edge of being knocked down a lap
-        penalties = pd.DataFrame(
+        penalties = pl.DataFrame(
             [
                 {"user_id": 1, "time": 7},
             ]
         )
         result = compute_results(lap_df, penalties)
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [0, 1, 2, 3],
                     "laps_complete": [4, 4, 4, 3],
@@ -381,18 +445,20 @@ class TestComputeResults:
                     "fastest_lap_time": [10, 11, 13, 14],
                 }
             ),
+            check_dtypes=False,
+            check_row_order=False,
         )
 
         # Just over 7s to knock to next lap
-        penalties = pd.DataFrame(
+        penalties = pl.DataFrame(
             [
                 {"user_id": 1, "time": 7.2},
             ]
         )
         result = compute_results(lap_df, penalties)
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [0, 2, 1, 3],
                     "laps_complete": [4, 4, 3, 3],
@@ -404,18 +470,20 @@ class TestComputeResults:
                     "fastest_lap_time": [10, 13, 11, 14],
                 }
             ),
+            check_dtypes=False,
+            check_row_order=False,
         )
 
         # Just under 2 lap penalty
-        penalties = pd.DataFrame(
+        penalties = pl.DataFrame(
             [
                 {"user_id": 1, "time": 15},
             ]
         )
         result = compute_results(lap_df, penalties)
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [0, 2, 3, 1],
                     "laps_complete": [4, 4, 3, 3],
@@ -427,18 +495,20 @@ class TestComputeResults:
                     "fastest_lap_time": [10, 13, 14, 11],
                 }
             ),
+            check_dtypes=False,
+            check_row_order=False,
         )
 
         # Just over 2 lap penalty
-        penalties = pd.DataFrame(
+        penalties = pl.DataFrame(
             [
                 {"user_id": 1, "time": 15.2},
             ]
         )
         result = compute_results(lap_df, penalties)
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [0, 2, 3, 1],
                     "laps_complete": [4, 4, 3, 2],
@@ -450,13 +520,15 @@ class TestComputeResults:
                     "fastest_lap_time": [10, 13, 14, 11],
                 }
             ),
+            check_dtypes=False,
+            check_row_order=False,
         )
 
     def test_driver_missing_from_qual(self):
         """
         Basic penalty test, all drivers on lead lap
         """
-        lap_df = pd.DataFrame(
+        lap_df = pl.DataFrame(
             [
                 {"user_id": 0, "lap": 1, "lap_time": 101, "interval": -1},
                 {"user_id": 1, "lap": 1, "lap_time": 100, "interval": 0},
@@ -465,22 +537,22 @@ class TestComputeResults:
                 {"user_id": 2, "lap": 2, "lap_time": 102, "interval": -4},
             ]
         )
-        qualy_df = pd.DataFrame(
+        qualy_df = pl.DataFrame(
             [
                 {"user_id": 1, "finish_position": 1, "best_lap_time": 12.345, "laps_complete": 1},
                 {"user_id": 2, "finish_position": 2, "best_lap_time": 32.345, "laps_complete": 2},
             ]
         )
 
-        lap_df["incident"] = False
+        lap_df = lap_df.with_columns(pl.lit(False).alias("incident"))
 
-        penalties = pd.DataFrame()
+        penalties = pl.DataFrame()
 
         result = compute_results(lap_df, penalties, qualy_df)
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [0, 1, 2],
                     "laps_complete": [1, 2, 2],
@@ -489,12 +561,13 @@ class TestComputeResults:
                     "interval": ["-1L", "0.000", "-4.000"],
                     "finish_position": [2, 0, 1],
                     "average_lap_time": [101.0, 100.0, 102.0],
-                    "start_position": [np.nan, 1.0, 2.0],
-                    "qualify_lap_time": [np.nan, 12.345, 32.345],
+                    "start_position": [None, 1.0, 2.0],
+                    "qualify_lap_time": [None, 12.345, 32.345],
                     "fastest_lap_time": [101, 100, 102],
                 }
             ),
-            check_dtype=False,
+            check_dtypes=False,
+            check_row_order=False,
         )
 
     @pytest.mark.skip("Not implemented")

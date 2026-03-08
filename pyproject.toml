@@ -7,8 +7,6 @@ authors = [
     {name = "Logan Grado", email = "grado.logan@gmail.com"},
 ]
 dependencies = [
-    "numpy>1",
-    "pandas>2",
     "click>=8.1.7",
     "iracingdataapi>=1.4.2",
     "pydantic>=2.5.2",

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
-import click
-from pathlib import Path
 import json
 import shutil
+from pathlib import Path
+
+import click
+import polars as pl
 
 
 def _load_config(path):
@@ -25,11 +27,9 @@ def _render_and_write_table(gt, path):
 
 
 def core_entrypoint(config, out_path, _overwrite=False):
+    from gpt_racing import core, render_tables
     from gpt_racing.config import RatingConfig
-    from gpt_racing import core
     from gpt_racing.iracing_data import IracingDataClient
-
-    from gpt_racing import render_tables
 
     config = RatingConfig(**_load_config(config))
     client = IracingDataClient()
@@ -56,22 +56,23 @@ def core_entrypoint(config, out_path, _overwrite=False):
     csv_out_path.mkdir(parents=True, exist_ok=True)
     for key, tables in out.items():
         for i, table in enumerate(tables):
-            table.write_csv(csv_out_path / f"{key}_race_{i+1}.csv")
+            # float_cols = [c for c, t in zip(table.columns, table.dtypes) if t in (pl.Float32, pl.Float64)]
+            table.write_csv(csv_out_path / f"{key}_race_{i + 1}.csv", float_precision=4)
 
     pdf_out_path = out_path / "pdf"
     pdf_out_path.mkdir(parents=True, exist_ok=True)
     for i, table in enumerate(out["standings"]):
         _render_and_write_table(
-            gt=render_tables.render_standings(table), path=pdf_out_path / f"standings_race_{i+1}.html"
+            gt=render_tables.render_standings(table), path=pdf_out_path / f"standings_race_{i + 1}.html"
         )
 
     for i, table in enumerate(out["race_results"]):
         _render_and_write_table(
-            gt=render_tables.render_race_results(table), path=pdf_out_path / f"results_race_{i+1}.html"
+            gt=render_tables.render_race_results(table), path=pdf_out_path / f"results_race_{i + 1}.html"
         )
 
     for i, table in enumerate(out["ELO"]):
-        _render_and_write_table(gt=render_tables.render_ratings(table), path=pdf_out_path / f"elo_race_{i+1}.html")
+        _render_and_write_table(gt=render_tables.render_ratings(table), path=pdf_out_path / f"elo_race_{i + 1}.html")
 
 
 @click.command

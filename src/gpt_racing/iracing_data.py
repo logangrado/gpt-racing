@@ -4,9 +4,9 @@ import getpass
 import hashlib
 import inspect
 import json
+from datetime import datetime
 
-import numpy as np
-import pandas as pd
+import polars as pl
 from iracing_oauth_client import Config, IRacingOAuthClient
 from iracingdataapi.client import irDataClient
 
@@ -62,19 +62,19 @@ def _load_client() -> irDataClient:
     return ir_client
 
 
-def _get_race_result(result: dict) -> pd.DataFrame:
+def _get_race_result(result: dict) -> pl.DataFrame:
     """
     Get the race result from a result dict
     """
     for session in result["session_results"][::-1]:
         if session["simsession_type_name"].upper() == "RACE":
-            df_all = pd.DataFrame(session["results"])
+            df_all = pl.DataFrame(session["results"])
 
             # Filter out AIs
-            df_all = df_all[df_all["ai"] == False]
+            df_all = df_all.filter(pl.col("ai") == False)
 
             # Select columns we care about
-            df = df_all[
+            df = df_all.select(
                 [
                     "cust_id",
                     "display_name",
@@ -91,31 +91,30 @@ def _get_race_result(result: dict) -> pd.DataFrame:
                     "car_class_name",
                     "reason_out",
                 ]
-            ].copy()
+            )
 
-            # # Compute total time
-            # df["total_time"] = df["average_lap"] * df["laps_complete"]
-
-            df["subsession_id"] = result["subsession_id"]
-            df["session_end_time"] = pd.Timestamp(result["end_time"])
+            df = df.with_columns(
+                pl.lit(result["subsession_id"]).alias("subsession_id"),
+                pl.lit(datetime.fromisoformat(result["end_time"])).alias("session_end_time"),
+            )
             return df
 
     return None
 
 
-def _get_qualy_result(result: dict) -> pd.DataFrame:
+def _get_qualy_result(result: dict) -> pl.DataFrame:
     """
     Get the race result from a result dict
     """
     for session in result["session_results"][::-1]:
         if "QUALIFY" in session["simsession_type_name"].upper():
-            df_all = pd.DataFrame(session["results"])
+            df_all = pl.DataFrame(session["results"])
 
             # Filter out AIs
-            df_all = df_all[df_all["ai"] == False]
+            df_all = df_all.filter(pl.col("ai") == False)
 
             # Select columns we care about
-            df = df_all[
+            df = df_all.select(
                 [
                     "cust_id",
                     "display_name",
@@ -130,13 +129,12 @@ def _get_qualy_result(result: dict) -> pd.DataFrame:
                     "incidents",
                     "reason_out",
                 ]
-            ].copy()
+            )
 
-            # # Compute total time
-            # df["total_time"] = df["average_lap"] * df["laps_complete"]
-
-            df["subsession_id"] = result["subsession_id"]
-            df["session_end_time"] = pd.Timestamp(result["end_time"])
+            df = df.with_columns(
+                pl.lit(result["subsession_id"]).alias("subsession_id"),
+                pl.lit(datetime.fromisoformat(result["end_time"])).alias("session_end_time"),
+            )
             return df
 
     raise ValueError("")
@@ -224,7 +222,7 @@ class IracingDataClient:
 
         self._cust_id = self._client.member_profile()["cust_id"]
 
-    def get_race_result(self, subsession_id: int) -> pd.DataFrame:
+    def get_race_result(self, subsession_id: int) -> pl.DataFrame:
         result = self._client.result(subsession_id)
 
         # Find the race results
@@ -234,7 +232,7 @@ class IracingDataClient:
 
         return race_result
 
-    def get_qualy_result(self, subsession_id: int) -> pd.DataFrame:
+    def get_qualy_result(self, subsession_id: int) -> pl.DataFrame:
         result = self._client.result(subsession_id)
 
         # Find the race results
@@ -244,8 +242,8 @@ class IracingDataClient:
 
         return race_result
 
-    def get_lap_data(self, subsession_id: int) -> pd.DataFrame:
-        return pd.DataFrame(self._client.result_lap_chart_data(subsession_id))
+    def get_lap_data(self, subsession_id: int) -> pl.DataFrame:
+        return pl.DataFrame(self._client.result_lap_chart_data(subsession_id))
 
     def search_sessions(self, start_time, end_time, cust_id=None):
         if cust_id is None:
@@ -253,7 +251,7 @@ class IracingDataClient:
 
         # Start_time/end_time must be no more than 90 days apart!
 
-        return pd.DataFrame(
+        return pl.DataFrame(
             self._client.result_search_hosted(
                 start_range_begin=start_time,
                 start_range_end=end_time,

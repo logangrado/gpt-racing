@@ -2,9 +2,10 @@
 
 import datetime
 
-import pandas as pd
 import polars as pl
 import pytest
+from polars.testing import assert_frame_equal
+
 from gpt_racing import core
 from gpt_racing._testing import assert_object_equal, generate_data
 from gpt_racing.config import RatingConfig
@@ -23,10 +24,10 @@ class TestComputeRatings:
             {
                 "subsession_id": 0,
                 "qualifying": [
-                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
-                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
-                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42, "laps_complete": 3},
-                    {"cust_id": 3, "display_name": "d", "best_lap_time": 43, "laps_complete": 3},
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40_0000, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44_0000, "laps_complete": 4},
+                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42_0000, "laps_complete": 3},
+                    {"cust_id": 3, "display_name": "d", "best_lap_time": 43_0000, "laps_complete": 3},
                 ],
                 "race": [
                     {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
@@ -41,25 +42,25 @@ class TestComputeRatings:
         rating_df, result_df = core.compute_ratings(config, client=fake_client)
 
         # Check result dataframes
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             rating_df,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "display_name": ["a", "b", "c", "d"],
                     "user_id": [0, 1, 2, 3],
                     "rating": [1771, 1579, 1421, 1229],
                     "rating_change": [271, 79, -79, -271],
                     "rank": [1, 2, 3, 4],
-                    "rank_change": [pd.NA, pd.NA, pd.NA, pd.NA],
+                    "rank_change": [None, None, None, None],
                     "subsession_id": [0, 0, 0, 0],
                 }
             ),
-            check_dtype=False,
+            check_dtypes=False,
         )
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result_df,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [0, 1, 2, 3],
                     "laps_complete": [3, 3, 3, 0],
@@ -76,11 +77,11 @@ class TestComputeRatings:
                     "num_contests": [1, 1, 1, 1],
                     "participated": [True, True, True, True],
                     "rank": [1, 2, 3, 4],
-                    "rank_change": [pd.NA, pd.NA, pd.NA, pd.NA],
+                    "rank_change": [None, None, None, None],
                     "display_name": ["a", "b", "c", "d"],
                 }
             ),
-            check_dtype=False,
+            check_dtypes=False,
         )
 
     def test_multi_race_fake(self, fake_client):
@@ -98,10 +99,10 @@ class TestComputeRatings:
             {
                 "subsession_id": 0,
                 "qualifying": [
-                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
-                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
-                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42, "laps_complete": 3},
-                    {"cust_id": 3, "display_name": "d", "best_lap_time": 43, "laps_complete": 3},
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40_0000, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44_0000, "laps_complete": 4},
+                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42_0000, "laps_complete": 3},
+                    {"cust_id": 3, "display_name": "d", "best_lap_time": 43_0000, "laps_complete": 3},
                 ],
                 "race": [
                     {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
@@ -113,9 +114,9 @@ class TestComputeRatings:
             {
                 "subsession_id": 1,
                 "qualifying": [
-                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
-                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
-                    {"cust_id": 4, "display_name": "e", "best_lap_time": 43, "laps_complete": 3},
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40_0000, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44_0000, "laps_complete": 4},
+                    {"cust_id": 4, "display_name": "e", "best_lap_time": 43_0000, "laps_complete": 3},
                 ],
                 "race": [
                     {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
@@ -133,25 +134,25 @@ class TestComputeRatings:
         )
 
         # Check result dataframes
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             rating_df,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "display_name": ["a", "b", "c", "d", "a", "b", "c", "e", "d"],
                     "user_id": [0, 1, 2, 3, 0, 1, 2, 4, 3],
                     "rating": [1771, 1579, 1421, 1229, 1793, 1586, 1421, 1387, 1229],
-                    "rating_change": [271, 79, -79, -271, 22, 7, pd.NA, -113, pd.NA],
+                    "rating_change": [271, 79, -79, -271, 22, 7, None, -113, None],
                     "rank": [1, 2, 3, 4, 1, 2, 3, 4, 5],
-                    "rank_change": [pd.NA, pd.NA, pd.NA, pd.NA, 0, 0, 0, pd.NA, 1],
+                    "rank_change": [None, None, None, None, 0, 0, 0, None, 1],
                     "subsession_id": [0, 0, 0, 0, 1, 1, 1, 1, 1],
                 }
             ),
-            check_dtype=False,
+            check_dtypes=False,
         )
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result_df,
-            pd.DataFrame(
+            pl.DataFrame(
                 {
                     "user_id": [0, 1, 2, 3, 0, 1, 4],
                     "laps_complete": [3, 3, 3, 0, 3, 3, 3],
@@ -168,11 +169,11 @@ class TestComputeRatings:
                     "num_contests": [1, 1, 1, 1, 2, 2, 1],
                     "participated": [True, True, True, True, True, True, True],
                     "rank": [1, 2, 3, 4, 1, 2, 4],
-                    "rank_change": [pd.NA, pd.NA, pd.NA, pd.NA, 0, 0, pd.NA],
+                    "rank_change": [None, None, None, None, 0, 0, None],
                     "display_name": ["a", "b", "c", "d", "a", "b", "e"],
                 }
             ),
-            check_dtype=False,
+            check_dtypes=False,
         )
 
 
@@ -195,10 +196,10 @@ class TestPointsScoring:
             {
                 "subsession_id": 0,
                 "qualifying": [
-                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
-                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
-                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42, "laps_complete": 3},
-                    {"cust_id": 3, "display_name": "d", "best_lap_time": 43, "laps_complete": 3},
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40_0000, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44_0000, "laps_complete": 4},
+                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42_0000, "laps_complete": 3},
+                    {"cust_id": 3, "display_name": "d", "best_lap_time": 43_0000, "laps_complete": 3},
                 ],
                 "race": [
                     {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
@@ -213,99 +214,101 @@ class TestPointsScoring:
         result = core.compute_ratings(config, client=fake_client)
 
         expected = {
-            "race_results": [
-                pl.DataFrame(
-                    {
-                        "display_name": ["c", "b", "a"],
-                        "start_position": [2, 4, 1],
-                        "qualify_lap_time": [0.0042, 0.0044, 0.004],
-                        "finish_position": [1, 2, 3],
-                        "interval": ["0.000", "-3.000", "-6.000"],
-                        "points": [10, 5, 3],
-                        "rating": [1713, 1500, 1287],
-                        "rating_change": [213, 0, -213],
-                        "rank": [1, 2, 3],
-                        "rank_change": [None, None, None],
-                        "laps_complete": [3, 3, 3],
-                        "total_time": [36.0, 33.0, 30.0],
-                        "penalty": [0.0, 0.0, 0.0],
-                        "average_lap_time": [12.0, 11.0, 10.0],
-                        "fastest_lap_time": [12.0, 11.0, 10.0],
-                        "num_incidents": [0, 0, 0],
-                        "fastest_lap": [False, False, True],
-                        "cleanest_driver": [True, True, True],
-                    }
-                )
-            ],
-            "standings": [
-                pl.DataFrame(
-                    {
-                        "user_id": [2, 1, 0],
-                        "points_race_1": [10, 5, 3],
-                        "drop_race_1": [False, False, False],
-                        "fastest_lap_race_1": [False, False, True],
-                        "cleanest_driver_race_1": [True, True, True],
-                        "points_total": [10, 5, 3],
-                        "points_rank": [1, 2, 3],
-                        "points_rank_change": [None, None, None],
-                        "rating": [1713, 1500, 1287],
-                        "rating_rank": [1, 2, 3],
-                        "rating_rank_change": [None, None, None],
-                        "num_races": [1, 1, 1],
-                        "display_name": ["c", "b", "a"],
-                    }
-                )
-            ],
-            "points": [
-                pl.DataFrame(
-                    {
-                        "user_id": [2, 1, 0],
-                        "finish_position": [0, 1, 2],
-                        "subsession_id": [0, 0, 0],
-                        "session_end_time": [
-                            datetime.datetime(1970, 1, 1, 0, 0),
-                            datetime.datetime(1970, 1, 1, 0, 0),
-                            datetime.datetime(1970, 1, 1, 0, 0),
-                        ],
-                        "fastest_lap_time": [12.0, 11.0, 10.0],
-                        "num_incidents": [0, 0, 0],
-                        "laps_complete": [3, 3, 3],
-                        "points_type": ["default", "default", "default"],
-                        "points": [10, 5, 3],
-                        "fastest_lap": [False, False, True],
-                        "cleanest_driver": [True, True, True],
-                        "cumulative_points": [10, 5, 3],
-                        "num_races": [1, 1, 1],
-                        "rank": [1, 2, 3],
-                        "rank_change": [None, None, None],
-                        "drop": [False, False, False],
-                    }
-                )
-            ],
             "ELO": [
                 pl.DataFrame(
                     {
-                        "user_id": [2, 1, 0],
-                        "rating": [1713, 1500, 1287],
-                        "num_contests": [1, 1, 1],
-                        "participated": [True, True, True],
-                        "subsession_id": [0, 0, 0],
+                        "user_id": [0, 1, 2, 3],
+                        "rating": [1769, 1579, 1421, 1231],
+                        "num_contests": [1, 1, 1, 1],
+                        "participated": [True, True, True, True],
+                        "subsession_id": [0, 0, 0, 0],
                         "contest_date": [
                             datetime.datetime(1970, 1, 1, 0, 0),
                             datetime.datetime(1970, 1, 1, 0, 0),
                             datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
                         ],
-                        "num_valid_contests": [1, 1, 1],
-                        "rank": [1, 2, 3],
-                        "rank_change": [None, None, None],
-                        "rating_change": [213, 0, -213],
-                        "display_name": ["c", "b", "a"],
+                        "num_valid_contests": [1, 1, 1, 1],
+                        "rank": [1, 2, 3, 4],
+                        "rank_change": [None, None, None, None],
+                        "rating_change": [269, 79, -79, -269],
+                        "display_name": ["a", "b", "c", "d"],
                     }
-                )
+                ),
+            ],
+            "points": [
+                pl.DataFrame(
+                    {
+                        "user_id": [0, 1, 2, 3],
+                        "finish_position": [0, 1, 2, 3],
+                        "subsession_id": [0, 0, 0, 0],
+                        "session_end_time": [
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                        ],
+                        "fastest_lap_time": [10.0, 11.0, 12.0, None],
+                        "num_incidents": [0, 0, 0, None],
+                        "laps_complete": [3, 3, 3, 0],
+                        "points_type": ["default", "default", "default", "default"],
+                        "points": [10, 5, 3, 0],
+                        "fastest_lap": [True, False, False, None],
+                        "cleanest_driver": [True, True, True, None],
+                        "cumulative_points": [10, 5, 3, 0],
+                        "num_races": [1, 1, 1, 1],
+                        "rank": [1, 2, 3, 4],
+                        "rank_change": [None, None, None, None],
+                        "drop": [False, False, False, False],
+                    }
+                ),
+            ],
+            "race_results": [
+                pl.DataFrame(
+                    {
+                        "display_name": ["a", "b", "c", "d"],
+                        "start_position": [1, 4, 2, 3],
+                        "qualify_lap_time": [40.0, 44.0, 42.0, 43.0],
+                        "finish_position": [1, 2, 3, 4],
+                        "interval": ["0.000", "-3.000", "-6.000", "-3L"],
+                        "points": [10, 5, 3, 0],
+                        "rating": [1769, 1579, 1421, 1231],
+                        "rating_change": [269, 79, -79, -269],
+                        "rank": [1, 2, 3, 4],
+                        "rank_change": [None, None, None, None],
+                        "laps_complete": [3, 3, 3, 0],
+                        "total_time": [30.0, 33.0, 36.0, None],
+                        "penalty": [0.0, 0.0, 0.0, 0.0],
+                        "average_lap_time": [10.0, 11.0, 12.0, None],
+                        "fastest_lap_time": [10.0, 11.0, 12.0, None],
+                        "num_incidents": [0, 0, 0, None],
+                        "fastest_lap": [True, False, False, None],
+                        "cleanest_driver": [True, True, True, None],
+                    }
+                ),
+            ],
+            "standings": [
+                pl.DataFrame(
+                    {
+                        "user_id": [0, 1, 2, 3],
+                        "points_race_1": [10, 5, 3, 0],
+                        "drop_race_1": [False, False, False, False],
+                        "fastest_lap_race_1": [True, False, False, None],
+                        "cleanest_driver_race_1": [True, True, True, None],
+                        "points_total": [10, 5, 3, 0],
+                        "points_rank": [1, 2, 3, 4],
+                        "points_rank_change": [None, None, None, None],
+                        "rating": [1769, 1579, 1421, 1231],
+                        "rating_rank": [1, 2, 3, 4],
+                        "rating_rank_change": [None, None, None, None],
+                        "num_races": [1, 1, 1, 1],
+                        "display_name": ["a", "b", "c", "d"],
+                    }
+                ),
             ],
         }
 
-        assert_object_equal(result, expected, frame_kwargs={"check_dtypes": False})
+        assert_object_equal(result, expected, frame_kwargs={"check_dtypes": False, "check_row_order": False})
 
     def test_multi_race_fake(self, fake_client):
         config = RatingConfig.model_validate(
@@ -325,10 +328,10 @@ class TestPointsScoring:
             {
                 "subsession_id": 0,
                 "qualifying": [
-                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
-                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
-                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42, "laps_complete": 3},
-                    {"cust_id": 3, "display_name": "d", "best_lap_time": 43, "laps_complete": 3},
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40_0000, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44_0000, "laps_complete": 4},
+                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42_0000, "laps_complete": 3},
+                    {"cust_id": 3, "display_name": "d", "best_lap_time": 43_0000, "laps_complete": 3},
                 ],
                 "race": [
                     {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
@@ -340,9 +343,9 @@ class TestPointsScoring:
             {
                 "subsession_id": 1,
                 "qualifying": [
-                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
-                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
-                    {"cust_id": 4, "display_name": "e", "best_lap_time": 43, "laps_complete": 3},
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40_0000, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44_0000, "laps_complete": 4},
+                    {"cust_id": 4, "display_name": "e", "best_lap_time": 43_0000, "laps_complete": 3},
                 ],
                 "race": [
                     {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
@@ -352,53 +355,153 @@ class TestPointsScoring:
             },
         ]
 
+        # Expected race results:
+        # 1: a,b,c,d
+        # 2: a,b,d
+
         generate_data(summary_data, fake_client)
 
         result = core.compute_ratings(config, client=fake_client)
 
         expected = {
-            "race_results": [
+            "ELO": [
                 pl.DataFrame(
                     {
-                        "display_name": ["c", "b", "a"],
-                        "start_position": [2, 4, 1],
-                        "qualify_lap_time": [0.0042, 0.0044, 0.004],
-                        "finish_position": [1, 2, 3],
-                        "interval": ["0.000", "-3.000", "-6.000"],
-                        "points": [10, 5, 3],
-                        "rating": [1713, 1500, 1287],
-                        "rating_change": [213, 0, -213],
-                        "rank": [1, 2, 3],
-                        "rank_change": [None, None, None],
-                        "laps_complete": [3, 3, 3],
-                        "total_time": [36.0, 33.0, 30.0],
-                        "penalty": [0.0, 0.0, 0.0],
-                        "average_lap_time": [12.0, 11.0, 10.0],
-                        "fastest_lap_time": [12.0, 11.0, 10.0],
-                        "num_incidents": [0, 0, 0],
-                        "fastest_lap": [False, False, True],
-                        "cleanest_driver": [True, True, True],
+                        "user_id": [0, 1, 2, 3],
+                        "rating": [1769, 1579, 1421, 1231],
+                        "num_contests": [1, 1, 1, 1],
+                        "participated": [True, True, True, True],
+                        "subsession_id": [0, 0, 0, 0],
+                        "contest_date": [
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                        ],
+                        "num_valid_contests": [1, 1, 1, 1],
+                        "rank": [1, 2, 3, 4],
+                        "rank_change": [None, None, None, None],
+                        "rating_change": [269, 79, -79, -269],
+                        "display_name": ["a", "b", "c", "d"],
                     }
                 ),
                 pl.DataFrame(
                     {
-                        "display_name": ["e", "b", "a"],
-                        "start_position": [2, 3, 1],
-                        "qualify_lap_time": [0.0043, 0.0044, 0.004],
+                        "user_id": [0, 1, 2, 4, 3],
+                        "rating": [1776, 1584, 1421, 1416, 1231],
+                        "num_contests": [2, 2, 1, 1, 1],
+                        "participated": [True, True, False, True, False],
+                        "subsession_id": [1, 1, 1, 1, 1],
+                        "contest_date": [
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                        ],
+                        "num_valid_contests": [2, 2, 2, 1, 2],
+                        "rank": [1, 2, 3, 4, 5],
+                        "rank_change": [0, 0, 0, None, 1],
+                        "rating_change": [7, 5, None, -84, None],
+                        "display_name": ["a", "b", "c", "e", "d"],
+                    }
+                ),
+            ],
+            "points": [
+                pl.DataFrame(
+                    {
+                        "user_id": [0, 1, 2, 3],
+                        "finish_position": [0, 1, 2, 3],
+                        "subsession_id": [0, 0, 0, 0],
+                        "session_end_time": [
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                        ],
+                        "fastest_lap_time": [10.0, 11.0, 12.0, None],
+                        "num_incidents": [0, 0, 0, None],
+                        "laps_complete": [3, 3, 3, 0],
+                        "points_type": ["default", "default", "default", "default"],
+                        "points": [10, 5, 3, 0],
+                        "fastest_lap": [True, False, False, None],
+                        "cleanest_driver": [True, True, True, None],
+                        "cumulative_points": [10, 5, 3, 0],
+                        "num_races": [1, 1, 1, 1],
+                        "rank": [1, 2, 3, 4],
+                        "rank_change": [None, None, None, None],
+                        "drop": [False, False, False, False],
+                    }
+                ),
+                pl.DataFrame(
+                    {
+                        "user_id": [2, 3, 0, 1, 4],
+                        "finish_position": [None, None, 0, 1, 2],
+                        "subsession_id": [1, 1, 1, 1, 1],
+                        "session_end_time": [
+                            None,
+                            None,
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                        ],
+                        "fastest_lap_time": [None, None, 10.0, 11.0, 12.0],
+                        "num_incidents": [None, None, 0, 0, 0],
+                        "laps_complete": [None, None, 3, 3, 3],
+                        "points_type": [None, None, "default", "default", "default"],
+                        "points": [None, None, 10, 5, 3],
+                        "fastest_lap": [None, None, True, False, False],
+                        "cleanest_driver": [None, None, True, True, True],
+                        "cumulative_points": [3, 0, 20, 10, 3],
+                        "num_races": [1, 1, 2, 2, 1],
+                        "rank": [3, 5, 1, 2, 3],
+                        "rank_change": [0, 1, 0, 0, None],
+                        "drop": [False, False, False, False, False],
+                    }
+                ),
+            ],
+            "race_results": [
+                pl.DataFrame(
+                    {
+                        "display_name": ["a", "b", "c", "d"],
+                        "start_position": [1, 4, 2, 3],
+                        "qualify_lap_time": [40.0, 44.0, 42.0, 43.0],
+                        "finish_position": [1, 2, 3, 4],
+                        "interval": ["0.000", "-3.000", "-6.000", "-3L"],
+                        "points": [10, 5, 3, 0],
+                        "rating": [1769, 1579, 1421, 1231],
+                        "rating_change": [269, 79, -79, -269],
+                        "rank": [1, 2, 3, 4],
+                        "rank_change": [None, None, None, None],
+                        "laps_complete": [3, 3, 3, 0],
+                        "total_time": [30.0, 33.0, 36.0, None],
+                        "penalty": [0.0, 0.0, 0.0, 0.0],
+                        "average_lap_time": [10.0, 11.0, 12.0, None],
+                        "fastest_lap_time": [10.0, 11.0, 12.0, None],
+                        "num_incidents": [0, 0, 0, None],
+                        "fastest_lap": [True, False, False, None],
+                        "cleanest_driver": [True, True, True, None],
+                    }
+                ),
+                pl.DataFrame(
+                    {
+                        "display_name": ["a", "b", "e"],
+                        "start_position": [1, 3, 2],
+                        "qualify_lap_time": [40.0, 44.0, 43.0],
                         "finish_position": [1, 2, 3],
                         "interval": ["0.000", "-3.000", "-6.000"],
                         "points": [10, 5, 3],
-                        "rating": [1451, 1435, 1230],
-                        "rating_change": [-49, -65, -57],
-                        "rank": [2, 3, 4],
-                        "rank_change": [None, 1, 1],
+                        "rating": [1776, 1584, 1416],
+                        "rating_change": [7, 5, -84],
+                        "rank": [1, 2, 4],
+                        "rank_change": [0, 0, None],
                         "laps_complete": [3, 3, 3],
-                        "total_time": [36.0, 33.0, 30.0],
+                        "total_time": [30.0, 33.0, 36.0],
                         "penalty": [0.0, 0.0, 0.0],
-                        "average_lap_time": [12.0, 11.0, 10.0],
-                        "fastest_lap_time": [12.0, 11.0, 10.0],
+                        "average_lap_time": [10.0, 11.0, 12.0],
+                        "fastest_lap_time": [10.0, 11.0, 12.0],
                         "num_incidents": [0, 0, 0],
-                        "fastest_lap": [False, False, True],
+                        "fastest_lap": [True, False, False],
                         "cleanest_driver": [True, True, True],
                     }
                 ),
@@ -406,138 +509,46 @@ class TestPointsScoring:
             "standings": [
                 pl.DataFrame(
                     {
-                        "user_id": [2, 1, 0],
-                        "points_race_1": [10, 5, 3],
-                        "drop_race_1": [False, False, False],
-                        "fastest_lap_race_1": [False, False, True],
-                        "cleanest_driver_race_1": [True, True, True],
-                        "points_total": [10, 5, 3],
-                        "points_rank": [1, 2, 3],
-                        "points_rank_change": [None, None, None],
-                        "rating": [1713, 1500, 1287],
-                        "rating_rank": [1, 2, 3],
-                        "rating_rank_change": [None, None, None],
-                        "num_races": [1, 1, 1],
-                        "display_name": ["c", "b", "a"],
-                    }
-                ),
-                pl.DataFrame(
-                    {
-                        "user_id": [2, 1, 4, 0],
-                        "points_race_1": [10, 5, None, 3],
-                        "points_race_2": [None, 5, 10, 3],
+                        "user_id": [0, 1, 2, 3],
+                        "points_race_1": [10, 5, 3, 0],
                         "drop_race_1": [False, False, False, False],
-                        "drop_race_2": [False, False, False, False],
-                        "fastest_lap_race_1": [False, False, None, True],
-                        "fastest_lap_race_2": [None, False, False, True],
-                        "cleanest_driver_race_1": [True, True, None, True],
-                        "cleanest_driver_race_2": [None, True, True, True],
-                        "points_total": [10, 10, 10, 6],
-                        "points_rank": [1, 1, 1, 4],
-                        "points_rank_change": [0, -1, None, 1],
-                        "rating": [1713, 1435, 1451, 1230],
-                        "rating_rank": [1, 3, 2, 4],
-                        "rating_rank_change": [0, 1, None, 1],
-                        "num_races": [1, 2, 1, 2],
-                        "display_name": ["c", "b", "e", "a"],
-                    }
-                ),
-            ],
-            "points": [
-                pl.DataFrame(
-                    {
-                        "user_id": [2, 1, 0],
-                        "finish_position": [0, 1, 2],
-                        "subsession_id": [0, 0, 0],
-                        "session_end_time": [
-                            datetime.datetime(1970, 1, 1, 0, 0),
-                            datetime.datetime(1970, 1, 1, 0, 0),
-                            datetime.datetime(1970, 1, 1, 0, 0),
-                        ],
-                        "fastest_lap_time": [12.0, 11.0, 10.0],
-                        "num_incidents": [0, 0, 0],
-                        "laps_complete": [3, 3, 3],
-                        "points_type": ["default", "default", "default"],
-                        "points": [10, 5, 3],
-                        "fastest_lap": [False, False, True],
-                        "cleanest_driver": [True, True, True],
-                        "cumulative_points": [10, 5, 3],
-                        "num_races": [1, 1, 1],
-                        "rank": [1, 2, 3],
-                        "rank_change": [None, None, None],
-                        "drop": [False, False, False],
+                        "fastest_lap_race_1": [True, False, False, None],
+                        "cleanest_driver_race_1": [True, True, True, None],
+                        "points_total": [10, 5, 3, 0],
+                        "points_rank": [1, 2, 3, 4],
+                        "points_rank_change": [None, None, None, None],
+                        "rating": [1769, 1579, 1421, 1231],
+                        "rating_rank": [1, 2, 3, 4],
+                        "rating_rank_change": [None, None, None, None],
+                        "num_races": [1, 1, 1, 1],
+                        "display_name": ["a", "b", "c", "d"],
                     }
                 ),
                 pl.DataFrame(
                     {
-                        "user_id": [2, 4, 1, 0],
-                        "finish_position": [None, 0, 1, 2],
-                        "subsession_id": [1, 1, 1, 1],
-                        "session_end_time": [
-                            None,
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
-                        ],
-                        "fastest_lap_time": [None, 12.0, 11.0, 10.0],
-                        "num_incidents": [None, 0, 0, 0],
-                        "laps_complete": [None, 3, 3, 3],
-                        "points_type": [None, "default", "default", "default"],
-                        "points": [None, 10, 5, 3],
-                        "fastest_lap": [None, False, False, True],
-                        "cleanest_driver": [None, True, True, True],
-                        "cumulative_points": [10, 10, 10, 6],
-                        "num_races": [1, 1, 2, 2],
-                        "rank": [1, 1, 1, 4],
-                        "rank_change": [0, None, -1, 1],
-                        "drop": [False, False, False, False],
-                    }
-                ),
-            ],
-            "ELO": [
-                pl.DataFrame(
-                    {
-                        "user_id": [2, 1, 0],
-                        "rating": [1713, 1500, 1287],
-                        "num_contests": [1, 1, 1],
-                        "participated": [True, True, True],
-                        "subsession_id": [0, 0, 0],
-                        "contest_date": [
-                            datetime.datetime(1970, 1, 1, 0, 0),
-                            datetime.datetime(1970, 1, 1, 0, 0),
-                            datetime.datetime(1970, 1, 1, 0, 0),
-                        ],
-                        "num_valid_contests": [1, 1, 1],
-                        "rank": [1, 2, 3],
-                        "rank_change": [None, None, None],
-                        "rating_change": [213, 0, -213],
-                        "display_name": ["c", "b", "a"],
-                    }
-                ),
-                pl.DataFrame(
-                    {
-                        "user_id": [2, 4, 1, 0],
-                        "rating": [1713, 1451, 1435, 1230],
-                        "num_contests": [1, 1, 2, 2],
-                        "participated": [False, True, True, True],
-                        "subsession_id": [1, 1, 1, 1],
-                        "contest_date": [
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
-                        ],
-                        "num_valid_contests": [2, 1, 2, 2],
-                        "rank": [1, 2, 3, 4],
-                        "rank_change": [0, None, 1, 1],
-                        "rating_change": [None, -49, -65, -57],
-                        "display_name": ["c", "e", "b", "a"],
+                        "user_id": [0, 1, 2, 4, 3],
+                        "points_race_1": [10, 5, 3, None, 0],
+                        "points_race_2": [10, 5, None, 3, None],
+                        "drop_race_1": [False, False, False, False, False],
+                        "drop_race_2": [False, False, False, False, False],
+                        "fastest_lap_race_1": [True, False, False, None, None],
+                        "fastest_lap_race_2": [True, False, None, False, None],
+                        "cleanest_driver_race_1": [True, True, True, None, None],
+                        "cleanest_driver_race_2": [True, True, None, True, None],
+                        "points_total": [20, 10, 3, 3, 0],
+                        "points_rank": [1, 2, 3, 3, 5],
+                        "points_rank_change": [0, 0, 0, None, 1],
+                        "rating": [1776, 1584, 1421, 1416, 1231],
+                        "rating_rank": [1, 2, 3, 4, 5],
+                        "rating_rank_change": [0, 0, 0, None, 1],
+                        "num_races": [2, 2, 1, 1, 1],
+                        "display_name": ["a", "b", "c", "e", "d"],
                     }
                 ),
             ],
         }
 
-        assert_object_equal(result, expected, frame_kwargs={"check_dtypes": False})
+        assert_object_equal(result, expected, frame_kwargs={"check_dtypes": False, "check_row_order": False})
 
     def test_multi_race_with_drop_fake(self, fake_client):
         config = RatingConfig.model_validate(
@@ -559,10 +570,10 @@ class TestPointsScoring:
             {
                 "subsession_id": 0,
                 "qualifying": [
-                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
-                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
-                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42, "laps_complete": 3},
-                    {"cust_id": 3, "display_name": "d", "best_lap_time": 43, "laps_complete": 3},
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40_0000, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44_0000, "laps_complete": 4},
+                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42_0000, "laps_complete": 3},
+                    {"cust_id": 3, "display_name": "d", "best_lap_time": 43_0000, "laps_complete": 3},
                 ],
                 "race": [
                     {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
@@ -574,9 +585,9 @@ class TestPointsScoring:
             {
                 "subsession_id": 1,
                 "qualifying": [
-                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
-                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
-                    {"cust_id": 4, "display_name": "e", "best_lap_time": 43, "laps_complete": 3},
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40_0000, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44_0000, "laps_complete": 4},
+                    {"cust_id": 4, "display_name": "e", "best_lap_time": 43_0000, "laps_complete": 3},
                 ],
                 "race": [
                     {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
@@ -587,9 +598,9 @@ class TestPointsScoring:
             {
                 "subsession_id": 2,
                 "qualifying": [
-                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40, "laps_complete": 3},
-                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44, "laps_complete": 4},
-                    {"cust_id": 4, "display_name": "e", "best_lap_time": 43, "laps_complete": 3},
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40_0000, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44_0000, "laps_complete": 4},
+                    {"cust_id": 4, "display_name": "e", "best_lap_time": 43_0000, "laps_complete": 3},
                 ],
                 "race": [
                     {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
@@ -604,70 +615,213 @@ class TestPointsScoring:
         result = core.compute_ratings(config, client=fake_client)
 
         expected = {
+            "ELO": [
+                pl.DataFrame(
+                    {
+                        "user_id": [0, 1, 2, 3],
+                        "rating": [1769, 1579, 1421, 1231],
+                        "num_contests": [1, 1, 1, 1],
+                        "participated": [True, True, True, True],
+                        "subsession_id": [0, 0, 0, 0],
+                        "contest_date": [
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                        ],
+                        "num_valid_contests": [1, 1, 1, 1],
+                        "rank": [1, 2, 3, 4],
+                        "rank_change": [None, None, None, None],
+                        "rating_change": [269, 79, -79, -269],
+                        "display_name": ["a", "b", "c", "d"],
+                    }
+                ),
+                pl.DataFrame(
+                    {
+                        "user_id": [0, 1, 2, 4, 3],
+                        "rating": [1776, 1584, 1421, 1416, 1231],
+                        "num_contests": [2, 2, 1, 1, 1],
+                        "participated": [True, True, False, True, False],
+                        "subsession_id": [1, 1, 1, 1, 1],
+                        "contest_date": [
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                        ],
+                        "num_valid_contests": [2, 2, 2, 1, 2],
+                        "rank": [1, 2, 3, 4, 5],
+                        "rank_change": [0, 0, 0, None, 1],
+                        "rating_change": [7, 5, None, -84, None],
+                        "display_name": ["a", "b", "c", "e", "d"],
+                    }
+                ),
+                pl.DataFrame(
+                    {
+                        "user_id": [0, 1, 2, 4, 3],
+                        "rating": [1779, 1586, 1421, 1412, 1231],
+                        "num_contests": [3, 3, 1, 2, 1],
+                        "participated": [True, True, False, True, False],
+                        "subsession_id": [2, 2, 2, 2, 2],
+                        "contest_date": [
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 2),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 2),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 2),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 2),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 2),
+                        ],
+                        "num_valid_contests": [3, 3, 3, 2, 3],
+                        "rank": [1, 2, 3, 4, 5],
+                        "rank_change": [0, 0, 0, 0, 0],
+                        "rating_change": [3, 2, None, -4, None],
+                        "display_name": ["a", "b", "c", "e", "d"],
+                    }
+                ),
+            ],
+            "points": [
+                pl.DataFrame(
+                    {
+                        "user_id": [0, 1, 2, 3],
+                        "finish_position": [0, 1, 2, 3],
+                        "subsession_id": [0, 0, 0, 0],
+                        "session_end_time": [
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                            datetime.datetime(1970, 1, 1, 0, 0),
+                        ],
+                        "fastest_lap_time": [10.0, 11.0, 12.0, None],
+                        "num_incidents": [0, 0, 0, None],
+                        "laps_complete": [3, 3, 3, 0],
+                        "points_type": ["default", "default", "default", "default"],
+                        "points": [10, 5, 3, 0],
+                        "fastest_lap": [True, False, False, None],
+                        "cleanest_driver": [True, True, True, None],
+                        "cumulative_points": [10, 5, 3, 0],
+                        "num_races": [1, 1, 1, 1],
+                        "rank": [1, 2, 3, 4],
+                        "rank_change": [None, None, None, None],
+                        "drop": [False, False, False, False],
+                    }
+                ),
+                pl.DataFrame(
+                    {
+                        "user_id": [2, 3, 0, 1, 4],
+                        "finish_position": [None, None, 0, 1, 2],
+                        "subsession_id": [1, 1, 1, 1, 1],
+                        "session_end_time": [
+                            None,
+                            None,
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
+                        ],
+                        "fastest_lap_time": [None, None, 10.0, 11.0, 12.0],
+                        "num_incidents": [None, None, 0, 0, 0],
+                        "laps_complete": [None, None, 3, 3, 3],
+                        "points_type": [None, None, "default", "default", "default"],
+                        "points": [None, None, 10, 5, 3],
+                        "fastest_lap": [None, None, True, False, False],
+                        "cleanest_driver": [None, None, True, True, True],
+                        "cumulative_points": [3, 0, 10, 5, 3],
+                        "num_races": [1, 1, 2, 2, 1],
+                        "rank": [3, 5, 1, 2, 3],
+                        "rank_change": [0, 1, 0, 0, None],
+                        "drop": [True, True, False, False, False],
+                    }
+                ),
+                pl.DataFrame(
+                    {
+                        "user_id": [2, 3, 0, 1, 4],
+                        "finish_position": [None, None, 0, 1, 2],
+                        "subsession_id": [2, 2, 2, 2, 2],
+                        "session_end_time": [
+                            None,
+                            None,
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 2),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 2),
+                            datetime.datetime(1970, 1, 1, 0, 0, 0, 2),
+                        ],
+                        "fastest_lap_time": [None, None, 10.0, 11.0, 12.0],
+                        "num_incidents": [None, None, 0, 0, 0],
+                        "laps_complete": [None, None, 3, 3, 3],
+                        "points_type": [None, None, "default", "default", "default"],
+                        "points": [None, None, 10, 5, 3],
+                        "fastest_lap": [None, None, True, False, False],
+                        "cleanest_driver": [None, None, True, True, True],
+                        "cumulative_points": [3, 0, 20, 10, 6],
+                        "num_races": [1, 1, 3, 3, 2],
+                        "rank": [4, 5, 1, 2, 3],
+                        "rank_change": [1, 0, 0, 0, 0],
+                        "drop": [False, False, False, False, False],
+                    }
+                ),
+            ],
             "race_results": [
                 pl.DataFrame(
                     {
-                        "display_name": ["c", "b", "a"],
-                        "start_position": [2, 4, 1],
-                        "qualify_lap_time": [0.0042, 0.0044, 0.004],
+                        "display_name": ["a", "b", "c", "d"],
+                        "start_position": [1, 4, 2, 3],
+                        "qualify_lap_time": [40.0, 44.0, 42.0, 43.0],
+                        "finish_position": [1, 2, 3, 4],
+                        "interval": ["0.000", "-3.000", "-6.000", "-3L"],
+                        "points": [10, 5, 3, 0],
+                        "rating": [1769, 1579, 1421, 1231],
+                        "rating_change": [269, 79, -79, -269],
+                        "rank": [1, 2, 3, 4],
+                        "rank_change": [None, None, None, None],
+                        "laps_complete": [3, 3, 3, 0],
+                        "total_time": [30.0, 33.0, 36.0, None],
+                        "penalty": [0.0, 0.0, 0.0, 0.0],
+                        "average_lap_time": [10.0, 11.0, 12.0, None],
+                        "fastest_lap_time": [10.0, 11.0, 12.0, None],
+                        "num_incidents": [0, 0, 0, None],
+                        "fastest_lap": [True, False, False, None],
+                        "cleanest_driver": [True, True, True, None],
+                    }
+                ),
+                pl.DataFrame(
+                    {
+                        "display_name": ["a", "b", "e"],
+                        "start_position": [1, 3, 2],
+                        "qualify_lap_time": [40.0, 44.0, 43.0],
                         "finish_position": [1, 2, 3],
                         "interval": ["0.000", "-3.000", "-6.000"],
                         "points": [10, 5, 3],
-                        "rating": [1713, 1500, 1287],
-                        "rating_change": [213, 0, -213],
-                        "rank": [1, 2, 3],
-                        "rank_change": [None, None, None],
+                        "rating": [1776, 1584, 1416],
+                        "rating_change": [7, 5, -84],
+                        "rank": [1, 2, 4],
+                        "rank_change": [0, 0, None],
                         "laps_complete": [3, 3, 3],
-                        "total_time": [36.0, 33.0, 30.0],
+                        "total_time": [30.0, 33.0, 36.0],
                         "penalty": [0.0, 0.0, 0.0],
-                        "average_lap_time": [12.0, 11.0, 10.0],
-                        "fastest_lap_time": [12.0, 11.0, 10.0],
+                        "average_lap_time": [10.0, 11.0, 12.0],
+                        "fastest_lap_time": [10.0, 11.0, 12.0],
                         "num_incidents": [0, 0, 0],
-                        "fastest_lap": [False, False, True],
+                        "fastest_lap": [True, False, False],
                         "cleanest_driver": [True, True, True],
                     }
                 ),
                 pl.DataFrame(
                     {
-                        "display_name": ["e", "b", "a"],
-                        "start_position": [2, 3, 1],
-                        "qualify_lap_time": [0.0043, 0.0044, 0.004],
+                        "display_name": ["a", "b", "e"],
+                        "start_position": [1, 3, 2],
+                        "qualify_lap_time": [40.0, 44.0, 43.0],
                         "finish_position": [1, 2, 3],
                         "interval": ["0.000", "-3.000", "-6.000"],
                         "points": [10, 5, 3],
-                        "rating": [1451, 1435, 1230],
-                        "rating_change": [-49, -65, -57],
-                        "rank": [2, 3, 4],
-                        "rank_change": [None, 1, 1],
-                        "laps_complete": [3, 3, 3],
-                        "total_time": [36.0, 33.0, 30.0],
-                        "penalty": [0.0, 0.0, 0.0],
-                        "average_lap_time": [12.0, 11.0, 10.0],
-                        "fastest_lap_time": [12.0, 11.0, 10.0],
-                        "num_incidents": [0, 0, 0],
-                        "fastest_lap": [False, False, True],
-                        "cleanest_driver": [True, True, True],
-                    }
-                ),
-                pl.DataFrame(
-                    {
-                        "display_name": ["e", "b", "a"],
-                        "start_position": [2, 3, 1],
-                        "qualify_lap_time": [0.0043, 0.0044, 0.004],
-                        "finish_position": [1, 2, 3],
-                        "interval": ["0.000", "-3.000", "-6.000"],
-                        "points": [10, 5, 3],
-                        "rating": [1446, 1413, 1266],
-                        "rating_change": [-5, -22, 36],
-                        "rank": [2, 3, 4],
+                        "rating": [1779, 1586, 1412],
+                        "rating_change": [3, 2, -4],
+                        "rank": [1, 2, 4],
                         "rank_change": [0, 0, 0],
                         "laps_complete": [3, 3, 3],
-                        "total_time": [36.0, 33.0, 30.0],
+                        "total_time": [30.0, 33.0, 36.0],
                         "penalty": [0.0, 0.0, 0.0],
-                        "average_lap_time": [12.0, 11.0, 10.0],
-                        "fastest_lap_time": [12.0, 11.0, 10.0],
+                        "average_lap_time": [10.0, 11.0, 12.0],
+                        "fastest_lap_time": [10.0, 11.0, 12.0],
                         "num_incidents": [0, 0, 0],
-                        "fastest_lap": [False, False, True],
+                        "fastest_lap": [True, False, False],
                         "cleanest_driver": [True, True, True],
                     }
                 ),
@@ -675,208 +829,71 @@ class TestPointsScoring:
             "standings": [
                 pl.DataFrame(
                     {
-                        "user_id": [2, 1, 0],
-                        "points_race_1": [10, 5, 3],
-                        "drop_race_1": [False, False, False],
-                        "fastest_lap_race_1": [False, False, True],
-                        "cleanest_driver_race_1": [True, True, True],
-                        "points_total": [10, 5, 3],
-                        "points_rank": [1, 2, 3],
-                        "points_rank_change": [None, None, None],
-                        "rating": [1713, 1500, 1287],
-                        "rating_rank": [1, 2, 3],
-                        "rating_rank_change": [None, None, None],
-                        "num_races": [1, 1, 1],
-                        "display_name": ["c", "b", "a"],
-                    }
-                ),
-                pl.DataFrame(
-                    {
-                        "user_id": [2, 4, 1, 0],
-                        "points_race_1": [10, None, 5, 3],
-                        "points_race_2": [None, 10, 5, 3],
-                        "drop_race_1": [False, True, True, True],
-                        "drop_race_2": [True, False, False, False],
-                        "fastest_lap_race_1": [False, None, False, True],
-                        "fastest_lap_race_2": [None, False, False, True],
-                        "cleanest_driver_race_1": [True, None, True, True],
-                        "cleanest_driver_race_2": [None, True, True, True],
-                        "points_total": [10, 10, 5, 3],
-                        "points_rank": [1, 1, 3, 4],
-                        "points_rank_change": [0, None, 1, 1],
-                        "rating": [1713, 1451, 1435, 1230],
+                        "user_id": [0, 1, 2, 3],
+                        "points_race_1": [10, 5, 3, 0],
+                        "drop_race_1": [False, False, False, False],
+                        "fastest_lap_race_1": [True, False, False, None],
+                        "cleanest_driver_race_1": [True, True, True, None],
+                        "points_total": [10, 5, 3, 0],
+                        "points_rank": [1, 2, 3, 4],
+                        "points_rank_change": [None, None, None, None],
+                        "rating": [1769, 1579, 1421, 1231],
                         "rating_rank": [1, 2, 3, 4],
-                        "rating_rank_change": [0, None, 1, 1],
-                        "num_races": [1, 1, 2, 2],
-                        "display_name": ["c", "e", "b", "a"],
+                        "rating_rank_change": [None, None, None, None],
+                        "num_races": [1, 1, 1, 1],
+                        "display_name": ["a", "b", "c", "d"],
                     }
                 ),
                 pl.DataFrame(
                     {
-                        "user_id": [4, 2, 1, 0],
-                        "points_race_1": [None, 10, 5, 3],
-                        "points_race_2": [10, None, 5, 3],
-                        "points_race_3": [10, None, 5, 3],
-                        "drop_race_1": [True, False, True, True],
-                        "drop_race_2": [False, True, False, False],
-                        "drop_race_3": [False, False, False, False],
-                        "fastest_lap_race_1": [None, False, False, True],
-                        "fastest_lap_race_2": [False, None, False, True],
-                        "fastest_lap_race_3": [False, None, False, True],
-                        "cleanest_driver_race_1": [None, True, True, True],
-                        "cleanest_driver_race_2": [True, None, True, True],
-                        "cleanest_driver_race_3": [True, None, True, True],
-                        "points_total": [20, 10, 10, 6],
-                        "points_rank": [1, 2, 2, 4],
-                        "points_rank_change": [0, 1, -1, 0],
-                        "rating": [1446, 1713, 1413, 1266],
-                        "rating_rank": [2, 1, 3, 4],
-                        "rating_rank_change": [0, 0, 0, 0],
-                        "num_races": [2, 1, 3, 3],
-                        "display_name": ["e", "c", "b", "a"],
-                    }
-                ),
-            ],
-            "points": [
-                pl.DataFrame(
-                    {
-                        "user_id": [2, 1, 0],
-                        "finish_position": [0, 1, 2],
-                        "subsession_id": [0, 0, 0],
-                        "session_end_time": [
-                            datetime.datetime(1970, 1, 1, 0, 0),
-                            datetime.datetime(1970, 1, 1, 0, 0),
-                            datetime.datetime(1970, 1, 1, 0, 0),
-                        ],
-                        "fastest_lap_time": [12.0, 11.0, 10.0],
-                        "num_incidents": [0, 0, 0],
-                        "laps_complete": [3, 3, 3],
-                        "points_type": ["default", "default", "default"],
-                        "points": [10, 5, 3],
-                        "fastest_lap": [False, False, True],
-                        "cleanest_driver": [True, True, True],
-                        "cumulative_points": [10, 5, 3],
-                        "num_races": [1, 1, 1],
-                        "rank": [1, 2, 3],
-                        "rank_change": [None, None, None],
-                        "drop": [False, False, False],
+                        "user_id": [0, 1, 4, 2, 3],
+                        "points_race_1": [10, 5, None, 3, 0],
+                        "points_race_2": [10, 5, 3, None, None],
+                        "drop_race_1": [True, True, True, False, False],
+                        "drop_race_2": [False, False, False, True, True],
+                        "fastest_lap_race_1": [True, False, None, False, None],
+                        "fastest_lap_race_2": [True, False, False, None, None],
+                        "cleanest_driver_race_1": [True, True, None, True, None],
+                        "cleanest_driver_race_2": [True, True, True, None, None],
+                        "points_total": [10, 5, 3, 3, 0],
+                        "points_rank": [1, 2, 3, 3, 5],
+                        "points_rank_change": [0, 0, None, 0, 1],
+                        "rating": [1776, 1584, 1416, 1421, 1231],
+                        "rating_rank": [1, 2, 4, 3, 5],
+                        "rating_rank_change": [0, 0, None, 0, 1],
+                        "num_races": [2, 2, 1, 1, 1],
+                        "display_name": ["a", "b", "e", "c", "d"],
                     }
                 ),
                 pl.DataFrame(
                     {
-                        "user_id": [2, 4, 1, 0],
-                        "finish_position": [None, 0, 1, 2],
-                        "subsession_id": [1, 1, 1, 1],
-                        "session_end_time": [
-                            None,
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
-                        ],
-                        "fastest_lap_time": [None, 12.0, 11.0, 10.0],
-                        "num_incidents": [None, 0, 0, 0],
-                        "laps_complete": [None, 3, 3, 3],
-                        "points_type": [None, "default", "default", "default"],
-                        "points": [None, 10, 5, 3],
-                        "fastest_lap": [None, False, False, True],
-                        "cleanest_driver": [None, True, True, True],
-                        "cumulative_points": [10, 10, 5, 3],
-                        "num_races": [1, 1, 2, 2],
-                        "rank": [1, 1, 3, 4],
-                        "rank_change": [0, None, 1, 1],
-                        "drop": [True, False, False, False],
-                    }
-                ),
-                pl.DataFrame(
-                    {
-                        "user_id": [2, 4, 1, 0],
-                        "finish_position": [None, 0, 1, 2],
-                        "subsession_id": [2, 2, 2, 2],
-                        "session_end_time": [
-                            None,
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 2),
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 2),
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 2),
-                        ],
-                        "fastest_lap_time": [None, 12.0, 11.0, 10.0],
-                        "num_incidents": [None, 0, 0, 0],
-                        "laps_complete": [None, 3, 3, 3],
-                        "points_type": [None, "default", "default", "default"],
-                        "points": [None, 10, 5, 3],
-                        "fastest_lap": [None, False, False, True],
-                        "cleanest_driver": [None, True, True, True],
-                        "cumulative_points": [10, 20, 10, 6],
-                        "num_races": [1, 2, 3, 3],
-                        "rank": [2, 1, 2, 4],
-                        "rank_change": [1, 0, -1, 0],
-                        "drop": [False, False, False, False],
-                    }
-                ),
-            ],
-            "ELO": [
-                pl.DataFrame(
-                    {
-                        "user_id": [2, 1, 0],
-                        "rating": [1713, 1500, 1287],
-                        "num_contests": [1, 1, 1],
-                        "participated": [True, True, True],
-                        "subsession_id": [0, 0, 0],
-                        "contest_date": [
-                            datetime.datetime(1970, 1, 1, 0, 0),
-                            datetime.datetime(1970, 1, 1, 0, 0),
-                            datetime.datetime(1970, 1, 1, 0, 0),
-                        ],
-                        "num_valid_contests": [1, 1, 1],
-                        "rank": [1, 2, 3],
-                        "rank_change": [None, None, None],
-                        "rating_change": [213, 0, -213],
-                        "display_name": ["c", "b", "a"],
-                    }
-                ),
-                pl.DataFrame(
-                    {
-                        "user_id": [2, 4, 1, 0],
-                        "rating": [1713, 1451, 1435, 1230],
-                        "num_contests": [1, 1, 2, 2],
-                        "participated": [False, True, True, True],
-                        "subsession_id": [1, 1, 1, 1],
-                        "contest_date": [
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 1),
-                        ],
-                        "num_valid_contests": [2, 1, 2, 2],
-                        "rank": [1, 2, 3, 4],
-                        "rank_change": [0, None, 1, 1],
-                        "rating_change": [None, -49, -65, -57],
-                        "display_name": ["c", "e", "b", "a"],
-                    }
-                ),
-                pl.DataFrame(
-                    {
-                        "user_id": [2, 4, 1, 0],
-                        "rating": [1713, 1446, 1413, 1266],
-                        "num_contests": [1, 2, 3, 3],
-                        "participated": [False, True, True, True],
-                        "subsession_id": [2, 2, 2, 2],
-                        "contest_date": [
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 2),
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 2),
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 2),
-                            datetime.datetime(1970, 1, 1, 0, 0, 0, 2),
-                        ],
-                        "num_valid_contests": [3, 2, 3, 3],
-                        "rank": [1, 2, 3, 4],
-                        "rank_change": [0, 0, 0, 0],
-                        "rating_change": [None, -5, -22, 36],
-                        "display_name": ["c", "e", "b", "a"],
+                        "user_id": [0, 1, 4, 2, 3],
+                        "points_race_1": [10, 5, None, 3, 0],
+                        "points_race_2": [10, 5, 3, None, None],
+                        "points_race_3": [10, 5, 3, None, None],
+                        "drop_race_1": [True, True, True, False, False],
+                        "drop_race_2": [False, False, False, True, True],
+                        "drop_race_3": [False, False, False, False, False],
+                        "fastest_lap_race_1": [True, False, None, False, None],
+                        "fastest_lap_race_2": [True, False, False, None, None],
+                        "fastest_lap_race_3": [True, False, False, None, None],
+                        "cleanest_driver_race_1": [True, True, None, True, None],
+                        "cleanest_driver_race_2": [True, True, True, None, None],
+                        "cleanest_driver_race_3": [True, True, True, None, None],
+                        "points_total": [20, 10, 6, 3, 0],
+                        "points_rank": [1, 2, 3, 4, 5],
+                        "points_rank_change": [0, 0, 0, 1, 0],
+                        "rating": [1779, 1586, 1412, 1421, 1231],
+                        "rating_rank": [1, 2, 4, 3, 5],
+                        "rating_rank_change": [0, 0, 0, 0, 0],
+                        "num_races": [3, 3, 2, 1, 1],
+                        "display_name": ["a", "b", "e", "c", "d"],
                     }
                 ),
             ],
         }
 
-        assert_object_equal(result, expected, frame_kwargs={"check_dtypes": False})
+        assert_object_equal(result, expected, frame_kwargs={"check_dtypes": False, "check_row_order": False})
 
 
 class _TestComputeRatings:
@@ -885,9 +902,9 @@ class _TestComputeRatings:
 
         result = core.compute_ratings(config, client=client)
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 [
                     {"rank": 1, "user_id": 260862, "rating": 1770, "display_name": "Rafael Amorim"},
                     {"rank": 2, "user_id": 622340, "rating": 1634, "display_name": "Logan Grado"},
@@ -926,9 +943,9 @@ class _TestComputeRatings:
 
         result = core.compute_ratings(config, client=client)
 
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             result,
-            pd.DataFrame(
+            pl.DataFrame(
                 [
                     {"rank": 1, "user_id": 15826, "rating": 1991, "display_name": "Wyatt Gooden"},
                     {"rank": 2, "user_id": 360788, "rating": 1906, "display_name": "Tres Drawhorn"},
@@ -990,4 +1007,4 @@ class _TestComputeRatings:
         result0 = core.compute_ratings(config0, client)
         result1 = core.compute_ratings(config1, client)
 
-        pd.testing.assert_frame_equal(result0, result1)
+        assert_frame_equal(result0, result1)

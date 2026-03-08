@@ -3,7 +3,6 @@
 import functools
 from typing import Tuple
 
-import pandas as pd
 import polars as pl
 
 from gpt_racing import utils
@@ -26,62 +25,64 @@ def _load_race_data(race_configs, client) -> Tuple[pl.DataFrame, pl.DataFrame]:
         session_metadata += [
             {
                 "subsession_id": race_config.subsession_id,
-                "session_end_time": race_result_df.iloc[0]["session_end_time"],
+                "session_end_time": race_result_df[0, "session_end_time"],
             }
         ]
 
         # Load lap time DF
         lap_df = client.get_lap_data(race_config.subsession_id)
         lap_df = lap_df.rename(
-            columns={
+            {
                 "cust_id": "user_id",
                 "lap_number": "lap",
             }
         )
 
         # For some really stupid reason, the `lap_time` is in 10,000th's of a second, while `interval` is in thousandths
-        lap_df["lap_time"] = lap_df["lap_time"] / 10000
-        lap_df["interval"] = lap_df["interval"] / 1000
+        lap_df = lap_df.with_columns(
+            (pl.col("lap_time") / 10000).alias("lap_time"),
+            (pl.col("interval") / 1000).alias("interval"),
+        )
 
         # Infer invalid laps
         lap_df = infer_invalid_laps(lap_df)
 
         # Compute results
         if race_config.penalties:
-            penalty_df = pd.DataFrame([dict(x) for x in race_config.penalties])
+            penalty_df = pl.DataFrame([dict(x) for x in race_config.penalties])
         else:
             penalty_df = None
         qualy_df = client.get_qualy_result(race_config.subsession_id)
         qualy_df = qualy_df.rename(
-            columns={
+            {
                 "cust_id": "user_id",
             }
         )
 
-        qualy_df["best_lap_time"] = qualy_df["best_lap_time"] / 10000
+        qualy_df = qualy_df.with_columns((pl.col("best_lap_time") / 10000).alias("best_lap_time"))
 
         result_df = compute_results(lap_df, penalty_df, qualy_df)
-        result_df["subsession_id"] = race_config.subsession_id
+        result_df = result_df.with_columns(pl.lit(race_config.subsession_id).alias("subsession_id"))
 
         race_name = f"race_{i + 1}"
         if race_config.race_name:
             race_name += f"_{race_config.race_name}"
-        result_df["race_name"] = race_name
+        result_df = result_df.with_columns(pl.lit(race_name).alias("race_name"))
 
-        result_df = result_df.merge(
-            race_result_df[["cust_id", "incidents"]].rename(
-                columns={"cust_id": "user_id", "incidents": "num_incidents"}
-            )
+        # Ensure we do not drop out users who qualified, but did not race.
+        result_df = result_df.join(
+            race_result_df.select(["cust_id", "incidents"]).rename(
+                {"cust_id": "user_id", "incidents": "num_incidents"}
+            ),
+            on="user_id",
+            how="left",
         )
 
         result_dfs.append(result_df)
-        name_data.append(qualy_df[["user_id", "display_name"]].drop_duplicates())
+        name_data.append(qualy_df.select(["user_id", "display_name"]).unique())
 
-    result_df = pd.concat(result_dfs).reset_index(drop=True)
-    name_df = pd.concat(name_data).drop_duplicates().reset_index(drop=True)
-
-    result_df = pl.DataFrame(result_df)
-    name_df = pl.DataFrame(name_df)
+    result_df = pl.concat(result_dfs)
+    name_df = pl.concat(name_data).unique()
 
     session_mdf = pl.DataFrame(session_metadata)
     # session_mdf = session_mdf.with_columns(pl.col("session_end_time").cast(pl.Date).alias("session_end_time"))
@@ -129,9 +130,6 @@ def compute_ratings(config, client):
         elo_mmr = _compute_elo_previous_seasons(config.elo, client, elo_mmr)
 
     result_df, name_df = _load_race_data(config.races, client)
-    result_df = pl.DataFrame(result_df)
-    name_df = pl.DataFrame(name_df)
-
     race_points_type_df = pl.DataFrame(
         [
             {

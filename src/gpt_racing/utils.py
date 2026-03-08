@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
-import pandas as pd
 import polars as pl
 
 
 def _format_value_with_delta_helper(value, delta):
     out = str(value)
-    if not pd.isnull(delta):
+    if delta is not None:
         if delta < 0:
             sign = "-"
         elif delta > 0:
@@ -18,7 +17,13 @@ def _format_value_with_delta_helper(value, delta):
 
 
 def format_value_with_delta(df, value_col, delta_col):
-    return df.apply(lambda x: _format_value_with_delta_helper(x[value_col], x[delta_col]), axis=1)
+    return df.select(
+        pl.struct([value_col, delta_col])
+        .map_elements(
+            lambda x: _format_value_with_delta_helper(x[value_col], x[delta_col]),
+            return_dtype=pl.String,
+        )
+    ).to_series()
 
 
 def require_columns(df: pl.DataFrame, cols: list[str]):
@@ -31,7 +36,7 @@ def require_columns(df: pl.DataFrame, cols: list[str]):
 
 
 def seconds_to_str(seconds, precision=3):
-    if pd.isnull(seconds):
+    if seconds is None:
         return "-"
 
     negative = False

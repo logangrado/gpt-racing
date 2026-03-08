@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 
-import pandas as pd
+import datetime
+
+import polars as pl
 import pytest
+from polars.testing import assert_frame_equal
 
 from gpt_racing import iracing_data
 
@@ -26,49 +29,54 @@ class TestRaceResults:
 
         assert len(result) == 23
 
-        pd.testing.assert_frame_equal(
-            result.iloc[:2],
-            pd.DataFrame(
-                [
-                    {
-                        "cust_id": 407068,
-                        "display_name": "Christian Youngwall",
-                        "finish_position": 0,
-                        "finish_position_in_class": 0,
-                        "interval": 0,
-                        "average_lap": 901658,
-                        "laps_complete": 14,
-                        "class_interval": 0,
-                        "qual_lap_time": -1,
-                        "starting_position": 1,
-                        "starting_position_in_class": 1,
-                        "incidents": 0,
-                        "car_class_name": "Hosted All Cars Class",
-                        "reason_out": "Running",
-                        "subsession_id": 65426723,
-                        "session_end_time": pd.Timestamp("2023-12-12 02:16:29"),
-                    },
-                    {
-                        "cust_id": 483350,
-                        "display_name": "Reed Gibson",
-                        "finish_position": 1,
-                        "finish_position_in_class": 1,
-                        "interval": 47405,
-                        "average_lap": 905043,
-                        "laps_complete": 14,
-                        "class_interval": 47405,
-                        "qual_lap_time": -1,
-                        "starting_position": 2,
-                        "starting_position_in_class": 2,
-                        "incidents": 4,
-                        "car_class_name": "Hosted All Cars Class",
-                        "reason_out": "Running",
-                        "subsession_id": 65426723,
-                        "session_end_time": pd.Timestamp("2023-12-12 02:16:29"),
-                    },
-                ]
-            ),
-            check_dtype=False,
+        expected = pl.DataFrame(
+            [
+                {
+                    "cust_id": 407068,
+                    "display_name": "Christian Youngwall",
+                    "finish_position": 0,
+                    "finish_position_in_class": 0,
+                    "interval": 0,
+                    "average_lap": 901658,
+                    "laps_complete": 14,
+                    "class_interval": 0,
+                    "qual_lap_time": -1,
+                    "starting_position": 1,
+                    "starting_position_in_class": 1,
+                    "incidents": 0,
+                    "car_class_name": "Hosted All Cars Class",
+                    "reason_out": "Running",
+                    "subsession_id": 65426723,
+                    "session_end_time": datetime.datetime(2023, 12, 12, 2, 16, 29).replace(
+                        tzinfo=datetime.timezone.utc
+                    ),
+                },
+                {
+                    "cust_id": 483350,
+                    "display_name": "Reed Gibson",
+                    "finish_position": 1,
+                    "finish_position_in_class": 1,
+                    "interval": 47405,
+                    "average_lap": 905043,
+                    "laps_complete": 14,
+                    "class_interval": 47405,
+                    "qual_lap_time": -1,
+                    "starting_position": 2,
+                    "starting_position_in_class": 2,
+                    "incidents": 4,
+                    "car_class_name": "Hosted All Cars Class",
+                    "reason_out": "Running",
+                    "subsession_id": 65426723,
+                    "session_end_time": datetime.datetime(2023, 12, 12, 2, 16, 29).replace(
+                        tzinfo=datetime.timezone.utc
+                    ),
+                },
+            ]
+        )
+        assert_frame_equal(
+            result.head(2),
+            expected,
+            check_dtypes=False,
         )
 
     def test_qualy_result(self, client):
@@ -93,9 +101,9 @@ class TestRaceResults:
         }
 
         assert len(result) == 23
-        pd.testing.assert_frame_equal(
-            result.iloc[:2],
-            pd.DataFrame(
+        assert_frame_equal(
+            result.head(2),
+            pl.DataFrame(
                 [
                     {
                         "cust_id": 260862,
@@ -111,7 +119,9 @@ class TestRaceResults:
                         "incidents": 0,
                         "reason_out": "Running",
                         "subsession_id": 65426723,
-                        "session_end_time": pd.Timestamp("2023-12-12 02:16:29"),
+                        "session_end_time": datetime.datetime(2023, 12, 12, 2, 16, 29).replace(
+                            tzinfo=datetime.timezone.utc
+                        ),
                     },
                     {
                         "cust_id": 154321,
@@ -127,11 +137,13 @@ class TestRaceResults:
                         "incidents": 0,
                         "reason_out": "Running",
                         "subsession_id": 65426723,
-                        "session_end_time": pd.Timestamp("2023-12-12 02:16:29"),
+                        "session_end_time": datetime.datetime(2023, 12, 12, 2, 16, 29).replace(
+                            tzinfo=datetime.timezone.utc
+                        ),
                     },
                 ]
             ),
-            check_dtype=False,
+            check_dtypes=False,
         )
 
 

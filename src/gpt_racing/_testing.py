@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
+import json
 import textwrap
 
-import pandas as pd
 import polars as pl
 from polars.testing import assert_frame_equal as _assert_frame_equal
 
@@ -36,7 +36,7 @@ def _generate_lap_data(session_data):
         .rename({"total_time": "total_time_leader"})
     )
     df = df.join(leader_df, on="lap_number")
-    df = df.with_columns(((pl.col("total_time") - pl.col("total_time_leader")) / 10).alias("interval"))
+    df = df.with_columns(((pl.col("total_time") - pl.col("total_time_leader")) / 10 * -1).alias("interval"))
 
     # Make lap_number - lap_time = -1
     df = df.with_columns(
@@ -135,8 +135,7 @@ def _generate_race_result(subsession_id, session_data):
         pl.col("subsession_id").cast(pl.Datetime).alias("session_end_time"),
     )
 
-    # Still operating in Pandas land over there...
-    return df.to_pandas()
+    return df
 
 
 def generate_data(summary_data, fake_client):
@@ -163,9 +162,9 @@ def generate_data(summary_data, fake_client):
     """
     for session in summary_data:
         fake_client._set_qualy_result(
-            session["subsession_id"], pd.DataFrame(_generate_qualy_data(session["qualifying"]))
+            session["subsession_id"], pl.DataFrame(_generate_qualy_data(session["qualifying"]))
         )
-        fake_client._set_lap_data(session["subsession_id"], pd.DataFrame(_generate_lap_data(session["race"])))
+        fake_client._set_lap_data(session["subsession_id"], pl.DataFrame(_generate_lap_data(session["race"])))
 
         fake_client._set_race_result(
             session["subsession_id"], _generate_race_result(session["subsession_id"], session["race"])
@@ -218,7 +217,31 @@ def _compare_objects(actual, expected, frame_kwargs, path="root"):
     return errors
 
 
+def _serialize(object: any):
+    if isinstance(object, dict):
+        out = "{"
+        for key in sorted(object.keys()):
+            out += f"'{key}': {_serialize(object[key])},"
+        out += "}"
+        return out
+    elif isinstance(object, list):
+        out = "["
+        for item in object:
+            out += f"{_serialize(item)},"
+        out += "]"
+        return out
+    elif isinstance(object, pl.DataFrame):
+        return f"pl.DataFrame({object.to_dict(as_series=False)})"
+
+    else:
+        return str(object)
+
+
 def assert_object_equal(actual, expected, frame_kwargs={}):
     errors = _compare_objects(actual, expected, frame_kwargs)
     if errors:
-        raise AssertionError("Objects do not match:\n" + "\n".join(textwrap.indent(e, "  ") for e in errors))
+        raise AssertionError(
+            "Objects do not match:\n"
+            + "\n".join(textwrap.indent(e, "  ") for e in errors)
+            + f"\n\nFull object: \n\n{_serialize(actual)}"
+        )

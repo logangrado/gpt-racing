@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import pandas as pd
 import polars as pl
 from gpt_racing.config import PointsConfig
 from gpt_racing.scoring.points import compute_points_score
