@@ -29,7 +29,7 @@
     },
     {
       subsession_id: 83060140,
-      race_name: 'Roat Atlanta',
+      race_name: 'Road Atlanta',
       penalties: [
         { user_id: 335343, time: 5 },
         { user_id: 464635, time: 5 },
@@ -48,12 +48,27 @@
     },
     {
       subsession_id: 83800241,
-      race_name: 'Sebfing',
+      race_name: 'Sebring',
       penalties: [
         {
           user_id: 346566,
           time: 5,
         },
+      ],
+    },
+    {
+      subsession_id: 84164646,
+      race_name: 'Road America',
+      penalties: [
+        // Logan
+        { user_id: 622340, time: 5 },
+        // Mann
+        { user_id: 603983, time: 5 },
+        // Logan
+        { user_id: 1049877, time: 5 },
+        // Mann
+        { user_id: 721524, time: 5 },
+
       ],
     },
   ],
