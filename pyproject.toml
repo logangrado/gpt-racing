@@ -1,6 +1,6 @@
 [project]
 name = "gpt-racing"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Add your description here"
 readme = "README.md"
 authors = [
@@ -26,13 +26,17 @@ dependencies = [
 requires-python = ">=3.11"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "uv-dynamic-versioning"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
 
 [dependency-groups]
 dev = [
     "black>=25.1.0",
     "flake8>=7.2.0",
+    "invoke>=2.2.1",
     "ipdb>=0.13.13",
     "ipympl>=0.9.7",
     "ipython>=9.3.0",
@@ -40,6 +44,7 @@ dev = [
     "jupyterlab>=4.5.1",
     "pandoc>=2.4",
     "pytest>=8.4.0",
+    "ruff>=0.15.7",
 ]
 
 [tool.uv.sources]

@@ -18,8 +18,7 @@ def _format_value_with_delta_helper(value, delta):
 
 def format_value_with_delta(df, value_col, delta_col):
     return df.select(
-        pl.struct([value_col, delta_col])
-        .map_elements(
+        pl.struct([value_col, delta_col]).map_elements(
             lambda x: _format_value_with_delta_helper(x[value_col], x[delta_col]),
             return_dtype=pl.String,
         )
