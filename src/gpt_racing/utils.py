@@ -43,19 +43,20 @@ def seconds_to_str(seconds, precision=3):
         seconds *= -1
         negative = True
 
-    seconds = round(seconds, precision)
-    hours, remainder = divmod(seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-    # seconds, remainder = divmod(remainder, 1)
-    hours = int(round(hours))
-    minutes = int(round(minutes))
+    # Use integer arithmetic to avoid float rounding inconsistencies across platforms.
+    # One extra digit of precision guards against rounding errors in the integer conversion.
+    factor = 10 ** (precision + 1)
+    total = round(seconds * factor)
+    hours, total = divmod(total, 3600 * factor)
+    minutes, sub = divmod(total, 60 * factor)
+    sub_seconds = round(sub / factor, precision)
 
     if hours == 0 and minutes == 0:
-        out = f"{seconds:.{precision}f}"
+        out = f"{sub_seconds:.{precision}f}"
     elif hours == 0:
-        out = f"{minutes}:{seconds:0{precision + 3}.{precision}f}"
+        out = f"{minutes}:{sub_seconds:0{precision + 3}.{precision}f}"
     else:
-        out = f"{hours}:{minutes:02d}:{seconds:0{precision + 3}.{precision}f}"
+        out = f"{hours}:{minutes:02d}:{sub_seconds:0{precision + 3}.{precision}f}"
 
     if negative:
         out = "-" + out
