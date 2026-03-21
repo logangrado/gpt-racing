@@ -232,7 +232,7 @@ def render_standings(standings_df: pl.DataFrame):
             pl.when(pl.col("rating_rank").is_not_null()).then(pl.col("rating")).otherwise(pl.lit("")).alias("rating"),
         )
 
-    standings_df = standings_df.sort("points_rank").with_columns(
+    standings_df = standings_df.sort(["points_rank", "user_id"]).with_columns(
         pl.col("points_rank_change").map_elements(
             functools.partial(_format_change_only, rank=True), return_dtype=str, skip_nulls=False
         ),
@@ -402,7 +402,7 @@ def render_race_results(df: pl.DataFrame):
 def render_ratings(df):
     show_provisional_rating = True
 
-    df = df.sort(["rank", "rating"], descending=[False, True], nulls_last=True)
+    df = df.sort(["rank", "rating", "user_id"], descending=[False, True, False], nulls_last=True)
 
     # Drop those with 0 contests
     df = df.filter(pl.col("num_valid_contests") > 0)

@@ -231,7 +231,7 @@ def compute_ratings(config, client):
                 on="user_id",
             )
             .join(name_df, on="user_id")
-            .sort("points_rank")
+            .sort(["points_rank", "user_id"])
         )
 
         outputs["race_results"].append(race_result_df)
