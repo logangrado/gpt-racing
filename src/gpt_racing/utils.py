@@ -43,6 +43,7 @@ def seconds_to_str(seconds, precision=3):
         seconds *= -1
         negative = True
 
+    seconds = round(seconds, precision)
     hours, remainder = divmod(seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     # seconds, remainder = divmod(remainder, 1)
