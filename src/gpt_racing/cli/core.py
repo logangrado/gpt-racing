@@ -26,13 +26,14 @@ def _render_and_write_table(gt, path):
             f.write(gt.as_raw_html())
 
 
-def core_entrypoint(config, out_path, _overwrite=False):
+def core_entrypoint(config, out_path, _overwrite=False, client=None):
     from gpt_racing import core, render_tables
     from gpt_racing.config import RatingConfig
     from gpt_racing.iracing_data import IracingDataClient
 
     config = RatingConfig(**_load_config(config))
-    client = IracingDataClient()
+    if client is None:
+        client = IracingDataClient()
 
     # render_tables.render_standings(out["standings"][-1]).show()
 
