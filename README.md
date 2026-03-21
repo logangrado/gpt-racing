@@ -2,7 +2,7 @@
 
 <!-- [![PyPI](https://img.shields.io/pypi/v/seekr-hatchery)](https://pypi.org/project/seekr-hatchery/) -->
 <!-- [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](https://pypi.org/project/seekr-hatchery/) -->
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/logangrado/gpt-racing/badge)](https://securityscorecards.dev/viewer/?uri=github.com/logangrado/gpt-racing)
 
 
