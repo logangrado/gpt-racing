@@ -11,12 +11,14 @@ VAULT_PATH = ROOT.parent.parent / "vault.yml"
 
 
 def get_vault() -> dict:
+    data = {}
     ansible_vault_pw_file = Path.home() / ".ansible/passwords/gpt_racing.txt"
-    with open(ansible_vault_pw_file, "r") as f:
-        pw = f.readlines()[0].strip()
+    if ansible_vault_pw_file.exists():
+        with open(ansible_vault_pw_file, "r") as f:
+            pw = f.readlines()[0].strip()
 
-    vault = Vault(pw)
-    data = vault.load(open(VAULT_PATH).read())
+        vault = Vault(pw)
+        data = vault.load(open(VAULT_PATH).read())
 
     return data
 

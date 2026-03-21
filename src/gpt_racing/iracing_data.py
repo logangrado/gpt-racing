@@ -4,6 +4,7 @@ import getpass
 import hashlib
 import inspect
 import json
+import os
 from datetime import datetime
 
 import polars as pl
@@ -15,14 +16,15 @@ from gpt_racing.vault import vault
 
 
 def _get_iracing_oauth_client():
+
     config = Config()
 
     # Create OAuth client
     client = IRacingOAuthClient(
-        client_id=vault["client_id"],
-        client_secret=vault["client_secret"],
-        username=vault["username"],
-        password=vault["password"],
+        client_id=os.environ.get("CLIENT_ID") or vault["client_id"],
+        client_secret=os.environ.get("CLIENT_SECRET") or vault["client_secret"],
+        username=os.environ.get("CLIENT_USERNAME") or vault["username"],
+        password=os.environ.get("CLIENT_PASSWORD") or vault["password"],
         request_timeout=config.request_timeout,
         token_refresh_buffer_seconds=config.token_refresh_buffer_seconds,
         log_level=config.log_level,
