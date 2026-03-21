@@ -75,20 +75,7 @@ Configs are written in jsonnet. A minimal example:
 
 ### Config reference
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `races[].subsession_id` | int | iRacing subsession ID |
-| `races[].race_name` | str | Display name for the race |
-| `races[].penalties[].user_id` | int | iRacing customer ID |
-| `races[].penalties[].time` | float | Penalty in seconds |
-| `races[].points_type` | str | Which points system to use (if multiple defined) |
-| `points.points` | list or dict | Points per finishing position |
-| `points.drop_races` | int | Number of worst results to drop per driver |
-| `points.fastest_lap.points` | int | Bonus points for fastest lap |
-| `points.cleanest_driver.points` | int | Bonus points for fewest incidents |
-| `elo.min_races` | int | Minimum races required to appear in ratings |
-| `elo.time_window` | str | Rolling window for ratings (e.g. `"365 days"`) |
-| `elo.previous_seasons` | list | Jsonnet imports of prior season configs for rating carryover |
+See `config.py`
 
 ## Output
 
