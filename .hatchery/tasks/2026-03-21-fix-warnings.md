@@ -1,39 +1,30 @@
 # Task: fix-warnings
 
-**Status**: in-progress
+**Status**: complete
 **Branch**: hatchery/fix-warnings
 **Created**: 2026-03-21 21:57
 
 ## Objective
 
-We have the following test warnings, can you address them all?
+Address deprecation/parser warnings surfacing during test runs.
 
-tests/test_iracing_data.py::TestRaceResults::test_race_result
-tests/test_real_integration.py::TestFullIntegration::test_single_season
-tests/test_real_integration.py::TestFullIntegration::test_multi_season
-  /Users/grado/Code/projects/gpt-racing/src/gpt_racing/iracing_data.py:62: DeprecationWarning: Returning raw dictionaries is deprecated and will be removed in a future version. Set use_pydantic=True to use Pydantic models for improved type safety. See documentation for migration guide.
-    ir_client = irDataClient(access_token=_get_token())
+## Context
 
-tests/test_real_integration.py: 24 warnings
-tests/test_render_tables.py: 2 warnings
-  /Users/grado/Code/projects/gpt-racing/src/gpt_racing/render_tables.py:96: GuessedAtParserWarning: No parser was explicitly specified, so I'm using the best available HTML parser for this system ("html.parser"). This usually isn't a problem, but if you run this code on another system, or in a different virtual environment, it may use a different parser and behave differently.
-  
-  The code that caused this warning is on line 96 of the file /Users/grado/Code/projects/gpt-racing/src/gpt_racing/render_tables.py. To get rid of this warning, pass the additional argument 'features="html.parser"' to the BeautifulSoup constructor.
-  
-    soup = BeautifulSoup(html)
+Two warnings appeared during test runs:
 
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1. **DeprecationWarning** from `iracing_data.py:62` — `irDataClient` constructed without `use_pydantic=True`. Migrating to Pydantic models would break the entire codebase: `CachedIRClient` serializes with `json.dump` (incompatible with Pydantic v2 models) and all downstream code uses dict-style access. Suppressing the warning explicitly is the correct minimal fix.
 
-## Agreed Plan
-
-*(To be filled in after planning discussion)*
-
-## Progress Log
-
-*(Steps will appear here once the plan is agreed)*
+2. **GuessedAtParserWarning** from `render_tables.py:96` — `BeautifulSoup(html)` called without an explicit parser.
 
 ## Summary
 
-*(Fill in on completion — then remove Agreed Plan and Progress Log above.
-Cover: key decisions made, patterns established, files changed, gotchas,
-and anything a future agent working in this repo should know.)*
+### Changes made
+
+- **`src/gpt_racing/iracing_data.py`**: Added `import warnings` and wrapped the `irDataClient(...)` constructor call in `_load_client()` with `warnings.catch_warnings()` / `warnings.simplefilter("ignore", DeprecationWarning)` to suppress the `iracingdataapi` deprecation warning without doing a large Pydantic migration.
+
+- **`src/gpt_racing/render_tables.py:96`**: Changed `BeautifulSoup(html)` → `BeautifulSoup(html, "html.parser")` to eliminate the `GuessedAtParserWarning`.
+
+### Key decisions
+
+- Did **not** set `use_pydantic=True` on `irDataClient` — the caching layer (`CachedIRClient`) uses `json.dump`/`json.load` which is incompatible with Pydantic v2 models, and all callers use dict-style access. A full migration would be a large separate task.
+- Used `warnings.catch_warnings()` context manager (scoped suppression) rather than a global `warnings.filterwarnings` call, keeping the suppression contained to the constructor call site.
