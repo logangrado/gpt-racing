@@ -5,6 +5,7 @@ import hashlib
 import inspect
 import json
 import os
+import warnings
 from datetime import datetime
 
 import polars as pl
@@ -59,7 +60,13 @@ def _load_client() -> irDataClient:
     Else, loads client using existing username/password
     """
 
-    ir_client = irDataClient(access_token=_get_token())
+    # use_pydantic=True is the library's desired path but iracingdataapi's own
+    # MemberProfileResponse model incorrectly requires logo_url: str when the
+    # API can return None — causing ValidationError against real data. Suppress
+    # the deprecation until the library fixes its model.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        ir_client = irDataClient(access_token=_get_token())
 
     return ir_client
 
