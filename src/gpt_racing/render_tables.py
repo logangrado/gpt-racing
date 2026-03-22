@@ -213,13 +213,12 @@ def _fix_gt_id(html: str) -> str:
     return html
 
 
-def render_standings(standings_df: pl.DataFrame):
+def render_standings(standings_df: pl.DataFrame, per_class: bool = False):
     race_cols = [col.replace("points_", "") for col in standings_df.columns if col.startswith("points_race_")]
     race_col_map = {"points_" + col: col.replace("_", " ").title() for col in race_cols}
 
     show_provisional_rating = True
     if show_provisional_rating:
-        # Expression when we are
         standings_df = standings_df.with_columns(
             pl.struct(["rating", "rating_rank"])
             .map_elements(
@@ -229,7 +228,6 @@ def render_standings(standings_df: pl.DataFrame):
             pl.col("rating_rank").map_elements(_format_rank_value, return_dtype=str, skip_nulls=False),
         )
     else:
-        # Expression if we aren't displaying rank
         standings_df = standings_df.with_columns(
             pl.when(pl.col("rating_rank").is_not_null())
             .then(pl.col("rating_rank"))
@@ -240,42 +238,56 @@ def render_standings(standings_df: pl.DataFrame):
 
     has_classes = standings_df["class_name"].n_unique() > 1
 
-    standings_df = standings_df.sort(["points_rank", "user_id"]).with_columns(
+    sort_col = "class_rank" if per_class else "points_rank"
+    standings_df = standings_df.sort([sort_col, "user_id"]).with_columns(
         pl.col("points_rank_change").map_elements(
             functools.partial(_format_change_only, rank=True), return_dtype=str, skip_nulls=False
         ),
         pl.col("rating_rank_change").map_elements(
             functools.partial(_format_change_only, rank=True), return_dtype=str, skip_nulls=False
         ),
+        pl.col("class_rank_change").map_elements(
+            functools.partial(_format_change_only, rank=True), return_dtype=str, skip_nulls=False
+        ),
     )
-
-    if has_classes:
-        standings_df = standings_df.with_columns(
-            pl.col("class_rank_change").map_elements(
-                functools.partial(_format_change_only, rank=True), return_dtype=str, skip_nulls=False
-            )
-        )
 
     standings_df = standings_df.with_columns(
         pl.struct(["class_symbol", "class_color"]).map_elements(_format_class, return_dtype=str).alias("class_display")
     )
 
-    select_cols = {
-        **{
+    _tail_cols = {
+        "rating": "Rating",
+        "rating_rank": "Rating Rank",
+        "rating_rank_change": "rating_rank_change",
+        **race_col_map,
+        "points_total": "Total Points",
+    }
+    if per_class:
+        select_cols = {
+            "class_display": "Class",
+            "class_rank": "Rank",
+            "class_rank_change": "rank_change",
+            "display_name": "Name",
+            **_tail_cols,
+        }
+    elif has_classes:
+        select_cols = {
             "points_rank": "Rank",
             "points_rank_change": "points_rank_change",
-            **({"class_rank": "Class Rank", "class_rank_change": "class_rank_change"} if has_classes else {}),
+            "class_display": "Class",
+            "class_rank": "Class Rank",
+            "class_rank_change": "class_rank_change",
+            "display_name": "Name",
+            **_tail_cols,
+        }
+    else:
+        select_cols = {
+            "points_rank": "Rank",
+            "points_rank_change": "points_rank_change",
             "display_name": "Name",
             "class_display": "Class",
-            "rating": "Rating",
-            "rating_rank": "Rating Rank",
-            "rating_rank_change": "rating_rank_change",
-        },
-        **race_col_map,
-        **{
-            "points_total": "Total Points",
-        },
-    }
+            **_tail_cols,
+        }
 
     df = standings_df.select(select_cols.keys()).rename(select_cols)
 
@@ -311,17 +323,17 @@ def render_standings(standings_df: pl.DataFrame):
     }
     gt = gt.cols_label(**formatted_race_cols)
 
-    gt = gt.tab_options(
-        data_row_padding="1px",
-    )
-
+    gt = gt.tab_options(data_row_padding="1px")
     gt = _add_row_striping(gt)
     gt = gt.tab_style(style=GT.style.text(align="right"), locations=GT.loc.body(columns="Rating Rank"))
 
     table_html = _fix_gt_id(gt.render("html"))
-    table_html = _combine_column_headers(table_html, "Rank", ["Rank", "points_rank_change"])
-    if has_classes:
-        table_html = _combine_column_headers(table_html, "Class Rank", ["Class-Rank", "class_rank_change"])
+    if per_class:
+        table_html = _combine_column_headers(table_html, "Rank", ["Rank", "rank_change"])
+    else:
+        table_html = _combine_column_headers(table_html, "Rank", ["Rank", "points_rank_change"])
+        if has_classes:
+            table_html = _combine_column_headers(table_html, "Class Rank", ["Class-Rank", "class_rank_change"])
     table_html = _combine_column_headers(table_html, "Rating Rank", ["Rating-Rank", "rating_rank_change"])
 
     return table_html
