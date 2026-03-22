@@ -16,6 +16,12 @@ def pytest_addoption(parser):
     )
 
 
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers", "integration: marks tests that require real iRacing API credentials"
+    )
+
+
 @pytest.fixture(scope="session")
 def client():
     from gpt_racing import iracing_data

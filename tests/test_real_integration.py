@@ -64,6 +64,7 @@ def compare_output(request, test_id):
     return _compare_output
 
 
+@pytest.mark.integration
 class TestFullIntegration:
     def test_single_season(self, client, config_dir, tmp_path, compare_output):
         config_path = config_dir / "season_1.jsonnet"
