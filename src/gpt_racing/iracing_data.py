@@ -5,6 +5,7 @@ import hashlib
 import inspect
 import json
 import os
+import warnings
 from datetime import datetime
 
 import polars as pl
@@ -59,7 +60,13 @@ def _load_client() -> irDataClient:
     Else, loads client using existing username/password
     """
 
-    ir_client = irDataClient(access_token=_get_token(), use_pydantic=True)
+    # use_pydantic=True is the library's desired path but iracingdataapi's own
+    # MemberProfileResponse model incorrectly requires logo_url: str when the
+    # API can return None — causing ValidationError against real data. Suppress
+    # the deprecation until the library fixes its model.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        ir_client = irDataClient(access_token=_get_token())
 
     return ir_client
 
@@ -204,14 +211,7 @@ class CachedIRClient:
             else:
                 # Cache miss — authenticate and fetch
                 logger.info("Retrieving result")
-                raw = func(*args, **kwargs)
-                # Convert Pydantic models to plain dicts for JSON serialization
-                if hasattr(raw, "model_dump"):
-                    result = raw.model_dump()
-                elif isinstance(raw, list) and raw and hasattr(raw[0], "model_dump"):
-                    result = [r.model_dump() for r in raw]
-                else:
-                    result = raw
+                result = func(*args, **kwargs)
                 data_path.parent.mkdir(exist_ok=True, parents=True)
                 logger.info("Writing cache")
                 with open(data_path, "w") as f:
