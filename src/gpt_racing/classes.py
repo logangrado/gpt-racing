@@ -8,7 +8,7 @@ def resolve_driver_classes(config, name_df: pl.DataFrame) -> pl.DataFrame:
     Given a RatingConfig and a name_df (columns: user_id, display_name),
     return a DataFrame with columns: user_id, class_name, class_symbol, class_color.
 
-    If config.classes is None, all drivers are assigned to "Overall".
+    If config.classes is None, all class columns are set to null.
 
     Matching priority:
     1. If DriverEntry has user_id → match by user_id
@@ -17,9 +17,9 @@ def resolve_driver_classes(config, name_df: pl.DataFrame) -> pl.DataFrame:
     """
     if config.classes is None:
         return name_df.select("user_id").with_columns(
-            pl.lit("Overall").alias("class_name"),
-            pl.lit("Overall").alias("class_symbol"),
-            pl.lit("#ffffff").alias("class_color"),
+            pl.lit(None).cast(pl.String).alias("class_name"),
+            pl.lit(None).cast(pl.String).alias("class_symbol"),
+            pl.lit(None).cast(pl.String).alias("class_color"),
         )
 
     class_lookup: dict[str, tuple[str, str]] = {dc.name: (dc.symbol, dc.color) for dc in config.classes}
