@@ -22,6 +22,7 @@ class TestCachedIRClient:
         pass
 
 
+@pytest.mark.integration
 class TestRaceResults:
     def test_race_result(self, client):
         subsession_id = 65426723
