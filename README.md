@@ -27,10 +27,23 @@ uv sync
 
 ### Credentials
 
-iRacing credentials are stored in an Ansible vault at `vault.yml`. To set up:
+Credentials can be supplied in three ways (listed in precedence order):
+
+**1. Environment variables** — set these in your shell or a `.env` file in your working directory:
+
+```
+CLIENT_ID=...
+CLIENT_SECRET=...
+CLIENT_USERNAME=...
+CLIENT_PASSWORD=...
+```
+
+A `.env` file is loaded automatically when the CLI starts.
+
+**2. Ansible vault** — store credentials encrypted in `vault.yml` in your working directory:
 
 ```bash
-ansible-vault edit vault.yml
+ansible-vault create vault.yml
 ```
 
 The vault should contain:
@@ -42,7 +55,11 @@ username: ...
 password: ...
 ```
 
-Alternatively, set `CLIENT_ID`, `CLIENT_SECRET`, `CLIENT_USERNAME`, and `CLIENT_PASSWORD` as environment variables — these take precedence over the vault.
+The vault password is read from `~/.ansible/passwords/gpt_racing.txt` by default. Override with `VAULT_PASSWORD_FILE=/path/to/file`.
+
+To use a vault file at a non-default path, set `VAULT_PATH=/path/to/vault.yml`.
+
+**3. Running from source** — same options apply; the working directory is the repo root.
 
 ## Usage
 
