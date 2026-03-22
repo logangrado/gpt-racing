@@ -137,9 +137,9 @@ class TestIntegration:
                 pl.DataFrame(
                     {
                         "display_name": ["a", "b", "c", "d"],
-                        "class_name": ["Overall", "Overall", "Overall", "Overall"],
-                        "class_symbol": ["Overall", "Overall", "Overall", "Overall"],
-                        "class_color": ["#ffffff", "#ffffff", "#ffffff", "#ffffff"],
+                        "class_name": [None, None, None, None],
+                        "class_symbol": [None, None, None, None],
+                        "class_color": [None, None, None, None],
                         "start_position": [1, 4, 2, 3],
                         "qualify_lap_time": [0.004, 0.0044, 0.004200000000000001, 0.0043],
                         "finish_position": [1, 2, 3, 4],
@@ -177,9 +177,9 @@ class TestIntegration:
                         "rating_rank_change": [None, None, None, None],
                         "num_races": [1, 1, 1, 1],
                         "display_name": ["a", "b", "c", "d"],
-                        "class_name": ["Overall", "Overall", "Overall", "Overall"],
-                        "class_symbol": ["Overall", "Overall", "Overall", "Overall"],
-                        "class_color": ["#ffffff", "#ffffff", "#ffffff", "#ffffff"],
+                        "class_name": [None, None, None, None],
+                        "class_symbol": [None, None, None, None],
+                        "class_color": [None, None, None, None],
                         "class_rank": [1, 2, 3, 4],
                         "class_rank_change": [None, None, None, None],
                     }
