@@ -1,11 +1,11 @@
-display_name,start_position,qualify_lap_time,finish_position,interval,points,rating,rating_change,rank,rank_change,laps_complete,total_time,penalty,average_lap_time,fastest_lap_time,num_incidents,fastest_lap,cleanest_driver
-Matthew Siddall,1,92.2786,1,0.000,25,1813,57,2,-1,38,3649.1995,0.0000,96.0316,93.5613,4,false,false
-Nick Melaragno2,2,92.8366,2,-24.286,21,1772,38,,,38,3673.4849,0.0000,96.6707,93.9436,8,false,false
-Lennie Holland,4,93.5700,3,-36.120,18,1772,-15,,,38,3685.3172,0.0000,96.9820,94.0940,18,false,false
-Logan Grado,3,93.3234,4,-39.333,17,1724,-8,4,0,38,3688.5307,0.0000,97.0666,94.3484,14,false,false
-Chris Sherburn,7,94.5347,5,-44.872,16,1681,181,,,38,3694.0655,0.0000,97.2122,94.5375,2,false,false
-David Fernandes,6,94.1810,6,-1:06.585,15,1675,-15,,,38,3715.7797,0.0000,97.7837,94.7201,8,false,false
-Rodney Campbell2,9,95.1388,7,-1:06.740,14,1464,87,8,,38,3715.9316,0.0000,97.7877,94.9935,4,false,false
-Dale Green,8,94.9608,8,-1:13.610,14,1573,-91,,,38,3722.8030,0.0000,97.9685,95.0480,1,false,true
-Peter Kummer,10,95.9086,9,-1:21.957,12,1317,-183,,,38,3731.1483,0.0000,98.1881,95.3246,8,false,false
-Rich Minkler,5,93.6046,10,-1:30.657,11,1228,-272,,,38,3739.8527,0.0000,98.4172,94.4024,10,false,false
+display_name,class_name,class_symbol,class_color,start_position,qualify_lap_time,finish_position,interval,points,rating,rating_change,rank,rank_change,laps_complete,total_time,penalty,average_lap_time,fastest_lap_time,num_incidents,fastest_lap,cleanest_driver
+Matthew Siddall,Overall,Overall,#ffffff,1,92.2786,1,0.000,25,1813,57,2,-1,38,3649.1995,0.0000,96.0316,93.5613,4,false,false
+Nick Melaragno2,Overall,Overall,#ffffff,2,92.8366,2,-24.286,21,1772,38,,,38,3673.4849,0.0000,96.6707,93.9436,8,false,false
+Lennie Holland,Overall,Overall,#ffffff,4,93.5700,3,-36.120,18,1772,-15,,,38,3685.3172,0.0000,96.9820,94.0940,18,false,false
+Logan Grado,Overall,Overall,#ffffff,3,93.3234,4,-39.333,17,1724,-8,4,0,38,3688.5307,0.0000,97.0666,94.3484,14,false,false
+Chris Sherburn,Overall,Overall,#ffffff,7,94.5347,5,-44.872,16,1681,181,,,38,3694.0655,0.0000,97.2122,94.5375,2,false,false
+David Fernandes,Overall,Overall,#ffffff,6,94.1810,6,-1:06.585,15,1675,-15,,,38,3715.7797,0.0000,97.7837,94.7201,8,false,false
+Rodney Campbell2,Overall,Overall,#ffffff,9,95.1388,7,-1:06.740,14,1464,87,8,,38,3715.9316,0.0000,97.7877,94.9935,4,false,false
+Dale Green,Overall,Overall,#ffffff,8,94.9608,8,-1:13.610,14,1573,-91,,,38,3722.8030,0.0000,97.9685,95.0480,1,false,true
+Peter Kummer,Overall,Overall,#ffffff,10,95.9086,9,-1:21.957,12,1317,-183,,,38,3731.1483,0.0000,98.1881,95.3246,8,false,false
+Rich Minkler,Overall,Overall,#ffffff,5,93.6046,10,-1:30.657,11,1228,-272,,,38,3739.8527,0.0000,98.4172,94.4024,10,false,false

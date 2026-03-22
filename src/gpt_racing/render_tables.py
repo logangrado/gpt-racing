@@ -135,6 +135,12 @@ def _render_html(html):
         time.sleep(5)
 
 
+def _format_class(row) -> str:
+    symbol = row["class_symbol"]
+    color = row["class_color"]
+    return f"<span style='background-color:{color}; padding: 2px 6px; border-radius: 3px;'>{symbol}</span>"
+
+
 def _format_rating_value(value, change):
     out = str(value)
     color = "DimGrey"
@@ -241,11 +247,18 @@ def render_standings(standings_df: pl.DataFrame):
         ),
     )
 
+    standings_df = standings_df.with_columns(
+        pl.struct(["class_symbol", "class_color"])
+        .map_elements(_format_class, return_dtype=str)
+        .alias("class_display")
+    )
+
     select_cols = {
         **{
             "points_rank": "Rank",
             "points_rank_change": "points_rank_change",
             "display_name": "Name",
+            "class_display": "Class",
             "rating": "Rating",
             "rating_rank": "Rating Rank",
             "rating_rank_change": "rating_rank_change",
@@ -351,9 +364,16 @@ def render_race_results(df: pl.DataFrame):
             .alias("rating_change"),
         )
 
+    df = df.with_columns(
+        pl.struct(["class_symbol", "class_color"])
+        .map_elements(_format_class, return_dtype=str)
+        .alias("class_display")
+    )
+
     select_cols = {
         "finish_position": "Pos",
         "display_name": "Name",
+        "class_display": "Class",
         "rating": "Rating",
         "rating_change": "rating_change",
         "qualify_lap_time": "Qual. Lap",

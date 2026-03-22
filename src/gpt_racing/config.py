@@ -37,10 +37,31 @@ class PointsConfig(BaseModel):
     cleanest_driver: Optional[CleanestDriverConfig] = None
 
 
+class DriverEntry(BaseModel):
+    name: str
+
+
+class DriverClass(BaseModel):
+    name: str
+    symbol: str
+    color: str
+    default: bool = False
+    drivers: List[DriverEntry] = []
+
+
 class RatingConfig(BaseModel):
     races: List[Race]
     elo: Optional["ELOConfig"] = pydantic.Field(default_factory=lambda: ELOConfig())  # forward ref as default
     points: Optional[PointsConfig] = None
+    classes: Optional[List[DriverClass]] = None
+
+    @pydantic.model_validator(mode="after")
+    def _check_default_class(self):
+        if self.classes is not None:
+            defaults = [c for c in self.classes if c.default]
+            if len(defaults) > 1:
+                raise ValueError(f"At most one class may be marked default, got: {[c.name for c in defaults]}")
+        return self
 
 
 class ELOConfig(BaseModel):
