@@ -286,7 +286,7 @@ def render_standings(standings_df: pl.DataFrame):
 
     # Format race col names
     formatted_race_cols = {
-        value: GT.html(re.sub("(Race \d+) (.*)", r"\1<br>\2", value)) for value in race_col_map.values()
+        value: GT.html(re.sub(r"(Race \d+) (.*)", r"\1<br>\2", value)) for value in race_col_map.values()
     }
     gt = gt.cols_label(**formatted_race_cols)
 
