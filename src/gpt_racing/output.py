@@ -21,7 +21,7 @@ def race_result_htmls(df: pl.DataFrame, render_config: RenderConfig) -> list[tup
         out.append(("", render_tables.render_race_results(df)))
     if render_config.per_class_tables and df["class_name"].n_unique() > 1:
         for cls in df["class_name"].unique().sort():
-            out.append((cls, render_tables.render_race_results(df.filter(pl.col("class_name") == cls))))
+            out.append((cls, render_tables.render_race_results(df.filter(pl.col("class_name") == cls), per_class=True)))
     return out
 
 

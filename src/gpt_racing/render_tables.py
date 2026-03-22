@@ -327,11 +327,12 @@ def render_standings(standings_df: pl.DataFrame):
     return table_html
 
 
-def render_race_results(df: pl.DataFrame):
+def render_race_results(df: pl.DataFrame, per_class: bool = False):
     show_provisional_rating = True
     has_classes = df["class_name"].n_unique() > 1
 
-    df = df.sort("finish_position").with_columns(
+    sort_col = "class_position" if per_class else "finish_position"
+    df = df.sort(sort_col).with_columns(
         pl.col("qualify_lap_time").map_elements(utils.seconds_to_str, return_dtype=str),
         pl.col("average_lap_time").map_elements(utils.seconds_to_str, return_dtype=str),
         pl.struct(["fastest_lap_time", "fastest_lap"]).map_elements(_format_fastest_lap, return_dtype=str),
@@ -379,11 +380,7 @@ def render_race_results(df: pl.DataFrame):
         pl.struct(["class_symbol", "class_color"]).map_elements(_format_class, return_dtype=str).alias("class_display")
     )
 
-    select_cols = {
-        "finish_position": "Pos",
-        **({"class_position": "Cls Pos"} if has_classes else {}),
-        "display_name": "Name",
-        "class_display": "Class",
+    _tail_cols = {
         "rating": "Rating",
         "rating_change": "rating_change",
         "qualify_lap_time": "Qual. Lap",
@@ -395,6 +392,28 @@ def render_race_results(df: pl.DataFrame):
         "num_incidents": "Inc",
         "points": "Points",
     }
+    if per_class:
+        select_cols = {
+            "class_display": "Class",
+            "class_position": "Pos",
+            "display_name": "Name",
+            **_tail_cols,
+        }
+    elif has_classes:
+        select_cols = {
+            "finish_position": "Pos",
+            "class_display": "Class",
+            "class_position": "Cls Pos",
+            "display_name": "Name",
+            **_tail_cols,
+        }
+    else:
+        select_cols = {
+            "finish_position": "Pos",
+            "display_name": "Name",
+            "class_display": "Class",
+            **_tail_cols,
+        }
 
     df = df.select(select_cols.keys()).rename(select_cols)
     gt = (
