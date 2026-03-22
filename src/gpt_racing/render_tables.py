@@ -415,7 +415,7 @@ def render_race_results(df: pl.DataFrame, per_class: bool = False):
         select_cols = {
             "finish_position": "Pos",
             "class_display": "Class",
-            "class_position": "Cls Pos",
+            "class_position": "Class Pos",
             "display_name": "Name",
             **_tail_cols,
         }
