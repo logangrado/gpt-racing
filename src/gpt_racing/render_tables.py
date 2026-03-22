@@ -238,6 +238,8 @@ def render_standings(standings_df: pl.DataFrame):
             pl.when(pl.col("rating_rank").is_not_null()).then(pl.col("rating")).otherwise(pl.lit("")).alias("rating"),
         )
 
+    has_classes = standings_df["class_name"].n_unique() > 1
+
     standings_df = standings_df.sort(["points_rank", "user_id"]).with_columns(
         pl.col("points_rank_change").map_elements(
             functools.partial(_format_change_only, rank=True), return_dtype=str, skip_nulls=False
@@ -247,6 +249,13 @@ def render_standings(standings_df: pl.DataFrame):
         ),
     )
 
+    if has_classes:
+        standings_df = standings_df.with_columns(
+            pl.col("class_rank_change").map_elements(
+                functools.partial(_format_change_only, rank=True), return_dtype=str, skip_nulls=False
+            )
+        )
+
     standings_df = standings_df.with_columns(
         pl.struct(["class_symbol", "class_color"]).map_elements(_format_class, return_dtype=str).alias("class_display")
     )
@@ -255,6 +264,7 @@ def render_standings(standings_df: pl.DataFrame):
         **{
             "points_rank": "Rank",
             "points_rank_change": "points_rank_change",
+            **({"class_rank": "Class Rank", "class_rank_change": "class_rank_change"} if has_classes else {}),
             "display_name": "Name",
             "class_display": "Class",
             "rating": "Rating",
@@ -310,6 +320,8 @@ def render_standings(standings_df: pl.DataFrame):
 
     table_html = _fix_gt_id(gt.render("html"))
     table_html = _combine_column_headers(table_html, "Rank", ["Rank", "points_rank_change"])
+    if has_classes:
+        table_html = _combine_column_headers(table_html, "Class Rank", ["Class-Rank", "class_rank_change"])
     table_html = _combine_column_headers(table_html, "Rating Rank", ["Rating-Rank", "rating_rank_change"])
 
     return table_html
@@ -317,6 +329,7 @@ def render_standings(standings_df: pl.DataFrame):
 
 def render_race_results(df: pl.DataFrame):
     show_provisional_rating = True
+    has_classes = df["class_name"].n_unique() > 1
 
     df = df.sort("finish_position").with_columns(
         pl.col("qualify_lap_time").map_elements(utils.seconds_to_str, return_dtype=str),
@@ -368,6 +381,7 @@ def render_race_results(df: pl.DataFrame):
 
     select_cols = {
         "finish_position": "Pos",
+        **({"class_position": "Cls Pos"} if has_classes else {}),
         "display_name": "Name",
         "class_display": "Class",
         "rating": "Rating",
