@@ -248,9 +248,7 @@ def render_standings(standings_df: pl.DataFrame):
     )
 
     standings_df = standings_df.with_columns(
-        pl.struct(["class_symbol", "class_color"])
-        .map_elements(_format_class, return_dtype=str)
-        .alias("class_display")
+        pl.struct(["class_symbol", "class_color"]).map_elements(_format_class, return_dtype=str).alias("class_display")
     )
 
     select_cols = {
@@ -365,9 +363,7 @@ def render_race_results(df: pl.DataFrame):
         )
 
     df = df.with_columns(
-        pl.struct(["class_symbol", "class_color"])
-        .map_elements(_format_class, return_dtype=str)
-        .alias("class_display")
+        pl.struct(["class_symbol", "class_color"]).map_elements(_format_class, return_dtype=str).alias("class_display")
     )
 
     select_cols = {

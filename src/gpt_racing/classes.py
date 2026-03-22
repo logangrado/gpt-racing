@@ -22,9 +22,7 @@ def resolve_driver_classes(config, name_df: pl.DataFrame) -> pl.DataFrame:
             pl.lit("#ffffff").alias("class_color"),
         )
 
-    class_lookup: dict[str, tuple[str, str]] = {
-        dc.name: (dc.symbol, dc.color) for dc in config.classes
-    }
+    class_lookup: dict[str, tuple[str, str]] = {dc.name: (dc.symbol, dc.color) for dc in config.classes}
 
     assignments: dict[int, str] = {}
     duplicates: dict[int, list[str]] = {}  # user_id → [class names]
@@ -45,9 +43,7 @@ def resolve_driver_classes(config, name_df: pl.DataFrame) -> pl.DataFrame:
     uid_to_name = dict(zip(name_df["user_id"].to_list(), name_df["display_name"].to_list()))
 
     if duplicates:
-        detail = "; ".join(
-            f"{uid_to_name[uid]} in {classes}" for uid, classes in duplicates.items()
-        )
+        detail = "; ".join(f"{uid_to_name[uid]} in {classes}" for uid, classes in duplicates.items())
         raise ValueError(f"Drivers assigned to multiple classes: {detail}")
 
     default_classes = [dc for dc in config.classes if dc.default]
