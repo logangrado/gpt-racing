@@ -93,7 +93,7 @@ def _format_change_only(
 
 
 def _combine_column_headers(html, label, columns):
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html, "html.parser")
     # Find the header row with class 'gt_col_headings'
     header_row = soup.find("tr", class_="gt_col_headings")
     if not header_row:
