@@ -3,7 +3,6 @@
 import os
 from pathlib import Path
 
-import yaml
 from ansible_vault import Vault
 from dotenv import load_dotenv
 
