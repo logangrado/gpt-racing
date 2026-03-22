@@ -766,6 +766,7 @@ name = "gpt-racing"
 source = { editable = "." }
 dependencies = [
     { name = "ansible-vault" },
+    { name = "beautifulsoup4" },
     { name = "click" },
     { name = "elommr" },
     { name = "great-tables" },
@@ -799,6 +800,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "ansible-vault", specifier = ">=4.1.0" },
+    { name = "beautifulsoup4", specifier = ">=4.14.3" },
     { name = "click", specifier = ">=8.1.7" },
     { name = "elommr", specifier = ">=1.2.1" },
     { name = "great-tables", specifier = ">=0.12.0" },
