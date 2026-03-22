@@ -56,11 +56,17 @@ class DriverClass(BaseModel):
     drivers: List[DriverEntry] = []
 
 
+class RenderConfig(BaseModel):
+    combined_table: bool = True
+    per_class_tables: bool = False
+
+
 class RatingConfig(BaseModel):
     races: List[Race]
     elo: Optional["ELOConfig"] = pydantic.Field(default_factory=lambda: ELOConfig())  # forward ref as default
     points: Optional[PointsConfig] = None
     classes: Optional[List[DriverClass]] = None
+    render: RenderConfig = pydantic.Field(default_factory=RenderConfig)
 
     @pydantic.model_validator(mode="after")
     def _check_default_class(self):

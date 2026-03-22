@@ -55,6 +55,7 @@ class TestRaceResults:
         df = pl.DataFrame(
             {
                 "finish_position": [1, 2, 3],
+                "class_position": [1, 1, 2],
                 "qualify_lap_time": [60.1234, 55.1234, 65.1234],
                 "start_position": [2, 1, 3],
                 "average_lap_time": [123.123, 124.123, 124.123],
@@ -83,6 +84,7 @@ class TestRaceResults:
         df = pl.DataFrame(
             {
                 "finish_position": [1, 2, 3],
+                "class_position": [1, 1, 2],
                 "qualify_lap_time": [60.1234, 55.1234, 65.1234],
                 "start_position": [2, 1, 3],
                 "average_lap_time": [123.123, 124.123, 124.123],
@@ -112,6 +114,7 @@ class TestRaceResults:
         df = pl.DataFrame(
             {
                 "finish_position": [1, 2, 3],
+                "class_position": [1, 2, 3],
                 "qualify_lap_time": [60.1234, 55.1234, 65.1234],
                 "start_position": [2, 1, 3],
                 "average_lap_time": [123.123, 124.123, 124.123],

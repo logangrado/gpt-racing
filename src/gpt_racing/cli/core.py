@@ -27,7 +27,7 @@ def _render_and_write_table(gt, path):
 
 
 def core_entrypoint(config, out_path, _overwrite=False, client=None):
-    from gpt_racing import core, render_tables
+    from gpt_racing import core, output, render_tables
     from gpt_racing.config import RatingConfig
     from gpt_racing.iracing_data import IracingDataClient
 
@@ -63,17 +63,19 @@ def core_entrypoint(config, out_path, _overwrite=False, client=None):
     pdf_out_path = out_path / "pdf"
     pdf_out_path.mkdir(parents=True, exist_ok=True)
     for i, table in enumerate(out["standings"]):
-        _render_and_write_table(
-            gt=render_tables.render_standings(table), path=pdf_out_path / f"standings_race_{i + 1}.html"
-        )
+        for label, html in output.standings_htmls(table, config.render):
+            suffix = f"_{label.lower()}" if label else ""
+            _render_and_write_table(gt=html, path=pdf_out_path / f"standings_race_{i + 1}{suffix}.html")
 
     for i, table in enumerate(out["race_results"]):
-        _render_and_write_table(
-            gt=render_tables.render_race_results(table), path=pdf_out_path / f"results_race_{i + 1}.html"
-        )
+        for label, html in output.race_result_htmls(table, config.render):
+            suffix = f"_{label.lower()}" if label else ""
+            _render_and_write_table(gt=html, path=pdf_out_path / f"results_race_{i + 1}{suffix}.html")
 
     for i, table in enumerate(out["ELO"]):
-        _render_and_write_table(gt=render_tables.render_ratings(table), path=pdf_out_path / f"elo_race_{i + 1}.html")
+        for label, html in output.ratings_htmls(table, config.render):
+            suffix = f"_{label.lower()}" if label else ""
+            _render_and_write_table(gt=html, path=pdf_out_path / f"elo_race_{i + 1}{suffix}.html")
 
 
 def list_drivers_entrypoint(config):

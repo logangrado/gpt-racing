@@ -123,3 +123,16 @@ uv run invoke format          # format code
 uv run invoke format --check  # check formatting without modifying
 uv run pytest tests           # run tests
 ```
+
+### Changelog
+
+This project uses [conventional commits](https://www.conventionalcommits.org/) to produce the changelog. Each PR should include one commit per logical changelog entry.
+
+When a PR contains multiple distinct user-facing changes, add additional **empty commits** (no code changes) with conventional commit messages so each change gets its own changelog line:
+
+```bash
+git commit --allow-empty -m "feat: <describe the second change>"
+git commit --allow-empty -m "feat: <describe the third change>"
+```
+
+Use `feat:` for new features, `fix:` for bug fixes, and `no-bump:` to suppress a changelog entry entirely.

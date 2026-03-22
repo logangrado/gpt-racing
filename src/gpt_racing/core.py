@@ -227,6 +227,10 @@ def compute_ratings(config, client):
             on=["user_id", "subsession_id"],
         )
 
+        race_result_df = race_result_df.with_columns(
+            pl.col("finish_position").rank("min").over("class_name").cast(pl.Int32).alias("class_position")
+        )
+
         race_result_df = (
             race_result_df.select(
                 "display_name",
@@ -236,6 +240,7 @@ def compute_ratings(config, client):
                 "start_position",
                 "qualify_lap_time",
                 "finish_position",
+                "class_position",
                 "interval",
                 "points",
                 "rating",
@@ -277,6 +282,23 @@ def compute_ratings(config, client):
             .join(class_df, on="user_id")
             .sort(["points_rank", "user_id"])
         )
+
+        standings_df = standings_df.with_columns(
+            pl.when(pl.col("points_rank").is_not_null())
+            .then(pl.col("points_total").rank("min", descending=True).over("class_name").cast(pl.Int32))
+            .otherwise(None)
+            .alias("class_rank")
+        )
+
+        if outputs["standings"]:
+            prev = outputs["standings"][-1].select("user_id", pl.col("class_rank").alias("_prev_class_rank"))
+            standings_df = (
+                standings_df.join(prev, on="user_id", how="left")
+                .with_columns((pl.col("class_rank") - pl.col("_prev_class_rank")).alias("class_rank_change"))
+                .drop("_prev_class_rank")
+            )
+        else:
+            standings_df = standings_df.with_columns(pl.lit(None).cast(pl.Int32).alias("class_rank_change"))
 
         outputs["race_results"].append(race_result_df)
         outputs["standings"].append(standings_df)

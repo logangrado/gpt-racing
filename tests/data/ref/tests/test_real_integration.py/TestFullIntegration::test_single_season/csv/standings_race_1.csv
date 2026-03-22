@@ -1,21 +1,21 @@
-user_id,points_race_1,drop_race_1,fastest_lap_race_1,cleanest_driver_race_1,points_total,points_rank,points_rank_change,rating,rating_rank,rating_rank_change,num_races,display_name,class_name,class_symbol,class_color
-346566,10,false,false,true,10,1,,2081,1,,1,Derek M Cyphers,Overall,Overall,#ffffff
-367874,6,false,false,true,6,2,,1937,2,,1,Matthew Siddall,Overall,Overall,#ffffff
-282802,4,false,false,true,4,3,,1848,3,,1,Ross Yost,Overall,Overall,#ffffff
-622340,3,false,false,false,3,4,,1781,4,,1,Logan Grado,Overall,Overall,#ffffff
-407068,2,false,true,false,2,5,,1726,5,,1,Christian Youngwall,Overall,Overall,#ffffff
-497965,1,false,false,false,1,6,,1678,6,,1,Marc Nistor,Overall,Overall,#ffffff
-80283,0,false,false,false,0,7,,1274,16,,1,James Huth,Overall,Overall,#ffffff
-161240,0,false,false,false,0,7,,1518,10,,1,Jacob Grube,Overall,Overall,#ffffff
-286691,0,false,false,false,0,7,,1635,7,,1,Jesse Lyon2,Overall,Overall,#ffffff
-351314,0,false,false,false,0,7,,1556,9,,1,Greg Fullwood,Overall,Overall,#ffffff
-405581,0,false,false,false,0,7,,1444,12,,1,Rodney Campbell2,Overall,Overall,#ffffff
-412321,0,false,false,false,0,7,,1322,15,,1,John Sedlak,Overall,Overall,#ffffff
-414448,0,false,false,false,0,7,,1152,18,,1,Justin SW Tsang,Overall,Overall,#ffffff
-483350,0,false,false,false,0,7,,1063,19,,1,Reed Gibson,Overall,Overall,#ffffff
-508277,0,false,false,false,0,7,,1365,14,,1,Domenico Masi,Overall,Overall,#ffffff
-538346,0,false,false,false,0,7,,1219,17,,1,Ariel Julian,Overall,Overall,#ffffff
-586629,0,false,false,false,0,7,,1594,8,,1,Enrico Gregoratto,Overall,Overall,#ffffff
-678864,0,false,false,false,0,7,,919,20,,1,John Marjoribanks,Overall,Overall,#ffffff
-686056,0,false,false,false,0,7,,1406,13,,1,Chad Henson,Overall,Overall,#ffffff
-719884,0,false,false,false,0,7,,1482,11,,1,Robby Prescott,Overall,Overall,#ffffff
+user_id,points_race_1,drop_race_1,fastest_lap_race_1,cleanest_driver_race_1,points_total,points_rank,points_rank_change,rating,rating_rank,rating_rank_change,num_races,display_name,class_name,class_symbol,class_color,class_rank,class_rank_change
+346566,10,false,false,true,10,1,,2081,1,,1,Derek M Cyphers,Overall,Overall,#ffffff,1,
+367874,6,false,false,true,6,2,,1937,2,,1,Matthew Siddall,Overall,Overall,#ffffff,2,
+282802,4,false,false,true,4,3,,1848,3,,1,Ross Yost,Overall,Overall,#ffffff,3,
+622340,3,false,false,false,3,4,,1781,4,,1,Logan Grado,Overall,Overall,#ffffff,4,
+407068,2,false,true,false,2,5,,1726,5,,1,Christian Youngwall,Overall,Overall,#ffffff,5,
+497965,1,false,false,false,1,6,,1678,6,,1,Marc Nistor,Overall,Overall,#ffffff,6,
+80283,0,false,false,false,0,7,,1274,16,,1,James Huth,Overall,Overall,#ffffff,7,
+161240,0,false,false,false,0,7,,1518,10,,1,Jacob Grube,Overall,Overall,#ffffff,7,
+286691,0,false,false,false,0,7,,1635,7,,1,Jesse Lyon2,Overall,Overall,#ffffff,7,
+351314,0,false,false,false,0,7,,1556,9,,1,Greg Fullwood,Overall,Overall,#ffffff,7,
+405581,0,false,false,false,0,7,,1444,12,,1,Rodney Campbell2,Overall,Overall,#ffffff,7,
+412321,0,false,false,false,0,7,,1322,15,,1,John Sedlak,Overall,Overall,#ffffff,7,
+414448,0,false,false,false,0,7,,1152,18,,1,Justin SW Tsang,Overall,Overall,#ffffff,7,
+483350,0,false,false,false,0,7,,1063,19,,1,Reed Gibson,Overall,Overall,#ffffff,7,
+508277,0,false,false,false,0,7,,1365,14,,1,Domenico Masi,Overall,Overall,#ffffff,7,
+538346,0,false,false,false,0,7,,1219,17,,1,Ariel Julian,Overall,Overall,#ffffff,7,
+586629,0,false,false,false,0,7,,1594,8,,1,Enrico Gregoratto,Overall,Overall,#ffffff,7,
+678864,0,false,false,false,0,7,,919,20,,1,John Marjoribanks,Overall,Overall,#ffffff,7,
+686056,0,false,false,false,0,7,,1406,13,,1,Chad Henson,Overall,Overall,#ffffff,7,
+719884,0,false,false,false,0,7,,1482,11,,1,Robby Prescott,Overall,Overall,#ffffff,7,
