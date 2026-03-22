@@ -49,3 +49,6 @@ dev = [
 
 [tool.uv.sources]
 iracing-oauth-client = { git = "https://github.com/NickBaileyMA/irplc.git" }
+
+[project.scripts]
+gpt-scoring = "gpt_racing.cli.core:cli"
