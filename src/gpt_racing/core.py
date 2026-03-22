@@ -81,9 +81,7 @@ def _load_race_data(race_configs, client) -> Tuple[pl.DataFrame, pl.DataFrame]:
         qualy_df = qualy_df.with_columns((pl.col("best_lap_time") / 10000).alias("best_lap_time"))
 
         if race_config.penalties:
-            penalty_df = _resolve_penalties(
-                race_config.penalties, qualy_df.select(["user_id", "display_name"])
-            )
+            penalty_df = _resolve_penalties(race_config.penalties, qualy_df.select(["user_id", "display_name"]))
         else:
             penalty_df = None
 

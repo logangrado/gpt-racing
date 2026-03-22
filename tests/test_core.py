@@ -1071,10 +1071,12 @@ class TestResolvePenalties:
     def test_mixed(self):
         from gpt_racing.config import Penalty
 
-        name_df = self._make_name_df([
-            {"user_id": 1, "display_name": "Alice"},
-            {"user_id": 2, "display_name": "Bob"},
-        ])
+        name_df = self._make_name_df(
+            [
+                {"user_id": 1, "display_name": "Alice"},
+                {"user_id": 2, "display_name": "Bob"},
+            ]
+        )
         penalties = [Penalty(user_id=1, time=5.0), Penalty(name="Bob", time=3.0)]
         result = core._resolve_penalties(penalties, name_df)
         assert result["user_id"].to_list() == [1, 2]
