@@ -20,6 +20,7 @@ dependencies = [
     "ansible-vault>=4.1.0",
     "pyyaml>=6.0.3",
     "python-dotenv>=1.0.0",
+    "beautifulsoup4>=4.14.3",
 ]
 requires-python = ">=3.11"
 
