@@ -1,16 +1,16 @@
-user_id,points_race_1_Algarve,points_race_2_Motegi,points_race_3_Watkins Glen,drop_race_1_Algarve,drop_race_2_Motegi,drop_race_3_Watkins Glen,fastest_lap_race_1_Algarve,fastest_lap_race_2_Motegi,fastest_lap_race_3_Watkins Glen,cleanest_driver_race_1_Algarve,cleanest_driver_race_2_Motegi,cleanest_driver_race_3_Watkins Glen,points_total,points_rank,points_rank_change,rating,rating_rank,rating_rank_change,num_races,display_name,class_name,class_symbol,class_color
-367874,25,15,25,false,true,false,false,false,false,false,false,false,50,1,0,1813,2,-1,6,Matthew Siddall,Overall,Overall,#ffffff
-346566,21,25,,false,false,true,false,false,,false,false,,46,2,1,1870,1,0,6,Derek M Cyphers,Overall,Overall,#ffffff
-982936,16,21,18,true,false,false,false,false,false,false,false,false,39,3,0,1772,,,3,Lennie Holland,Overall,Overall,#ffffff
-599305,,16,21,true,false,false,,false,false,,false,false,37,4,-3,1772,,,2,Nick Melaragno2,Overall,Overall,#ffffff
-282802,18,18,,false,false,true,false,false,,false,false,,36,5,1,1793,3,1,7,Ross Yost,Overall,Overall,#ffffff
-622340,,17,17,true,false,false,,false,false,,false,false,34,6,1,1724,4,0,6,Logan Grado,Overall,Overall,#ffffff
-109501,15,14,15,false,true,false,false,false,false,false,false,false,30,7,-1,1675,,,3,David Fernandes,Overall,Overall,#ffffff
-335343,17,12,,false,false,true,false,false,,false,false,,29,8,3,1660,,,2,Nick Facciolo,Overall,Overall,#ffffff
-48282,15,13,14,false,true,false,false,true,false,true,false,true,28,9,1,1573,,,3,Dale Green,Overall,Overall,#ffffff
-286691,12,11,,false,false,true,true,false,,false,false,,23,10,-1,1602,7,0,5,Jesse Lyon2,Overall,Overall,#ffffff
-110678,,,16,true,false,false,,,false,,,false,16,11,,1681,,,1,Chris Sherburn,Overall,Overall,#ffffff
-405581,,,14,true,false,false,,,false,,,false,14,12,,1464,8,,5,Rodney Campbell2,Overall,Overall,#ffffff
-719884,13,,,false,true,false,false,,,false,,,13,13,3,1660,5,0,5,Robby Prescott,Overall,Overall,#ffffff
-721524,,,12,true,false,false,,,false,,,false,12,14,,1317,,,1,Peter Kummer,Overall,Overall,#ffffff
-48076,,,11,true,false,false,,,false,,,false,11,15,,1228,,,1,Rich Minkler,Overall,Overall,#ffffff
+user_id,points_race_1_Algarve,points_race_2_Motegi,points_race_3_Watkins Glen,drop_race_1_Algarve,drop_race_2_Motegi,drop_race_3_Watkins Glen,fastest_lap_race_1_Algarve,fastest_lap_race_2_Motegi,fastest_lap_race_3_Watkins Glen,cleanest_driver_race_1_Algarve,cleanest_driver_race_2_Motegi,cleanest_driver_race_3_Watkins Glen,points_total,points_rank,points_rank_change,rating,rating_rank,rating_rank_change,num_races,display_name,class_name,class_symbol,class_color,class_rank,class_rank_change
+367874,25,15,25,false,true,false,false,false,false,false,false,false,50,1,0,1813,2,-1,6,Matthew Siddall,Overall,Overall,#ffffff,1,0
+346566,21,25,,false,false,true,false,false,,false,false,,46,2,1,1870,1,0,6,Derek M Cyphers,Overall,Overall,#ffffff,2,1
+982936,16,21,18,true,false,false,false,false,false,false,false,false,39,3,0,1772,,,3,Lennie Holland,Overall,Overall,#ffffff,3,0
+599305,,16,21,true,false,false,,false,false,,false,false,37,4,-3,1772,,,2,Nick Melaragno2,Overall,Overall,#ffffff,4,-3
+282802,18,18,,false,false,true,false,false,,false,false,,36,5,1,1793,3,1,7,Ross Yost,Overall,Overall,#ffffff,5,1
+622340,,17,17,true,false,false,,false,false,,false,false,34,6,1,1724,4,0,6,Logan Grado,Overall,Overall,#ffffff,6,1
+109501,15,14,15,false,true,false,false,false,false,false,false,false,30,7,-1,1675,,,3,David Fernandes,Overall,Overall,#ffffff,7,-1
+335343,17,12,,false,false,true,false,false,,false,false,,29,8,3,1660,,,2,Nick Facciolo,Overall,Overall,#ffffff,8,3
+48282,15,13,14,false,true,false,false,true,false,true,false,true,28,9,1,1573,,,3,Dale Green,Overall,Overall,#ffffff,9,1
+286691,12,11,,false,false,true,true,false,,false,false,,23,10,-1,1602,7,0,5,Jesse Lyon2,Overall,Overall,#ffffff,10,-1
+110678,,,16,true,false,false,,,false,,,false,16,11,,1681,,,1,Chris Sherburn,Overall,Overall,#ffffff,11,
+405581,,,14,true,false,false,,,false,,,false,14,12,,1464,8,,5,Rodney Campbell2,Overall,Overall,#ffffff,12,
+719884,13,,,false,true,false,false,,,false,,,13,13,3,1660,5,0,5,Robby Prescott,Overall,Overall,#ffffff,13,3
+721524,,,12,true,false,false,,,false,,,false,12,14,,1317,,,1,Peter Kummer,Overall,Overall,#ffffff,14,
+48076,,,11,true,false,false,,,false,,,false,11,15,,1228,,,1,Rich Minkler,Overall,Overall,#ffffff,15,

@@ -1,11 +1,11 @@
-display_name,class_name,class_symbol,class_color,start_position,qualify_lap_time,finish_position,interval,points,rating,rating_change,rank,rank_change,laps_complete,total_time,penalty,average_lap_time,fastest_lap_time,num_incidents,fastest_lap,cleanest_driver
-Logan Grado,Overall,Overall,#ffffff,3,102.2761,1,0.000,10,1861,80,2,-2,35,3653.5874,0.0000,104.3882,102.7020,13,false,false
-Robby Prescott,Overall,Overall,#ffffff,6,102.4597,2,-4.140,6,1770,63,6,-2,35,3657.7253,0.0000,104.5064,102.6317,17,false,false
-Ross Yost,Overall,Overall,#ffffff,5,102.3465,3,-4.686,4,1678,122,8,-3,35,3658.2726,0.0000,104.5221,102.6355,9,false,false
-Matthew Siddall,Overall,Overall,#ffffff,1,101.8386,4,-9.943,3,1778,-159,4,3,35,3663.5328,0.0000,104.6724,102.8786,8,false,false
-Marc Nistor,Overall,Overall,#ffffff,9,102.6408,5,-16.566,2,1623,0,9,0,35,3670.1491,0.0000,104.8614,102.7919,22,false,false
-Leif Peterson,Overall,Overall,#ffffff,7,102.6284,6,-17.320,1,1430,240,15,-5,35,3670.9050,0.0000,104.8830,102.3910,8,false,false
-Ed Eijsenring,Overall,Overall,#ffffff,2,101.9829,7,-39.849,0,1520,20,13,,35,3693.4379,0.0000,105.5268,102.9269,20,false,false
-Chad Henson,Overall,Overall,#ffffff,8,102.6295,8,-42.466,0,1460,14,14,0,35,3696.0503,0.0000,105.6014,102.8716,12,false,false
-Jochem Bakker,Overall,Overall,#ffffff,4,102.2800,9,-1L,0,1526,-215,12,6,34,3663.1210,0.0000,107.7389,102.6723,6,false,false
-Rodney Campbell2,Overall,Overall,#ffffff,10,103.7020,10,-20L,0,1377,-113,18,5,15,1585.8838,0.0000,105.7256,103.5226,7,false,false
+display_name,class_name,class_symbol,class_color,start_position,qualify_lap_time,finish_position,class_position,interval,points,rating,rating_change,rank,rank_change,laps_complete,total_time,penalty,average_lap_time,fastest_lap_time,num_incidents,fastest_lap,cleanest_driver
+Logan Grado,Overall,Overall,#ffffff,3,102.2761,1,1,0.000,10,1861,80,2,-2,35,3653.5874,0.0000,104.3882,102.7020,13,false,false
+Robby Prescott,Overall,Overall,#ffffff,6,102.4597,2,2,-4.140,6,1770,63,6,-2,35,3657.7253,0.0000,104.5064,102.6317,17,false,false
+Ross Yost,Overall,Overall,#ffffff,5,102.3465,3,3,-4.686,4,1678,122,8,-3,35,3658.2726,0.0000,104.5221,102.6355,9,false,false
+Matthew Siddall,Overall,Overall,#ffffff,1,101.8386,4,4,-9.943,3,1778,-159,4,3,35,3663.5328,0.0000,104.6724,102.8786,8,false,false
+Marc Nistor,Overall,Overall,#ffffff,9,102.6408,5,5,-16.566,2,1623,0,9,0,35,3670.1491,0.0000,104.8614,102.7919,22,false,false
+Leif Peterson,Overall,Overall,#ffffff,7,102.6284,6,6,-17.320,1,1430,240,15,-5,35,3670.9050,0.0000,104.8830,102.3910,8,false,false
+Ed Eijsenring,Overall,Overall,#ffffff,2,101.9829,7,7,-39.849,0,1520,20,13,,35,3693.4379,0.0000,105.5268,102.9269,20,false,false
+Chad Henson,Overall,Overall,#ffffff,8,102.6295,8,8,-42.466,0,1460,14,14,0,35,3696.0503,0.0000,105.6014,102.8716,12,false,false
+Jochem Bakker,Overall,Overall,#ffffff,4,102.2800,9,9,-1L,0,1526,-215,12,6,34,3663.1210,0.0000,107.7389,102.6723,6,false,false
+Rodney Campbell2,Overall,Overall,#ffffff,10,103.7020,10,10,-20L,0,1377,-113,18,5,15,1585.8838,0.0000,105.7256,103.5226,7,false,false

@@ -1,14 +1,14 @@
-display_name,class_name,class_symbol,class_color,start_position,qualify_lap_time,finish_position,interval,points,rating,rating_change,rank,rank_change,laps_complete,total_time,penalty,average_lap_time,fastest_lap_time,num_incidents,fastest_lap,cleanest_driver
-Jesse Lyon2,Overall,Overall,#ffffff,4,119.6622,1,0.000,10,1869,234,2,-5,20,2441.0990,0.0000,122.0550,119.8545,6,false,false
-Robby Prescott,Overall,Overall,#ffffff,6,119.7472,2,-9.013,6,1707,225,8,-3,20,2450.1109,5.0000,122.5055,120.0631,14,false,false
-Chris Braun,Overall,Overall,#ffffff,2,119.5898,3,-14.196,4,1773,273,5,,20,2455.2949,0.0000,122.7647,120.1163,13,false,false
-Jochem Bakker,Overall,Overall,#ffffff,9,120.0873,4,-16.481,3,1741,241,6,,20,2457.5766,0.0000,122.8788,120.7149,3,false,false
-Derek M Cyphers,Overall,Overall,#ffffff,5,119.7062,5,-24.978,2,1834,-247,3,2,20,2466.0721,0.0000,123.3036,120.7142,4,false,false
-Enrico Gregoratto,Overall,Overall,#ffffff,11,120.5596,6,-31.261,1,1614,20,10,2,20,2472.3539,0.0000,123.6177,120.7892,11,false,false
-Marc Nistor,Overall,Overall,#ffffff,8,119.8889,7,-34.213,0,1623,-55,9,3,20,2475.3120,0.0000,123.7656,120.6743,18,false,false
-Rodney Campbell2,Overall,Overall,#ffffff,13,121.1061,8,-39.853,0,1490,46,13,1,20,2480.9410,0.0000,124.0471,121.3924,14,false,false
-Chad Henson,Overall,Overall,#ffffff,12,120.7990,9,-59.656,0,1446,40,14,1,20,2500.7451,10.0000,125.0373,120.8929,14,false,false
-Domenico Masi,Overall,Overall,#ffffff,10,120.2024,10,-1L,0,1401,36,15,1,19,2477.9325,5.0000,130.4175,120.8802,7,false,false
-Ross Yost,Overall,Overall,#ffffff,7,119.8746,11,-15L,0,1556,-292,11,8,5,676.5469,0.0000,135.3094,120.1839,2,false,false
-Jacob Grube,Overall,Overall,#ffffff,1,119.4692,12,-16L,0,1398,-120,16,6,4,576.0410,5.0000,144.0103,120.2062,9,false,false
-Leif Peterson,Overall,Overall,#ffffff,3,119.6478,13,-17L,0,1190,-310,20,,3,431.3545,0.0000,143.7848,125.9072,5,false,false
+display_name,class_name,class_symbol,class_color,start_position,qualify_lap_time,finish_position,class_position,interval,points,rating,rating_change,rank,rank_change,laps_complete,total_time,penalty,average_lap_time,fastest_lap_time,num_incidents,fastest_lap,cleanest_driver
+Jesse Lyon2,Overall,Overall,#ffffff,4,119.6622,1,1,0.000,10,1869,234,2,-5,20,2441.0990,0.0000,122.0550,119.8545,6,false,false
+Robby Prescott,Overall,Overall,#ffffff,6,119.7472,2,2,-9.013,6,1707,225,8,-3,20,2450.1109,5.0000,122.5055,120.0631,14,false,false
+Chris Braun,Overall,Overall,#ffffff,2,119.5898,3,3,-14.196,4,1773,273,5,,20,2455.2949,0.0000,122.7647,120.1163,13,false,false
+Jochem Bakker,Overall,Overall,#ffffff,9,120.0873,4,4,-16.481,3,1741,241,6,,20,2457.5766,0.0000,122.8788,120.7149,3,false,false
+Derek M Cyphers,Overall,Overall,#ffffff,5,119.7062,5,5,-24.978,2,1834,-247,3,2,20,2466.0721,0.0000,123.3036,120.7142,4,false,false
+Enrico Gregoratto,Overall,Overall,#ffffff,11,120.5596,6,6,-31.261,1,1614,20,10,2,20,2472.3539,0.0000,123.6177,120.7892,11,false,false
+Marc Nistor,Overall,Overall,#ffffff,8,119.8889,7,7,-34.213,0,1623,-55,9,3,20,2475.3120,0.0000,123.7656,120.6743,18,false,false
+Rodney Campbell2,Overall,Overall,#ffffff,13,121.1061,8,8,-39.853,0,1490,46,13,1,20,2480.9410,0.0000,124.0471,121.3924,14,false,false
+Chad Henson,Overall,Overall,#ffffff,12,120.7990,9,9,-59.656,0,1446,40,14,1,20,2500.7451,10.0000,125.0373,120.8929,14,false,false
+Domenico Masi,Overall,Overall,#ffffff,10,120.2024,10,10,-1L,0,1401,36,15,1,19,2477.9325,5.0000,130.4175,120.8802,7,false,false
+Ross Yost,Overall,Overall,#ffffff,7,119.8746,11,11,-15L,0,1556,-292,11,8,5,676.5469,0.0000,135.3094,120.1839,2,false,false
+Jacob Grube,Overall,Overall,#ffffff,1,119.4692,12,12,-16L,0,1398,-120,16,6,4,576.0410,5.0000,144.0103,120.2062,9,false,false
+Leif Peterson,Overall,Overall,#ffffff,3,119.6478,13,13,-17L,0,1190,-310,20,,3,431.3545,0.0000,143.7848,125.9072,5,false,false
