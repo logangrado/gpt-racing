@@ -6,6 +6,7 @@ from typing import Tuple
 import polars as pl
 
 from gpt_racing import utils
+from gpt_racing.classes import resolve_driver_classes
 from gpt_racing.elo_mmr import ELOMMR
 
 # from great_tables import GT
@@ -130,6 +131,7 @@ def compute_ratings(config, client):
         elo_mmr = _compute_elo_previous_seasons(config.elo, client, elo_mmr)
 
     result_df, name_df = _load_race_data(config.races, client)
+    class_df = resolve_driver_classes(config, name_df)
     race_points_type_df = pl.DataFrame(
         [
             {
@@ -175,6 +177,7 @@ def compute_ratings(config, client):
         race_result_df = (
             result_df.filter(pl.col("subsession_id") == subsession_id)
             .join(name_df, on="user_id")
+            .join(class_df, on="user_id")
             .join(
                 points_df[["user_id", "subsession_id", "points", "fastest_lap", "cleanest_driver"]],
                 on=["user_id", "subsession_id"],
@@ -190,6 +193,9 @@ def compute_ratings(config, client):
         race_result_df = (
             race_result_df.select(
                 "display_name",
+                "class_name",
+                "class_symbol",
+                "class_color",
                 "start_position",
                 "qualify_lap_time",
                 "finish_position",
@@ -231,6 +237,7 @@ def compute_ratings(config, client):
                 on="user_id",
             )
             .join(name_df, on="user_id")
+            .join(class_df, on="user_id")
             .sort(["points_rank", "user_id"])
         )
 

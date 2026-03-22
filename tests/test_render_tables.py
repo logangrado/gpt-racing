@@ -67,6 +67,9 @@ class TestRaceResults:
                 "rating": [60, 50, 40],
                 "rating_change": [10, 0, -10],
                 "display_name": ["a", "b", "c"],
+                "class_name": ["Pro", "Am", "Am"],
+                "class_symbol": ["P", "A", "A"],
+                "class_color": ["#ff0000", "#0000ff", "#0000ff"],
                 "interval": ["0.000", "10.111", "1:10.888"],
                 "points": [50, 40, 30],
             }
@@ -92,6 +95,38 @@ class TestRaceResults:
                 "rating": [60, 50, 40],
                 "rating_change": [10, 0, -10],
                 "display_name": ["a", "b", "c"],
+                "class_name": ["Pro", "Am", "Am"],
+                "class_symbol": ["P", "A", "A"],
+                "class_color": ["#ff0000", "#0000ff", "#0000ff"],
+                "interval": ["0.000", "10.111", "1:10.888"],
+                "points": [50, 40, 30],
+            }
+        )
+
+        result = render_tables.render_race_results(df)
+
+        compare_html(result)
+
+    def test_no_classes(self, compare_html):
+        """When config.classes is None, all drivers have class_symbol='Overall' and class_color='#ffffff'."""
+        df = pl.DataFrame(
+            {
+                "finish_position": [1, 2, 3],
+                "qualify_lap_time": [60.1234, 55.1234, 65.1234],
+                "start_position": [2, 1, 3],
+                "average_lap_time": [123.123, 124.123, 124.123],
+                "fastest_lap_time": [100.123, 101.123, 102.123],
+                "fastest_lap": [True, False, False],
+                "penalty": [0.0, 0.0, 0.0],
+                "num_incidents": [5, 2, 6],
+                "cleanest_driver": [False, True, False],
+                "rank": [1, 2, 3],
+                "rating": [60, 50, 40],
+                "rating_change": [10, 0, -10],
+                "display_name": ["a", "b", "c"],
+                "class_name": ["Overall", "Overall", "Overall"],
+                "class_symbol": ["Overall", "Overall", "Overall"],
+                "class_color": ["#ffffff", "#ffffff", "#ffffff"],
                 "interval": ["0.000", "10.111", "1:10.888"],
                 "points": [50, 40, 30],
             }

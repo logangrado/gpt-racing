@@ -1,10 +1,10 @@
-user_id,points_race_1_Algarve,drop_race_1_Algarve,fastest_lap_race_1_Algarve,cleanest_driver_race_1_Algarve,points_total,points_rank,points_rank_change,rating,rating_rank,rating_rank_change,num_races,display_name
-367874,25,false,false,false,25,1,,1805,2,,4,Matthew Siddall
-346566,21,false,false,false,21,2,,1836,1,0,5,Derek M Cyphers
-282802,18,false,false,false,18,3,,1784,3,1,6,Ross Yost
-335343,17,false,false,false,17,4,,1724,,,1,Nick Facciolo
-982936,16,false,false,false,16,5,,1709,,,1,Lennie Holland
-48282,15,false,false,true,15,6,,1677,,,1,Dale Green
-109501,15,false,false,false,15,6,,1693,,,1,David Fernandes
-719884,13,false,false,false,13,8,,1660,5,1,5,Robby Prescott
-286691,12,false,true,false,12,9,,1657,6,,4,Jesse Lyon2
+user_id,points_race_1_Algarve,drop_race_1_Algarve,fastest_lap_race_1_Algarve,cleanest_driver_race_1_Algarve,points_total,points_rank,points_rank_change,rating,rating_rank,rating_rank_change,num_races,display_name,class_name,class_symbol,class_color
+367874,25,false,false,false,25,1,,1805,2,,4,Matthew Siddall,Overall,Overall,#ffffff
+346566,21,false,false,false,21,2,,1836,1,0,5,Derek M Cyphers,Overall,Overall,#ffffff
+282802,18,false,false,false,18,3,,1784,3,1,6,Ross Yost,Overall,Overall,#ffffff
+335343,17,false,false,false,17,4,,1724,,,1,Nick Facciolo,Overall,Overall,#ffffff
+982936,16,false,false,false,16,5,,1709,,,1,Lennie Holland,Overall,Overall,#ffffff
+48282,15,false,false,true,15,6,,1677,,,1,Dale Green,Overall,Overall,#ffffff
+109501,15,false,false,false,15,6,,1693,,,1,David Fernandes,Overall,Overall,#ffffff
+719884,13,false,false,false,13,8,,1660,5,1,5,Robby Prescott,Overall,Overall,#ffffff
+286691,12,false,true,false,12,9,,1657,6,,4,Jesse Lyon2,Overall,Overall,#ffffff

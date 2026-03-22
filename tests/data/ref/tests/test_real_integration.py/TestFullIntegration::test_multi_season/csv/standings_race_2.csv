@@ -1,12 +1,12 @@
-user_id,points_race_1_Algarve,points_race_2_Motegi,drop_race_1_Algarve,drop_race_2_Motegi,fastest_lap_race_1_Algarve,fastest_lap_race_2_Motegi,cleanest_driver_race_1_Algarve,cleanest_driver_race_2_Motegi,points_total,points_rank,points_rank_change,rating,rating_rank,rating_rank_change,num_races,display_name
-346566,21,25,true,false,false,false,false,false,25,1,-1,1870,1,0,6,Derek M Cyphers
-367874,25,15,false,true,false,false,false,false,25,1,0,1756,3,1,5,Matthew Siddall
-982936,16,21,true,false,false,false,false,false,21,3,-2,1787,,,2,Lennie Holland
-282802,18,18,true,false,false,false,false,false,18,4,1,1793,2,-1,7,Ross Yost
-335343,17,12,false,true,false,false,false,false,17,5,1,1660,,,2,Nick Facciolo
-622340,,17,true,false,,false,,false,17,5,,1732,4,0,5,Logan Grado
-599305,,16,true,false,,false,,false,16,7,,1734,,,1,Nick Melaragno2
-48282,15,13,false,true,false,true,true,false,15,8,2,1664,,,2,Dale Green
-109501,15,14,false,true,false,false,false,false,15,8,2,1690,,,2,David Fernandes
-719884,13,,false,true,false,,false,,13,10,2,1660,5,0,5,Robby Prescott
-286691,12,11,false,true,true,false,false,false,12,11,2,1602,7,1,5,Jesse Lyon2
+user_id,points_race_1_Algarve,points_race_2_Motegi,drop_race_1_Algarve,drop_race_2_Motegi,fastest_lap_race_1_Algarve,fastest_lap_race_2_Motegi,cleanest_driver_race_1_Algarve,cleanest_driver_race_2_Motegi,points_total,points_rank,points_rank_change,rating,rating_rank,rating_rank_change,num_races,display_name,class_name,class_symbol,class_color
+346566,21,25,true,false,false,false,false,false,25,1,-1,1870,1,0,6,Derek M Cyphers,Overall,Overall,#ffffff
+367874,25,15,false,true,false,false,false,false,25,1,0,1756,3,1,5,Matthew Siddall,Overall,Overall,#ffffff
+982936,16,21,true,false,false,false,false,false,21,3,-2,1787,,,2,Lennie Holland,Overall,Overall,#ffffff
+282802,18,18,true,false,false,false,false,false,18,4,1,1793,2,-1,7,Ross Yost,Overall,Overall,#ffffff
+335343,17,12,false,true,false,false,false,false,17,5,1,1660,,,2,Nick Facciolo,Overall,Overall,#ffffff
+622340,,17,true,false,,false,,false,17,5,,1732,4,0,5,Logan Grado,Overall,Overall,#ffffff
+599305,,16,true,false,,false,,false,16,7,,1734,,,1,Nick Melaragno2,Overall,Overall,#ffffff
+48282,15,13,false,true,false,true,true,false,15,8,2,1664,,,2,Dale Green,Overall,Overall,#ffffff
+109501,15,14,false,true,false,false,false,false,15,8,2,1690,,,2,David Fernandes,Overall,Overall,#ffffff
+719884,13,,false,true,false,,false,,13,10,2,1660,5,0,5,Robby Prescott,Overall,Overall,#ffffff
+286691,12,11,false,true,true,false,false,false,12,11,2,1602,7,1,5,Jesse Lyon2,Overall,Overall,#ffffff

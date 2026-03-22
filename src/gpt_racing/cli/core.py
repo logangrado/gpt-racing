@@ -76,12 +76,37 @@ def core_entrypoint(config, out_path, _overwrite=False, client=None):
         _render_and_write_table(gt=render_tables.render_ratings(table), path=pdf_out_path / f"elo_race_{i + 1}.html")
 
 
-@click.command
+def list_drivers_entrypoint(config):
+    from gpt_racing.config import RatingConfig
+    from gpt_racing.core import _load_race_data
+    from gpt_racing.iracing_data import IracingDataClient
+
+    config = RatingConfig(**_load_config(config))
+    client = IracingDataClient()
+
+    _, name_df = _load_race_data(config.races, client)
+
+    for row in name_df.sort("display_name").iter_rows(named=True):
+        print(f"{{ name: '{row['display_name']}' }},")
+
+
+@click.group
+def cli():
+    pass
+
+
+@cli.command("run")
 @click.argument("config")
 @click.argument("out_path")
 def core(config, out_path):
     core_entrypoint(config, out_path)
 
 
+@cli.command("list-drivers")
+@click.argument("config")
+def list_drivers(config):
+    list_drivers_entrypoint(config)
+
+
 if __name__ == "__main__":
-    core()
+    cli()
