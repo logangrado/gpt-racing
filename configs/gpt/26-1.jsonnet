@@ -55,6 +55,10 @@
       ],
     },
   ],
+  render: {
+    combined_table: true,
+    per_class_tables: true,
+  },
   elo: {
     previous_seasons: [
       import '24_gt3.jsonnet',
