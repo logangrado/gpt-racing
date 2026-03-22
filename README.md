@@ -1,5 +1,11 @@
 # gpt-racing
 
+<!-- [![PyPI](https://img.shields.io/pypi/v/seekr-hatchery)](https://pypi.org/project/seekr-hatchery/) -->
+<!-- [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](https://pypi.org/project/seekr-hatchery/) -->
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/logangrado/gpt-racing/badge)](https://securityscorecards.dev/viewer/?uri=github.com/logangrado/gpt-racing)
+
+
 A racing analytics and league management tool for [iRacing](https://www.iracing.com/). Fetches race data from the iRacing API, computes championship standings and ELO/MMR driver ratings, and generates HTML reports and CSV exports.
 
 ## Features
