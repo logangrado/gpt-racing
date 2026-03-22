@@ -7,6 +7,7 @@ import polars as pl
 
 from gpt_racing import utils
 from gpt_racing.classes import resolve_driver_classes
+from gpt_racing.config import Penalty
 from gpt_racing.elo_mmr import ELOMMR
 
 # from great_tables import GT
@@ -15,8 +16,21 @@ from gpt_racing.results import compute_results, infer_invalid_laps
 from gpt_racing.scoring.points import compute_points_score
 
 
-def resolve_penalties(penalties, name_df: pl.DataFrame) -> pl.DataFrame:
-    """Resolve a list of Penalty config objects to a user_id/time DataFrame."""
+def resolve_penalties(penalties: list[Penalty], name_df: pl.DataFrame) -> pl.DataFrame:
+    """Resolve a list of Penalty config objects to a user_id/time DataFrame.
+
+    Args:
+        penalties: Penalty entries from race config. Each has either ``user_id`` or ``name`` set.
+        name_df: Qualifying data for the race.
+            Columns: user_id (Int64), display_name (String)
+
+    Returns:
+        DataFrame with columns: user_id (Int64), time (Float64)
+
+    Raises:
+        ValueError: If any name-based penalties cannot be matched. All unresolved names are
+            reported together.
+    """
     rows = []
     missing = []
     for p in penalties:
