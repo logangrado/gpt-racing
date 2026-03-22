@@ -7,12 +7,48 @@ import polars as pl
 
 from gpt_racing import utils
 from gpt_racing.classes import resolve_driver_classes
+from gpt_racing.config import Penalty
 from gpt_racing.elo_mmr import ELOMMR
 
 # from great_tables import GT
 from gpt_racing.iracing_data import IracingDataClient
 from gpt_racing.results import compute_results, infer_invalid_laps
 from gpt_racing.scoring.points import compute_points_score
+
+
+def resolve_penalties(penalties: list[Penalty], name_df: pl.DataFrame) -> pl.DataFrame:
+    """Resolve a list of Penalty config objects to a user_id/time DataFrame.
+
+    Args:
+        penalties: Penalty entries from race config. Each has either ``user_id`` or ``name`` set.
+        name_df: Qualifying data for the race.
+            Columns: user_id (Int64), display_name (String)
+
+    Returns:
+        DataFrame with columns: user_id (Int64), time (Float64)
+
+    Raises:
+        ValueError: If any name-based penalties cannot be matched. All unresolved names are
+            reported together.
+    """
+    rows = []
+    missing = []
+    for p in penalties:
+        if p.user_id is not None:
+            rows.append({"user_id": p.user_id, "time": p.time})
+        else:
+            matched = name_df.filter(pl.col("display_name") == p.name)
+            if matched.is_empty():
+                missing.append(p.name)
+            else:
+                for user_id in matched["user_id"].to_list():
+                    rows.append({"user_id": user_id, "time": p.time})
+    if missing:
+        raise ValueError(
+            f"Penalty driver name(s) not found in race data: {missing}. "
+            f"Available names: {name_df['display_name'].to_list()}"
+        )
+    return pl.DataFrame(rows, schema={"user_id": pl.Int64, "time": pl.Float64})
 
 
 def _load_race_data(race_configs, client) -> Tuple[pl.DataFrame, pl.DataFrame]:
@@ -49,10 +85,6 @@ def _load_race_data(race_configs, client) -> Tuple[pl.DataFrame, pl.DataFrame]:
         lap_df = infer_invalid_laps(lap_df)
 
         # Compute results
-        if race_config.penalties:
-            penalty_df = pl.DataFrame([dict(x) for x in race_config.penalties])
-        else:
-            penalty_df = None
         qualy_df = client.get_qualy_result(race_config.subsession_id)
         qualy_df = qualy_df.rename(
             {
@@ -61,6 +93,11 @@ def _load_race_data(race_configs, client) -> Tuple[pl.DataFrame, pl.DataFrame]:
         )
 
         qualy_df = qualy_df.with_columns((pl.col("best_lap_time") / 10000).alias("best_lap_time"))
+
+        if race_config.penalties:
+            penalty_df = resolve_penalties(race_config.penalties, qualy_df.select(["user_id", "display_name"]))
+        else:
+            penalty_df = None
 
         result_df = compute_results(lap_df, penalty_df, qualy_df)
         result_df = result_df.with_columns(pl.lit(race_config.subsession_id).alias("subsession_id"))
