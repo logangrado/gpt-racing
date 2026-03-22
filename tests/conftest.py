@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 from pathlib import Path
 
 import pytest
@@ -17,9 +18,15 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
-    config.addinivalue_line(
-        "markers", "integration: marks tests that require real iRacing API credentials"
-    )
+    config.addinivalue_line("markers", "integration: marks tests that require real iRacing API credentials")
+
+
+def pytest_collection_modifyitems(items):
+    if os.environ.get("CI") and not os.environ.get("CLIENT_ID"):
+        skip = pytest.mark.skip(reason="Integration tests skipped in CI without credentials")
+        for item in items:
+            if item.get_closest_marker("integration"):
+                item.add_marker(skip)
 
 
 @pytest.fixture(scope="session")
