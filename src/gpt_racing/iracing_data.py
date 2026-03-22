@@ -178,12 +178,17 @@ def _collect_func_signature_and_args(func: callable, args: tuple, kwargs: dict) 
 
 class CachedIRClient:
     def __init__(self, cache_path):
-        self._client = _load_client()
+        self._client = None  # authenticated lazily on first cache miss
         self._cache_path = cache_path
+
+    def _get_client(self):
+        if self._client is None:
+            self._client = _load_client()
+        return self._client
 
     def _cache_wrapper(self, func, func_name, z=42):
         def wrapper(*args, **kwargs):
-            # Collet all args
+            # Collect all args
             all_kwargs = _collect_func_signature_and_args(func, args, kwargs)
 
             # Determine cache path
@@ -197,6 +202,7 @@ class CachedIRClient:
                 with open(data_path, "r") as f:
                     result = json.load(f)
             else:
+                # Cache miss — authenticate and fetch
                 logger.info("Retrieving result")
                 result = func(*args, **kwargs)
                 data_path.parent.mkdir(exist_ok=True, parents=True)
@@ -212,7 +218,7 @@ class CachedIRClient:
         if attr in self.__dict__:
             return getattr(self, attr)
 
-        return self._cache_wrapper(getattr(self._client, attr), attr)
+        return self._cache_wrapper(getattr(self._get_client(), attr), attr)
 
 
 class IracingDataClient:
