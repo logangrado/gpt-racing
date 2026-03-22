@@ -29,7 +29,7 @@ RUN curl -fsSL https://claude.ai/install.sh | bash
 # =============================================================================
 
 # ── Python / uv ───────────────────────────────────────────────────────────────
-# COPY --from=ghcr.io/astral-sh/uv:0.10.7 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.10.7 /uv /uvx /bin/
 
 # ── Go ────────────────────────────────────────────────────────────────────────
 # COPY --from=golang:1.24 /usr/local/go /usr/local/go
