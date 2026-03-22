@@ -10,15 +10,8 @@ class BaseModel(pydantic.BaseModel):
 
 
 class Penalty(BaseModel):
-    user_id: Optional[int] = None
-    name: Optional[str] = None
+    user_id: int
     time: float
-
-    @pydantic.model_validator(mode="after")
-    def _check_identifier(self):
-        if (self.user_id is None) == (self.name is None):
-            raise ValueError("Exactly one of 'user_id' or 'name' must be provided")
-        return self
 
 
 class Race(BaseModel):

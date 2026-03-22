@@ -1,0 +1,3 @@
+[submodule "submodules/Elo-MMR"]
+	path = submodules/Elo-MMR
+	url = git@github.com:EbTech/Elo-MMR.git

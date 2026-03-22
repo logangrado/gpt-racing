@@ -1044,35 +1044,3 @@ class _TestComputeRatings:
         result1 = core.compute_ratings(config1, client)
 
         assert_frame_equal(result0, result1)
-
-
-class TestPenaltyByNameIntegration:
-    def test_name_based_penalty_pipeline(self, fake_client):
-        config = RatingConfig.model_validate(
-            {
-                "races": [{"subsession_id": 0, "penalties": [{"name": "b", "time": 30.0}]}],
-                "points": {"points": [10, 5, 3]},
-            }
-        )
-        summary_data = [
-            {
-                "subsession_id": 0,
-                "qualifying": [
-                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40_0000, "laps_complete": 3},
-                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44_0000, "laps_complete": 3},
-                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42_0000, "laps_complete": 3},
-                ],
-                "race": [
-                    {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
-                    {"cust_id": 1, "display_name": "b", "laps_complete": 3, "average_lap_time": 11},
-                    {"cust_id": 2, "display_name": "c", "laps_complete": 3, "average_lap_time": 12},
-                ],
-            }
-        ]
-        generate_data(summary_data, fake_client)
-        outputs = core.compute_ratings(config, client=fake_client)
-        race_result = outputs["race_results"][0]
-        # driver "b" (user_id=1) should have a 30s penalty, placing them last
-        b_row = race_result.filter(pl.col("display_name") == "b")
-        assert b_row["penalty"][0] == 30.0
-        assert b_row["finish_position"][0] == 3
