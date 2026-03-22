@@ -12,7 +12,7 @@ import polars as pl
 from iracing_oauth_client import Config, IRacingOAuthClient
 from iracingdataapi.client import irDataClient
 
-from gpt_racing import CACHE_PATH, SECRETS_PATH, logger
+from gpt_racing import CACHE_PATH, logger
 from gpt_racing.vault import vault
 
 
