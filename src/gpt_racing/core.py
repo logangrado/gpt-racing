@@ -293,8 +293,7 @@ def compute_ratings(config, client):
         if outputs["standings"]:
             prev = outputs["standings"][-1].select("user_id", pl.col("class_rank").alias("_prev_class_rank"))
             standings_df = (
-                standings_df
-                .join(prev, on="user_id", how="left")
+                standings_df.join(prev, on="user_id", how="left")
                 .with_columns((pl.col("class_rank") - pl.col("_prev_class_rank")).alias("class_rank_change"))
                 .drop("_prev_class_rank")
             )
