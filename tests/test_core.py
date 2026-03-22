@@ -1044,3 +1044,111 @@ class _TestComputeRatings:
         result1 = core.compute_ratings(config1, client)
 
         assert_frame_equal(result0, result1)
+
+
+class TestResolvePenalties:
+    def _make_name_df(self, rows):
+        return pl.DataFrame(rows, schema={"user_id": pl.Int64, "display_name": pl.String})
+
+    def test_by_user_id(self):
+        from gpt_racing.config import Penalty
+
+        name_df = self._make_name_df([{"user_id": 1, "display_name": "Alice"}])
+        penalties = [Penalty(user_id=1, time=5.0)]
+        result = core._resolve_penalties(penalties, name_df)
+        assert result["user_id"].to_list() == [1]
+        assert result["time"].to_list() == [5.0]
+
+    def test_by_name(self):
+        from gpt_racing.config import Penalty
+
+        name_df = self._make_name_df([{"user_id": 42, "display_name": "Bob"}])
+        penalties = [Penalty(name="Bob", time=10.0)]
+        result = core._resolve_penalties(penalties, name_df)
+        assert result["user_id"].to_list() == [42]
+        assert result["time"].to_list() == [10.0]
+
+    def test_mixed(self):
+        from gpt_racing.config import Penalty
+
+        name_df = self._make_name_df([
+            {"user_id": 1, "display_name": "Alice"},
+            {"user_id": 2, "display_name": "Bob"},
+        ])
+        penalties = [Penalty(user_id=1, time=5.0), Penalty(name="Bob", time=3.0)]
+        result = core._resolve_penalties(penalties, name_df)
+        assert result["user_id"].to_list() == [1, 2]
+        assert result["time"].to_list() == [5.0, 3.0]
+
+    def test_name_not_found_raises(self):
+        from gpt_racing.config import Penalty
+
+        name_df = self._make_name_df([{"user_id": 1, "display_name": "Alice"}])
+        penalties = [Penalty(name="Nobody", time=5.0), Penalty(name="Ghost", time=3.0)]
+        with pytest.raises(ValueError, match="Nobody") as exc_info:
+            core._resolve_penalties(penalties, name_df)
+        assert "Ghost" in str(exc_info.value)
+
+
+class TestPenaltyValidation:
+    def test_user_id_only_valid(self):
+        from pydantic import ValidationError
+
+        from gpt_racing.config import Penalty
+
+        p = Penalty(user_id=1, time=5)
+        assert p.user_id == 1
+
+    def test_name_only_valid(self):
+        from gpt_racing.config import Penalty
+
+        p = Penalty(name="Alice", time=5)
+        assert p.name == "Alice"
+
+    def test_both_raises(self):
+        from pydantic import ValidationError
+
+        from gpt_racing.config import Penalty
+
+        with pytest.raises(ValidationError):
+            Penalty(user_id=1, name="Alice", time=5)
+
+    def test_neither_raises(self):
+        from pydantic import ValidationError
+
+        from gpt_racing.config import Penalty
+
+        with pytest.raises(ValidationError):
+            Penalty(time=5)
+
+
+class TestPenaltyByNameIntegration:
+    def test_name_based_penalty_pipeline(self, fake_client):
+        config = RatingConfig.model_validate(
+            {
+                "races": [{"subsession_id": 0, "penalties": [{"name": "b", "time": 30.0}]}],
+                "points": {"points": [10, 5, 3]},
+            }
+        )
+        summary_data = [
+            {
+                "subsession_id": 0,
+                "qualifying": [
+                    {"cust_id": 0, "display_name": "a", "best_lap_time": 40_0000, "laps_complete": 3},
+                    {"cust_id": 1, "display_name": "b", "best_lap_time": 44_0000, "laps_complete": 3},
+                    {"cust_id": 2, "display_name": "c", "best_lap_time": 42_0000, "laps_complete": 3},
+                ],
+                "race": [
+                    {"cust_id": 0, "display_name": "a", "laps_complete": 3, "average_lap_time": 10},
+                    {"cust_id": 1, "display_name": "b", "laps_complete": 3, "average_lap_time": 11},
+                    {"cust_id": 2, "display_name": "c", "laps_complete": 3, "average_lap_time": 12},
+                ],
+            }
+        ]
+        generate_data(summary_data, fake_client)
+        outputs = core.compute_ratings(config, client=fake_client)
+        race_result = outputs["race_results"][0]
+        # driver "b" (user_id=1) should have a 30s penalty, placing them last
+        b_row = race_result.filter(pl.col("display_name") == "b")
+        assert b_row["penalty"][0] == 30.0
+        assert b_row["finish_position"][0] == 3
