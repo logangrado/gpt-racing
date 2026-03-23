@@ -148,6 +148,60 @@ class TestRaceResults:
         )
 
 
+class TestGetLeagueSessions:
+    def _make_session(self, subsession_id, has_results, track_name="Sometrack", launch_at="2026-01-01T00:00:00Z"):
+        return {
+            "subsession_id": subsession_id,
+            "has_results": has_results,
+            "track": {"track_name": track_name},
+            "launch_at": launch_at,
+        }
+
+    def _make_client(self, sessions):
+        from unittest.mock import MagicMock
+        from gpt_racing.iracing_data import IracingDataClient
+
+        mock_ir = MagicMock()
+        mock_ir.league_season_sessions.return_value = {"sessions": sessions}
+
+        client = IracingDataClient.__new__(IracingDataClient)
+        client._client = mock_ir
+        client._cust_id = 0
+        return client
+
+    def test_returns_only_completed(self):
+        sessions = [
+            self._make_session(1001, has_results=True, track_name="Spa"),
+            self._make_session(None, has_results=False, track_name="Monza"),
+            self._make_session(1003, has_results=True, track_name="Silverstone"),
+        ]
+        client = self._make_client(sessions)
+        result = client.get_league_sessions(99, 1)
+        assert len(result) == 2
+        assert result[0]["subsession_id"] == 1001
+        assert result[0]["track_name"] == "Spa"
+        assert result[1]["subsession_id"] == 1003
+
+    def test_excludes_no_subsession_id(self):
+        sessions = [
+            self._make_session(None, has_results=True, track_name="Spa"),
+        ]
+        client = self._make_client(sessions)
+        result = client.get_league_sessions(99, 1)
+        assert result == []
+
+    def test_empty_sessions(self):
+        client = self._make_client([])
+        result = client.get_league_sessions(99, 1)
+        assert result == []
+
+    def test_result_fields(self):
+        sessions = [self._make_session(42, has_results=True, track_name="Daytona", launch_at="2026-03-01T18:00:00Z")]
+        client = self._make_client(sessions)
+        result = client.get_league_sessions(99, 1)
+        assert result == [{"subsession_id": 42, "track_name": "Daytona", "launch_at": "2026-03-01T18:00:00Z"}]
+
+
 @pytest.mark.skip(reason="Not implemented")
 class TestGetLapData:
     def test_basic(self):

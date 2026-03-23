@@ -184,6 +184,8 @@ def _collect_func_signature_and_args(func: callable, args: tuple, kwargs: dict) 
 
 
 class CachedIRClient:
+    _no_cache: frozenset = frozenset({"league_season_sessions"})
+
     def __init__(self, cache_path):
         self._client = None  # authenticated lazily on first cache miss
         self._cache_path = cache_path
@@ -225,6 +227,9 @@ class CachedIRClient:
         if attr in self.__dict__:
             return getattr(self, attr)
 
+        if attr in self._no_cache:
+            return getattr(self._get_client(), attr)
+
         return self._cache_wrapper(getattr(self._get_client(), attr), attr)
 
 
@@ -259,6 +264,24 @@ class IracingDataClient:
 
     def get_lap_data(self, subsession_id: int) -> pl.DataFrame:
         return pl.DataFrame(self._client.result_lap_chart_data(subsession_id))
+
+    def get_league_sessions(self, league_id: int, season_id: int) -> list[dict]:
+        """Returns completed sessions (has_results=True) for the given league season.
+        Each dict has: subsession_id (int), track_name (str), launch_at (str).
+        NOT cached — list grows as races complete.
+        """
+        result = self._client.league_season_sessions(league_id, season_id)
+        sessions = result["sessions"] if isinstance(result, dict) else result.sessions
+        return [
+            {
+                "subsession_id": s["subsession_id"] if isinstance(s, dict) else s.subsession_id,
+                "track_name": s["track"]["track_name"] if isinstance(s, dict) else s.track.track_name,
+                "launch_at": s["launch_at"] if isinstance(s, dict) else s.launch_at,
+            }
+            for s in sessions
+            if (s.get("has_results") if isinstance(s, dict) else s.has_results)
+            and (s.get("subsession_id") if isinstance(s, dict) else s.subsession_id) is not None
+        ]
 
     def search_sessions(self, start_time, end_time, cust_id=None):
         if cust_id is None:
