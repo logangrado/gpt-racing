@@ -97,7 +97,7 @@ def test_multiple_defaults_raises():
 def test_no_classes_config():
     config = _make_config(classes=None)
     result = resolve_driver_classes(config, NAME_DF)
-    assert set(result["class_name"].to_list()) == {"Overall"}
-    assert set(result["class_symbol"].to_list()) == {"Overall"}
-    assert set(result["class_color"].to_list()) == {"#ffffff"}
+    assert result["class_name"].is_null().all()
+    assert result["class_symbol"].is_null().all()
+    assert result["class_color"].is_null().all()
     assert len(result) == 3
