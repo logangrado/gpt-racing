@@ -1,9 +1,9 @@
 display_name,class_name,class_symbol,class_color,start_position,qualify_lap_time,finish_position,class_position,interval,points,rating,rating_change,rank,rank_change,laps_complete,total_time,penalty,average_lap_time,fastest_lap_time,num_incidents,fastest_lap,cleanest_driver
-Kevin San Diego,Overall,Overall,#ffffff,2,106.7915,1,1,0.000,10,1936,436,1,,33,3609.3634,0.0000,109.3746,107.0959,6,false,false
-Derek M Cyphers,Overall,Overall,#ffffff,1,106.7690,2,2,-0.202,6,1843,21,2,1,33,3609.5671,0.0000,109.3808,107.2142,13,false,false
-Ross Yost,Overall,Overall,#ffffff,4,107.5450,3,3,-15.126,4,1798,3,3,1,33,3624.4875,0.0000,109.8330,107.8189,9,false,false
-Ed Eijsenring,Overall,Overall,#ffffff,3,107.1863,4,4,-16.287,3,1659,139,10,-5,33,3625.6500,0.0000,109.8682,107.7157,12,false,false
-Logan Grado,Overall,Overall,#ffffff,6,107.6591,5,5,-22.896,2,1695,-2,8,1,33,3632.2562,0.0000,110.0684,107.9197,18,false,false
-Matthew Siddall,Overall,Overall,#ffffff,5,107.5469,6,6,-23.220,1,1702,-76,7,4,33,3632.5804,0.0000,110.0782,107.6911,15,false,false
-Marc Nistor,Overall,Overall,#ffffff,7,108.4903,7,7,-23.547,0,1612,-72,13,5,33,3632.9059,0.0000,110.0881,107.8485,16,false,false
-Chad Henson,Overall,Overall,#ffffff,8,108.5546,8,8,-22L,0,1431,-18,17,1,11,1208.9924,0.0000,109.9084,108.4126,2,false,false
+Kevin San Diego,,,,2,106.7915,1,1,0.000,10,1936,436,1,,33,3609.3634,0.0000,109.3746,107.0959,6,false,false
+Derek M Cyphers,,,,1,106.7690,2,2,-0.202,6,1843,21,2,1,33,3609.5671,0.0000,109.3808,107.2142,13,false,false
+Ross Yost,,,,4,107.5450,3,3,-15.126,4,1798,3,3,1,33,3624.4875,0.0000,109.8330,107.8189,9,false,false
+Ed Eijsenring,,,,3,107.1863,4,4,-16.287,3,1659,139,10,-5,33,3625.6500,0.0000,109.8682,107.7157,12,false,false
+Logan Grado,,,,6,107.6591,5,5,-22.896,2,1695,-2,8,1,33,3632.2562,0.0000,110.0684,107.9197,18,false,false
+Matthew Siddall,,,,5,107.5469,6,6,-23.220,1,1702,-76,7,4,33,3632.5804,0.0000,110.0782,107.6911,15,false,false
+Marc Nistor,,,,7,108.4903,7,7,-23.547,0,1612,-72,13,5,33,3632.9059,0.0000,110.0881,107.8485,16,false,false
+Chad Henson,,,,8,108.5546,8,8,-22L,0,1431,-18,17,1,11,1208.9924,0.0000,109.9084,108.4126,2,false,false

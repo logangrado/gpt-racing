@@ -1,11 +1,11 @@
 display_name,class_name,class_symbol,class_color,start_position,qualify_lap_time,finish_position,class_position,interval,points,rating,rating_change,rank,rank_change,laps_complete,total_time,penalty,average_lap_time,fastest_lap_time,num_incidents,fastest_lap,cleanest_driver
-Derek M Cyphers,Overall,Overall,#ffffff,1,100.7603,1,1,0.000,25,1870,34,1,0,35,3610.9343,0.0000,103.1696,100.9703,3,false,false
-Lennie Holland,Overall,Overall,#ffffff,5,101.1776,2,2,-29.713,21,1787,78,,,35,3640.6441,0.0000,104.0184,101.5839,4,false,false
-Ross Yost,Overall,Overall,#ffffff,8,101.9818,3,3,-35.395,18,1793,9,2,-1,35,3646.3230,0.0000,104.1807,101.8507,8,false,false
-Logan Grado,Overall,Overall,#ffffff,6,101.5677,4,4,-36.326,17,1732,37,4,0,35,3647.2559,0.0000,104.2073,101.6916,10,false,false
-Nick Melaragno2,Overall,Overall,#ffffff,3,101.0217,5,5,-38.954,16,1734,234,,,35,3649.8870,0.0000,104.2825,101.8165,19,false,false
-Matthew Siddall,Overall,Overall,#ffffff,2,100.7685,6,6,-39.230,15,1756,-49,3,1,35,3650.1641,0.0000,104.2904,100.7315,9,false,false
-David Fernandes,Overall,Overall,#ffffff,7,101.9799,7,7,-1:08.918,14,1690,-3,,,35,3679.8466,0.0000,105.1385,102.2783,10,false,false
-Dale Green,Overall,Overall,#ffffff,10,103.9983,8,8,-1L,13,1664,-13,,,34,3500.2330,0.0000,102.9480,61.5173,4,true,false
-Nick Facciolo,Overall,Overall,#ffffff,4,101.1124,9,9,-3L,12,1660,-64,,,32,3358.4498,0.0000,104.9516,102.0103,12,false,false
-Jesse Lyon2,Overall,Overall,#ffffff,9,103.0429,10,10,-23L,11,1602,-55,7,1,12,1232.0854,0.0000,102.6738,101.1687,1,false,false
+Derek M Cyphers,,,,1,100.7603,1,1,0.000,25,1870,34,1,0,35,3610.9343,0.0000,103.1696,100.9703,3,false,false
+Lennie Holland,,,,5,101.1776,2,2,-29.713,21,1787,78,,,35,3640.6441,0.0000,104.0184,101.5839,4,false,false
+Ross Yost,,,,8,101.9818,3,3,-35.395,18,1793,9,2,-1,35,3646.3230,0.0000,104.1807,101.8507,8,false,false
+Logan Grado,,,,6,101.5677,4,4,-36.326,17,1732,37,4,0,35,3647.2559,0.0000,104.2073,101.6916,10,false,false
+Nick Melaragno2,,,,3,101.0217,5,5,-38.954,16,1734,234,,,35,3649.8870,0.0000,104.2825,101.8165,19,false,false
+Matthew Siddall,,,,2,100.7685,6,6,-39.230,15,1756,-49,3,1,35,3650.1641,0.0000,104.2904,100.7315,9,false,false
+David Fernandes,,,,7,101.9799,7,7,-1:08.918,14,1690,-3,,,35,3679.8466,0.0000,105.1385,102.2783,10,false,false
+Dale Green,,,,10,103.9983,8,8,-1L,13,1664,-13,,,34,3500.2330,0.0000,102.9480,61.5173,4,true,false
+Nick Facciolo,,,,4,101.1124,9,9,-3L,12,1660,-64,,,32,3358.4498,0.0000,104.9516,102.0103,12,false,false
+Jesse Lyon2,,,,9,103.0429,10,10,-23L,11,1602,-55,7,1,12,1232.0854,0.0000,102.6738,101.1687,1,false,false

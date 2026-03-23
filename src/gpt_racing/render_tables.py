@@ -236,7 +236,7 @@ def render_standings(standings_df: pl.DataFrame, per_class: bool = False):
             pl.when(pl.col("rating_rank").is_not_null()).then(pl.col("rating")).otherwise(pl.lit("")).alias("rating"),
         )
 
-    has_classes = standings_df["class_name"].n_unique() > 1
+    has_classes = standings_df["class_name"].is_not_null().any()
 
     sort_col = "class_rank" if per_class else "points_rank"
     standings_df = standings_df.sort([sort_col, "user_id"]).with_columns(
@@ -285,7 +285,6 @@ def render_standings(standings_df: pl.DataFrame, per_class: bool = False):
             "points_rank": "Rank",
             "points_rank_change": "points_rank_change",
             "display_name": "Name",
-            "class_display": "Class",
             **_tail_cols,
         }
 
@@ -341,7 +340,7 @@ def render_standings(standings_df: pl.DataFrame, per_class: bool = False):
 
 def render_race_results(df: pl.DataFrame, per_class: bool = False):
     show_provisional_rating = True
-    has_classes = df["class_name"].n_unique() > 1
+    has_classes = df["class_name"].is_not_null().any()
 
     sort_col = "class_position" if per_class else "finish_position"
     df = df.sort(sort_col).with_columns(
@@ -423,7 +422,6 @@ def render_race_results(df: pl.DataFrame, per_class: bool = False):
         select_cols = {
             "finish_position": "Pos",
             "display_name": "Name",
-            "class_display": "Class",
             **_tail_cols,
         }
 

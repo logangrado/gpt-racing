@@ -1,24 +1,24 @@
 user_id,points_race_1,points_race_2,drop_race_1,drop_race_2,fastest_lap_race_1,fastest_lap_race_2,cleanest_driver_race_1,cleanest_driver_race_2,points_total,points_rank,points_rank_change,rating,rating_rank,rating_rank_change,num_races,display_name,class_name,class_symbol,class_color,class_rank,class_rank_change
-286691,0,10,true,false,false,false,false,false,10,1,-6,1869,2,-5,2,Jesse Lyon2,Overall,Overall,#ffffff,1,-6
-346566,10,2,false,true,false,false,true,false,10,1,0,1834,3,2,2,Derek M Cyphers,Overall,Overall,#ffffff,1,0
-367874,6,,false,true,false,,true,,6,3,1,1937,1,-1,1,Matthew Siddall,Overall,Overall,#ffffff,3,1
-719884,0,6,true,false,false,false,false,false,6,3,-4,1707,8,-3,2,Robby Prescott,Overall,Overall,#ffffff,3,-4
-282802,4,0,false,true,false,false,true,false,4,5,2,1556,11,8,2,Ross Yost,Overall,Overall,#ffffff,5,2
-295695,,4,true,false,,false,,false,4,5,,1773,5,,1,Chris Braun,Overall,Overall,#ffffff,5,
-622340,3,,false,true,false,,false,,3,7,3,1781,4,0,1,Logan Grado,Overall,Overall,#ffffff,7,3
-696009,,3,true,false,,false,,false,3,7,,1741,6,,1,Jochem Bakker,Overall,Overall,#ffffff,7,
-407068,2,,false,true,true,,false,,2,9,4,1726,7,2,1,Christian Youngwall,Overall,Overall,#ffffff,9,4
-497965,1,0,false,true,false,false,false,false,1,10,4,1623,9,3,2,Marc Nistor,Overall,Overall,#ffffff,10,4
-586629,0,1,true,false,false,false,false,false,1,10,3,1614,10,2,2,Enrico Gregoratto,Overall,Overall,#ffffff,10,3
-80283,0,,false,true,false,,false,,0,12,5,1274,18,2,1,James Huth,Overall,Overall,#ffffff,12,5
-154321,,0,true,false,,false,,false,0,12,,1190,20,,1,Leif Peterson,Overall,Overall,#ffffff,12,
-161240,0,0,true,false,false,false,false,false,0,12,5,1398,16,6,2,Jacob Grube,Overall,Overall,#ffffff,12,5
-351314,0,,false,true,false,,false,,0,12,5,1556,11,2,1,Greg Fullwood,Overall,Overall,#ffffff,12,5
-405581,0,0,true,false,false,false,false,false,0,12,5,1490,13,1,2,Rodney Campbell2,Overall,Overall,#ffffff,12,5
-412321,0,,false,true,false,,false,,0,12,5,1322,17,2,1,John Sedlak,Overall,Overall,#ffffff,12,5
-414448,0,,false,true,false,,false,,0,12,5,1152,21,3,1,Justin SW Tsang,Overall,Overall,#ffffff,12,5
-483350,0,,false,true,false,,false,,0,12,5,1063,22,3,1,Reed Gibson,Overall,Overall,#ffffff,12,5
-508277,0,0,true,false,false,false,false,false,0,12,5,1401,15,1,2,Domenico Masi,Overall,Overall,#ffffff,12,5
-538346,0,,false,true,false,,false,,0,12,5,1219,19,2,1,Ariel Julian,Overall,Overall,#ffffff,12,5
-678864,0,,false,true,false,,false,,0,12,5,919,23,3,1,John Marjoribanks,Overall,Overall,#ffffff,12,5
-686056,0,0,true,false,false,false,false,false,0,12,5,1446,14,1,2,Chad Henson,Overall,Overall,#ffffff,12,5
+286691,0,10,true,false,false,false,false,false,10,1,-6,1869,2,-5,2,Jesse Lyon2,,,,1,-6
+346566,10,2,false,true,false,false,true,false,10,1,0,1834,3,2,2,Derek M Cyphers,,,,1,0
+367874,6,,false,true,false,,true,,6,3,1,1937,1,-1,1,Matthew Siddall,,,,3,1
+719884,0,6,true,false,false,false,false,false,6,3,-4,1707,8,-3,2,Robby Prescott,,,,3,-4
+282802,4,0,false,true,false,false,true,false,4,5,2,1556,11,8,2,Ross Yost,,,,5,2
+295695,,4,true,false,,false,,false,4,5,,1773,5,,1,Chris Braun,,,,5,
+622340,3,,false,true,false,,false,,3,7,3,1781,4,0,1,Logan Grado,,,,7,3
+696009,,3,true,false,,false,,false,3,7,,1741,6,,1,Jochem Bakker,,,,7,
+407068,2,,false,true,true,,false,,2,9,4,1726,7,2,1,Christian Youngwall,,,,9,4
+497965,1,0,false,true,false,false,false,false,1,10,4,1623,9,3,2,Marc Nistor,,,,10,4
+586629,0,1,true,false,false,false,false,false,1,10,3,1614,10,2,2,Enrico Gregoratto,,,,10,3
+80283,0,,false,true,false,,false,,0,12,5,1274,18,2,1,James Huth,,,,12,5
+154321,,0,true,false,,false,,false,0,12,,1190,20,,1,Leif Peterson,,,,12,
+161240,0,0,true,false,false,false,false,false,0,12,5,1398,16,6,2,Jacob Grube,,,,12,5
+351314,0,,false,true,false,,false,,0,12,5,1556,11,2,1,Greg Fullwood,,,,12,5
+405581,0,0,true,false,false,false,false,false,0,12,5,1490,13,1,2,Rodney Campbell2,,,,12,5
+412321,0,,false,true,false,,false,,0,12,5,1322,17,2,1,John Sedlak,,,,12,5
+414448,0,,false,true,false,,false,,0,12,5,1152,21,3,1,Justin SW Tsang,,,,12,5
+483350,0,,false,true,false,,false,,0,12,5,1063,22,3,1,Reed Gibson,,,,12,5
+508277,0,0,true,false,false,false,false,false,0,12,5,1401,15,1,2,Domenico Masi,,,,12,5
+538346,0,,false,true,false,,false,,0,12,5,1219,19,2,1,Ariel Julian,,,,12,5
+678864,0,,false,true,false,,false,,0,12,5,919,23,3,1,John Marjoribanks,,,,12,5
+686056,0,0,true,false,false,false,false,false,0,12,5,1446,14,1,2,Chad Henson,,,,12,5
