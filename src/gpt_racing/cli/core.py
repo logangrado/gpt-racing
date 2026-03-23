@@ -82,7 +82,7 @@ def core_entrypoint(config, out_path, _overwrite=False, client=None):
 def append_races_to_config(config_path: Path, new_races: list[dict]) -> None:
     """Insert new race entries before the closing ] of the races array in a jsonnet config."""
     text = config_path.read_text()
-    match = re.search(r'\braces:\s*\[', text)
+    match = re.search(r"\braces:\s*\[", text)
     if match is None:
         raise ValueError("Could not find 'races: [' in config")
     bracket_start = match.end() - 1  # position of '['
@@ -98,12 +98,11 @@ def append_races_to_config(config_path: Path, new_races: list[dict]) -> None:
                 break
     if bracket_end is None:
         raise ValueError("Could not find closing ] for races array")
-    line_start = text.rfind('\n', 0, bracket_end) + 1
+    line_start = text.rfind("\n", 0, bracket_end) + 1
     closing_indent = text[line_start:bracket_end]  # whitespace before ']'
-    entry_indent = closing_indent + '  '
+    entry_indent = closing_indent + "  "
     entries = "".join(
-        f"{entry_indent}{{ subsession_id: {r['subsession_id']}, race_name: '{r['track_name']}' }},\n"
-        for r in new_races
+        f"{entry_indent}{{ subsession_id: {r['subsession_id']}, race_name: '{r['track_name']}' }},\n" for r in new_races
     )
     config_path.write_text(text[:line_start] + entries + text[line_start:])
 

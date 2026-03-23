@@ -65,14 +65,16 @@ def test_multiple_entries(tmp_path):
 def test_ignores_drop_races_key(tmp_path):
     """'drop_races:' contains 'races:' as a substring — must not match it."""
     cfg = tmp_path / "config.jsonnet"
-    cfg.write_text(textwrap.dedent("""\
+    cfg.write_text(
+        textwrap.dedent("""\
         {
           points: { drop_races: 2, default: [50, 41, 36] },
           races: [
             { subsession_id: 100, race_name: 'Spa' },
           ],
         }
-    """))
+    """)
+    )
     append_races_to_config(cfg, [{"subsession_id": 200, "track_name": "Monza"}])
     result = cfg.read_text()
     assert "subsession_id: 200" in result
