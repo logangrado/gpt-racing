@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -78,6 +79,51 @@ def core_entrypoint(config, out_path, _overwrite=False, client=None):
             _render_and_write_table(gt=html, path=pdf_out_path / f"elo_race_{i + 1}{suffix}.html")
 
 
+def append_races_to_config(config_path: Path, new_races: list[dict]) -> None:
+    """Insert new race entries before the closing ] of the races array in a jsonnet config."""
+    text = config_path.read_text()
+    match = re.search(r'\braces:\s*\[', text)
+    if match is None:
+        raise ValueError("Could not find 'races: [' in config")
+    bracket_start = match.end() - 1  # position of '['
+    depth = 0
+    bracket_end = None
+    for i, ch in enumerate(text[bracket_start:], bracket_start):
+        if ch == "[":
+            depth += 1
+        elif ch == "]":
+            depth -= 1
+            if depth == 0:
+                bracket_end = i
+                break
+    if bracket_end is None:
+        raise ValueError("Could not find closing ] for races array")
+    line_start = text.rfind('\n', 0, bracket_end) + 1
+    closing_indent = text[line_start:bracket_end]  # whitespace before ']'
+    entry_indent = closing_indent + '  '
+    entries = "".join(
+        f"{entry_indent}{{ subsession_id: {r['subsession_id']}, race_name: '{r['track_name']}' }},\n"
+        for r in new_races
+    )
+    config_path.write_text(text[:line_start] + entries + text[line_start:])
+
+
+def update_season_entrypoint(config_path, league_id: int, season_id: int) -> None:
+    from gpt_racing.iracing_data import IracingDataClient
+    from gpt_racing.league import fetch_new_races
+
+    config_dict = _load_config(config_path)
+    existing_ids = {r["subsession_id"] for r in config_dict["races"]}
+    client = IracingDataClient()
+    new_races = fetch_new_races(client, league_id, season_id, existing_ids)
+    if not new_races:
+        print("No new races found.")
+        return
+    append_races_to_config(Path(config_path), new_races)
+    for r in new_races:
+        print(f"Added: subsession_id={r['subsession_id']} ({r['track_name']})")
+
+
 def list_drivers_entrypoint(config):
     from gpt_racing.config import RatingConfig
     from gpt_racing.core import _load_race_data
@@ -108,6 +154,14 @@ def core(config, out_path):
 @click.argument("config")
 def list_drivers(config):
     list_drivers_entrypoint(config)
+
+
+@cli.command("update-season")
+@click.argument("config")
+@click.argument("league_id", type=int)
+@click.argument("season_id", type=int)
+def update_season(config, league_id, season_id):
+    update_season_entrypoint(config, league_id, season_id)
 
 
 if __name__ == "__main__":

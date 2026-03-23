@@ -5,9 +5,11 @@ FROM debian:trixie-slim@sha256:1d3c811171a08a5adaa4a163fbafd96b61b87aa871bbc7aa1
 
 # ── System packages ───────────────────────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    curl \
+    build-essential \
     ca-certificates \
+    curl \
+    g++ \
+    git \
     jq \
     make \
     unzip \
@@ -23,6 +25,7 @@ ENV PATH="/home/hatchery/.npm-global/bin:/home/hatchery/.local/bin:$PATH"
 # ── Agent install ─────────────────────────────────────────────────────────────
 # ── Claude Code ───────────────────────────────────────────────────────────────
 RUN curl -fsSL https://claude.ai/install.sh | bash
+ENV UV_PROJECT_ENVIRONMENT=/home/hatchery/venv
 
 # =============================================================================
 # Optional extras — uncomment what you need
