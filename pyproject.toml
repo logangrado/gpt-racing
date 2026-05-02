@@ -7,14 +7,14 @@ authors = [
     {name = "Logan Grado", email = "grado.logan@gmail.com"},
 ]
 dependencies = [
-    "click>=8.1.7",
-    "iracingdataapi>=1.4.2",
-    "pydantic>=2.5.2",
-    "jsonnet>=0.20.0",
+    "click>=8.3.3",
+    "iracingdataapi>=1.4.4",
+    "pydantic>=2.13.3",
+    "jsonnet>=0.22.0",
     "elommr>=1.2.1",
-    "polars>=1.8.2",
+    "polars>=1.40.1",
     "great-tables>=0.12.0",
-    "pyarrow>=17.0.0",
+    "pyarrow>=24.0.0",
     "loggerado>=0.2.0",
     "iracing-oauth-client",
     "ansible-vault>=4.1.0",
@@ -35,15 +35,15 @@ source = "uv-dynamic-versioning"
 dev = [
     "black>=25.1.0",
     "flake8>=7.2.0",
-    "invoke>=2.2.1",
+    "invoke>=3.0.3",
     "ipdb>=0.13.13",
     "ipympl>=0.9.7",
-    "ipython>=9.3.0",
+    "ipython>=9.13.0",
     "jupyter>=1.1.1",
-    "jupyterlab>=4.5.1",
+    "jupyterlab>=4.5.7",
     "pandoc>=2.4",
-    "pytest>=8.4.0",
-    "ruff>=0.15.7",
+    "pytest>=9.0.3",
+    "ruff>=0.15.12",
 ]
 
 [tool.uv.sources]
